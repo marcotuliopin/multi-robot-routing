@@ -22,12 +22,13 @@ TSIZE = 4
 
 MAXD = 3
 BUDGET = 80
+ELITE_SIZE = 1
 
 distmx = cdist(rpositions, rpositions, metric="euclidean")
 kdtree = KDTree(rpositions)
 
 
-creator.create("FitnessMulti", base.Fitness, weights=(1.0, -1.0, -1.0))
+creator.create("FitnessMulti", base.Fitness, weights=(1.0, -20.0, -10.0))
 creator.create("Individual", np.ndarray, fitness=creator.FitnessMulti)
 
 toolbox = base.Toolbox()
@@ -35,7 +36,7 @@ toolbox.register("individual", ga.init_individual, creator.Individual, NUM_REWAR
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("mate", ga.cx_individual)
 toolbox.register("mutate", ga.mut_individual, indpb=0.1)
-toolbox.register("select", tools.selNSGA2)
+toolbox.register("select", tools.selTournament, tournsize=TSIZE)
 toolbox.register("evaluate", ga.evaluate)
 
 
@@ -49,48 +50,49 @@ def main(toolbox, seed=None):
     stats.register("max", np.max)
 
     logbook = tools.Logbook()
-    
-    nvalues = add_neighbor_values(rvalues, rpositions, kdtree, MAXD)    
 
     population = toolbox.population(n=PSIZE)
     for ind in population:
-        ind.fitness.values = toolbox.evaluate(ind, 0, NGEN, nvalues, distmx, MAXD, BUDGET)
-    
-    population = toolbox.select(population, len(population))
+        ind.fitness.values = toolbox.evaluate(ind, 0, NGEN, rvalues, distmx, MAXD, BUDGET)
 
     record = stats.compile(population)
     logbook.record(gen=0, **record)
 
     for gen in range(1, NGEN):
-        offspring = tools.selTournamentDCD(population, len(population))
+        elite = tools.selBest(population, ELITE_SIZE)[0]
+
+        offspring = toolbox.select(population, len(population) - 1)
         offspring = list(map(toolbox.clone, offspring))
 
-        # Crossover
+        mutation_prob = calculate_mutation_probability(gen, NGEN, MX, MXDECAY)
+
         for parent1, parent2 in zip(offspring[::2], offspring[1::2]):
+            # Crossover
             if random.random() < CX:
                 toolbox.mate(parent1, parent2)
-                del parent1.fitness.values
-                del parent2.fitness.values
             
-        # Mutation
-        mutation_prob = calculate_mutation_probability(gen, NGEN, MX, MXDECAY)
-        for individual in offspring:
+            # Mutation
             if random.random() < mutation_prob:
-                toolbox.mutate(individual)
-                del individual.fitness.values
+                toolbox.mutate(parent1)
+                toolbox.mutate(parent2) 
+
+            del parent1.fitness.values
+            del parent2.fitness.values
+
 
         # Fitness evaluation
         for ind in offspring:
-            ind.fitness.values = toolbox.evaluate(ind, gen, NGEN, nvalues, distmx, MAXD, BUDGET)
-        
-        # Selection NSGA-II
-        population = toolbox.select(population + offspring, PSIZE)
+            ind.fitness.values = toolbox.evaluate(ind, gen, NGEN, rvalues, distmx, MAXD, BUDGET)
+
+        # Elitism
+        offspring.append(elite)
+        population[:] = offspring
 
         record = stats.compile(population)
         logbook.record(gen=gen, **record)
         print(logbook.stream)
 
-    return population, logbook
+    return tools.selBest(population, 1)[0], logbook
 
     
 if __name__ == "__main__":
@@ -103,10 +105,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Run the GA
-    population, logbook = main(toolbox, seed=42)
-
-    pareto_front = tools.emo.sortLogNondominated(population, len(population), first_front_only=True)
-    individual = pareto_front[0]
+    individual, logbook = main(toolbox, seed=42)
 
     if args.plot_path:
         fig, ax = plt.subplots(figsize=(7, 5))
@@ -119,11 +118,11 @@ if __name__ == "__main__":
         plt.axis('equal')
         plt.ylim(0, None)
         plt.xlim(0, None)
-        plt.show()
+
         if args.save_plot:
             plt.savefig(f'{args.save_plot}_path.png')
 
+        plt.show()
+
     if args.plot_distances:
-        plots.plot_distances(individual[0], individual[1], distmx, BUDGET)
-        if args.save_plot:
-            plt.savefig(f'{args.save_plot}_distances.png')
+        plots.plot_distances(individual[0], individual[1], distmx, BUDGET, save_plot=args.save_plot)

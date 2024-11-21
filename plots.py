@@ -42,7 +42,7 @@ def plot_path(
         curr_reward = next_reward
 
 
-def plot_distances(path1: list, path2: list, distmx: np.ndarray, budget: int):
+def plot_distances(path1: list, path2: list, distmx: np.ndarray, budget: int, save_plot: str):
     last_idx = min(get_last_valid_idx(path1, distmx, budget), get_last_valid_idx(path2, distmx, budget))
     fig, ax = plt.subplots(figsize=(10, 5))
     dist = []
@@ -53,4 +53,8 @@ def plot_distances(path1: list, path2: list, distmx: np.ndarray, budget: int):
     ax.set_title("Distance between agents in the two paths. Max distance allowed: 3.5")
     plt.grid(True)
     plt.tight_layout()
+
+    if save_plot:
+        plt.savefig(f'{save_plot}_distances.png')
+
     plt.show()
