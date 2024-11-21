@@ -1,7 +1,7 @@
 import numpy as np
 
 
-reward_p = np.array(
+rpositions = np.array(
     [
         [0, 0],
         [1, 5],
@@ -27,6 +27,6 @@ reward_p = np.array(
     ]
 )
 
-reward_value = np.array(
+rvalues = np.array(
     [0, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105]
 )

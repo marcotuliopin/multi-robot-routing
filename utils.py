@@ -1,5 +1,14 @@
 import numpy as np
 from deap import tools
+from sklearn.neighbors import KDTree
+
+
+def add_neighbor_values(rvalues: np.ndarray, rpositions: np.ndarray, kdtree: KDTree, maxdist: np.ndarray) -> np.ndarray:
+    rvalues = np.array(rvalues)
+    for i, pos in enumerate(rpositions):
+        neighbors = kdtree.query_radius([pos], r=maxdist)[0]
+        rvalues[i] = rvalues[i] + max(rvalues[neighbors])
+    return rvalues
 
 
 def get_last_valid_idx(path: list, distmx: np.ndarray, budget: int) -> int:
@@ -42,3 +51,9 @@ def assign_crowding_dist(population):
 
 def calculate_mutation_probability(generation: int, max_generations: int, initial_prob: float, decay_rate: float) -> float:
     return initial_prob * np.exp(-decay_rate * (generation / max_generations))
+
+
+def get_points_in_range(p: int, rpositions: np.ndarray, maxdist: float, kdtree: KDTree) -> list:
+    current_point = rpositions[p]
+    indices_within_radius = kdtree.query_radius([current_point], r=maxdist)[0]
+    return indices_within_radius
