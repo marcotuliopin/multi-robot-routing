@@ -57,3 +57,23 @@ def get_points_in_range(p: int, rpositions: np.ndarray, maxdist: float, kdtree: 
     current_point = rpositions[p]
     indices_within_radius = kdtree.query_radius([current_point], r=maxdist)[0]
     return indices_within_radius
+
+
+def disentangle_paths(path1: np.ndarray, path2: np.ndarray, positions: np.ndarray) -> tuple:
+    def segments_intersect(p1, p2, q1, q2):
+        def ccw(a, b, c):
+            return (c[1] - a[1]) * (b[0] - a[0]) > (b[1] - a[1]) * (c[0] - a[0])
+
+        return ccw(p1, q1, q2) != ccw(p2, q1, q2) and ccw(p1, p2, q1) != ccw(p1, p2, q2)
+
+    path1, path2 = path1.copy(), path2.copy()
+
+    for i in range(len(path1) - 1):
+        for j in range(len(path2) - 1):
+            p1, p2 = positions[path1[i]], positions[path1[i + 1]]
+            q1, q2 = positions[path2[j]], positions[path2[j + 1]]
+
+            if segments_intersect(p1, p2, q1, q2):
+                path1[i + 1], path2[j + 1] = path2[j + 1], path1[i + 1]
+
+    return path1, path2
