@@ -1,6 +1,7 @@
+import random
 import numpy as np
 from sklearn.neighbors import KDTree
-from utils import get_last_valid_idx, get_points_in_range
+from utils import get_last_valid_idx, get_points_in_range, interpolate_paths
 from deap import tools
 
 
@@ -30,8 +31,11 @@ def init_individual(icls, num_rewards: list, rpositions: np.ndarray, maxdist:np.
 
 def mut_individual(individual: list, indpb: float) -> tuple:
     path1, path2 = individual
-    tools.mutShuffleIndexes(path1, indpb=indpb)
-    tools.mutShuffleIndexes(path2, indpb=indpb)
+    if random.random() < .5:
+        tools.cxPartialyMatched(path1, path2)
+    else:
+        tools.mutShuffleIndexes(path1, indpb=indpb)
+        tools.mutShuffleIndexes(path2, indpb=indpb)
     return (individual,)
 
 
@@ -41,92 +45,79 @@ def cx_individual(ind1: list, ind2: list) -> tuple:
     return ind1, ind2
 
 
-def evaluate(ind: list, gen: int, ngen: int, rvalues: np.ndarray, distmx: np.ndarray, maxdist: float, budget: int) -> float:
-    last_valid_idxs = [get_last_valid_idx(path, distmx, budget) for path in ind]
+def cx_partialy_matched(ind1: list, ind2: list) -> tuple:
+    size = ind1.shape[1]
+    
+    cxpoint1, cxpoint2 = sorted(random.sample(range(size), 2))
+    
+    for row in range(ind1.shape[0]):
+        p1, p2 = np.zeros(size, dtype=int), np.zeros(size, dtype=int)
+        
+        for i in range(size):
+            p1[ind1[row][i]] = i
+            p2[ind2[row][i]] = i
 
-    max_reward = maximize_reward(ind, rvalues, last_valid_idxs)
-    min_distance = minimize_distance(ind, distmx)
-    min_distance_between_agents = minimize_distance_between_agents(ind, distmx, last_valid_idxs)
+        for i in range(cxpoint1, cxpoint2):
+            temp1 = ind1[row, i]
+            temp2 = ind2[row, i]
 
-    penalize_dist = penalize_distance(ind, distmx, maxdist, last_valid_idxs)
+            ind1[row, i], ind2[row, i] = temp2, temp1
+            
+            ind1[row, p1[temp2]] = temp1
+            ind2[row, p2[temp1]] = temp2
 
+            p1[temp1], p1[temp2] = p1[temp2], p1[temp1]
+            p2[temp1], p2[temp2] = p2[temp2], p2[temp1]
+
+    return ind1, ind2
+
+
+def evaluate(ind: list, rvalues: np.ndarray, rpositions: np.ndarray, distmx: np.ndarray, maxdist: float, budget: int) -> float:
+    last_idxs = [get_last_valid_idx(path, distmx, budget) + 1 for path in ind]
+
+    max_reward = maximize_reward(ind, rvalues, last_idxs)
+    min_distance = minimize_distance(ind, distmx, last_idxs)
+
+    penalize_dist = penalize_distance(ind, rpositions, maxdist, last_idxs)
     if penalize_dist:
-        # Add a big penalty if the distance is too high after half of the generations.
-        if gen > ngen // 2:
-            return (-1000, min_distance + 5000, min_distance_between_agents + 5000)
+        return (0, np.inf)
 
-        # Add a small penalty if the distance is too high. This lets the algorithm explore more.
-        reward_penalty = 500 * (1 + gen / ngen)
-        distance_penalty = 1000 * (1 + gen / ngen)
-        return (max_reward - reward_penalty, min_distance + distance_penalty, min_distance_between_agents + distance_penalty)
-
-    return (max_reward, min_distance, min_distance_between_agents)
+    return (max_reward, min_distance)
 
 
-def maximize_reward(ind: list, rvalues: np.ndarray, last_valid_idxs: list) -> float:
-
+def maximize_reward(ind: list, rvalues: np.ndarray, last_idxs: list) -> float:
     visited = set()
     fitness = 0
 
-    for p, path in enumerate(ind):
-        last_idx = last_valid_idxs[p]
+    for path, last_idx in zip(ind, last_idxs):
 
-        for i in range(last_idx + 1):
-            next_reward = path[i]
-
-            if not next_reward in visited:
-                fitness += rvalues[next_reward]
-                visited.add(next_reward)
+        for reward in path[:last_idx]:
+            if reward not in visited:
+                fitness += rvalues[reward]
+                visited.add(reward)
 
     return fitness
 
 
-def minimize_distance(ind: list, distmx: np.ndarray) -> float:
+def minimize_distance(ind: list, distmx: np.ndarray, last_idxs: list) -> float:
     total_distance = 0
-    for path in ind:
+
+    for path, last_idx in zip(ind, last_idxs):
         prev = 0
-        for curr in path:
-            total_distance += distmx[prev, curr]
+        partial_distance = 0
+
+        for curr in path[:last_idx]:
+            partial_distance += distmx[prev, curr]
             prev = curr
+
+        partial_distance = (partial_distance + distmx[prev, 0]) / last_idx
+        total_distance += partial_distance
 
     return total_distance
 
 
-def minimize_distance_between_agents(ind: list, distmx: np.ndarray, last_valid_idxs: list) -> float:
-    last_idx1, last_idx2 = last_valid_idxs
-    min_last_idx = min(last_idx1, last_idx2)
+def penalize_distance(ind: list, rpositions: np.ndarray, maxdist: float, last_idxs: list) -> float:
+    paths = interpolate_paths(ind[0][:last_idxs[0]], ind[1][:last_idxs[1]], rpositions, 60)
 
-    full_distance = 0
-
-    for p1, p2 in zip(ind[0][:min_last_idx], ind[1][:min_last_idx]):
-        full_distance += distmx[p1, p2]
-
-    if last_idx1 > last_idx2:
-        for p1 in ind[0][min_last_idx:last_idx1]:
-            full_distance += distmx[p1, p2]
-    elif last_idx2 > last_idx1:
-        for p2 in ind[1][min_last_idx:last_idx2]:
-            full_distance += distmx[p1, p2]
-
-    return full_distance
-
-
-def penalize_distance(ind: list, distmx: np.ndarray, maxdist: float, last_valid_idxs: list) -> float:
-    last_idx1, last_idx2 = last_valid_idxs
-    min_last_idx = min(last_idx1, last_idx2)
-
-    for p1, p2 in zip(ind[0][:min_last_idx+1], ind[1][:min_last_idx+1]):
-        if distmx[p1, p2] > maxdist:
-            return True
-
-    if last_idx1 > last_idx2:
-        for p1 in ind[0][min_last_idx+1:last_idx1]:
-            if distmx[p1, ind[1][min_last_idx - 1]] > maxdist:
-                return True
-
-    elif last_idx2 > last_idx1:
-        for p2 in ind[1][min_last_idx+1:last_idx2]:
-            if distmx[ind[0][min_last_idx - 1], p2] > maxdist:
-                return True
-
-    return False
+    distances = np.linalg.norm(paths[0] - paths[1], axis=1)
+    return np.any(distances > maxdist)
