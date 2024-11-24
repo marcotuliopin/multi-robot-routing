@@ -57,7 +57,6 @@ def plot_distances(path1, path2, positions, max_distance, num_samples=100, save_
     interpolated_paths = interpolate_paths(path1, path2, positions, num_samples)
     
     distances = np.linalg.norm(interpolated_paths[0] - interpolated_paths[1], axis=1)
-    distances = np.insert(distances, 0, 0)
     
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(distances, color='red')
@@ -118,6 +117,7 @@ def plot_pareto_front(population):
 def plot_interpolated_individual(
     individual: list,
     maxdist: float,
+    save_plot=None
 ):
     fig, ax = plt.subplots(figsize=(7, 5))
     plot_path(ax, individual[0], maxdist, color='orange')
@@ -128,5 +128,8 @@ def plot_interpolated_individual(
     plt.axis('equal')
     plt.ylim(0, None)
     plt.xlim(0, None)
+
+    if save_plot:
+        plt.savefig(f'{save_plot}_interpolated_path.png')
 
     plt.show()

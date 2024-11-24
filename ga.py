@@ -40,12 +40,6 @@ def mut_individual(individual: list, indpb: float) -> tuple:
 
 
 def cx_individual(ind1: list, ind2: list) -> tuple:
-    tools.cxPartialyMatched(ind1[0], ind2[0])
-    tools.cxPartialyMatched(ind1[1], ind2[1])
-    return ind1, ind2
-
-
-def cx_partialy_matched(ind1: list, ind2: list) -> tuple:
     size = ind1.shape[1]
     
     cxpoint1, cxpoint2 = sorted(random.sample(range(size), 2))
@@ -80,7 +74,7 @@ def evaluate(ind: list, rvalues: np.ndarray, rpositions: np.ndarray, distmx: np.
 
     penalize_dist = penalize_distance(ind, rpositions, maxdist, last_idxs)
     if penalize_dist:
-        return (0, np.inf)
+        return (0, 500)
 
     return (max_reward, min_distance)
 
@@ -117,7 +111,13 @@ def minimize_distance(ind: list, distmx: np.ndarray, last_idxs: list) -> float:
 
 
 def penalize_distance(ind: list, rpositions: np.ndarray, maxdist: float, last_idxs: list) -> float:
-    paths = interpolate_paths(ind[0][:last_idxs[0]], ind[1][:last_idxs[1]], rpositions, 60)
+    path1, path2 = list(ind[0][:last_idxs[0]]), list(ind[1][:last_idxs[1]])
+    path1.append(0)
+    path1.insert(0, 0)
+    path2.append(0)
+    path2.insert(0, 0)
+    
+    paths = interpolate_paths(path1, path2, rpositions, 1)
 
     distances = np.linalg.norm(paths[0] - paths[1], axis=1)
     return np.any(distances > maxdist)

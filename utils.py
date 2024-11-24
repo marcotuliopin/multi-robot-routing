@@ -110,56 +110,68 @@ def assign_crowding_dist(population):
                     cur[1].fitness.crowding_dist += dist
 
 
-def interpolate_paths(path1: list, path2: list, positions: np.ndarray, num_samples: int = 100) -> tuple:
+def interpolate_paths(path1: list, path2: list, positions: np.ndarray, n: float) -> tuple:
+    interpolated_path1 = interpolate_path(path1, positions, n)
+    interpolated_path2 = interpolate_path(path2, positions, n)
+
+    if len(interpolated_path1) > len(interpolated_path2):
+        interpolated_path2 = np.vstack((interpolated_path2, [interpolated_path2[-1]] * (len(interpolated_path1) - len(interpolated_path2))))
+    elif len(interpolated_path2) > len(interpolated_path1):
+        interpolated_path1 = np.vstack((interpolated_path1, [interpolated_path1[-1]] * (len(interpolated_path2) - len(interpolated_path1))))
+
+    return [interpolated_path1, interpolated_path2]
+
+
+def interpolate_path(path: list, positions: np.ndarray, n: float) -> np.ndarray:
     """
-    Interpolate two paths such that the samples are equally spaced along both paths.
+    Create samples along the path at every n units of distance.
 
     Parameters
     ----------
-    path1 : list
-        The first path.
-    path2 : list
-        The second path.
+    path : list
+        The path to sample, represented as a list of indices to rewards.
     positions : np.ndarray
         The positions of the rewards.
-    num_samples : int
-        The number of samples to generate.
+    n : float
+        The distance interval between samples.
 
     Returns
     -------
-    tuple
-        Two arrays of interpolated points for path1 and path2.
+    np.ndarray
+        The array of sampled points along the path.
     """
+    
     def cumulative_distances(path):
+        """
+        Calculate the cumulative distances between consecutive points on the path.
+        """
         distances = [0.0]
         for i in range(len(path) - 1):
             start, end = positions[path[i]], positions[path[i + 1]]
             distances.append(distances[-1] + np.linalg.norm(end - start))
         return np.array(distances)
 
-    # Interpolate points for both paths
-    def interpolate_path(cum_dist, path):
-        interpolated_points = []
-        for d in sample_distances:
-            idx = np.searchsorted(cum_dist, d, side='right') - 1
-            idx = min(idx, len(path) - 2)  # Avoid index out of bounds
-            t = (d - cum_dist[idx]) / (cum_dist[idx + 1] - cum_dist[idx])
-            start, end = positions[path[idx]], positions[path[idx + 1]]
-            interpolated_points.append((1 - t) * start + t * end)
-        return np.array(interpolated_points)
+    # Calculate cumulative distances for the path
+    cum_dist = cumulative_distances(path)
     
-    # Calculate cumulative distances for both paths
-    cum_dist1 = cumulative_distances(path1)
-    cum_dist2 = cumulative_distances(path2)
+    # Define the sampling distances based on n
+    total_distance = cum_dist[-1]
+    sample_distances = np.arange(0, total_distance, n)
 
-    # Define the sampling points (shared between the two paths)
-    total_distance = max(cum_dist1[-1], cum_dist2[-1])
-    sample_distances = np.linspace(0, total_distance, num_samples)
-    
-    interpolated_path1 = interpolate_path(cum_dist1, path1)
-    interpolated_path2 = interpolate_path(cum_dist2, path2)
-    
-    return interpolated_path1, interpolated_path2
+    # List to store the sampled points
+    sampled_points = []
+
+    for d in sample_distances:
+        # Find the two points between which the sample will be interpolated
+        idx = np.searchsorted(cum_dist, d, side='right') - 1
+        idx = min(idx, len(path) - 2)  # Avoid index out of bounds
+        t = (d - cum_dist[idx]) / (cum_dist[idx + 1] - cum_dist[idx])  # Calculate interpolation factor
+
+        # Interpolate between the points
+        start, end = positions[path[idx]], positions[path[idx + 1]]
+        sampled_points.append((1 - t) * start + t * end)
+
+    return np.array(sampled_points)
 
 
 def translate_path_to_coordinates(path: list, positions: np.ndarray) -> list:
