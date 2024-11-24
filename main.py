@@ -12,16 +12,17 @@ import argparse
 NUM_REWARDS = rpositions.shape[0]
 
 PSIZE = 1200
-NGEN = 200
+NGEN = 250
 
 CX = 0.9
-MX = 0.7
-MXDECAY = 0.5
+MX = 0.3
+MXDECAY = 0
 
 MAXD = 3
 BUDGET = 100
 
 REINIT_RATE = 0.2
+REINIT_GEN = 20
 
 
 distmx = cdist(rpositions, rpositions, metric="euclidean")
@@ -68,6 +69,12 @@ def main(toolbox, seed=None):
         offspring = tools.selTournamentDCD(population, len(population))
         offspring = list(map(toolbox.clone, offspring))
 
+        # Reinitialize worst individuals
+        if gen % REINIT_GEN == 0:
+            worst_ind = tools.selWorst(offspring, int(len(offspring) * REINIT_RATE))
+            for ind in worst_ind:
+                ind[:] = toolbox.individual()
+
         mutation_prob = calculate_mutation_probability(gen, NGEN, MX, MXDECAY)
 
         for ind1, ind2 in zip(offspring[::2], offspring[1::2]):
@@ -87,14 +94,9 @@ def main(toolbox, seed=None):
         for ind in offspring:
             ind.fitness.values = toolbox.evaluate(ind, rvalues, rpositions, distmx, MAXD, BUDGET)
         
-        # Reinitialize worst individuals
-        if gen % 10 == 0:
-            worst_ind = tools.selWorst(offspring, int(len(offspring) * REINIT_RATE))
-            for ind in worst_ind:
-                ind[:] = toolbox.individual()
-        
         # Selection NSGA-II
         population = toolbox.select(population + offspring, PSIZE)
+        
 
         record = stats.compile(population)
         logbook.record(gen=gen, **record)

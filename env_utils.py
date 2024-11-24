@@ -6,11 +6,14 @@ def get_flow_velocity(point, vortices): # Code provided by Douglas G. Macharet.
     Calculate the flow field at a given point based on the positions of the vortices.
 
     Parameters:
-    point (numpy.ndarray): The point at which to calculate the flow field.
-    vortices (list): A list of vortices, where each vortex is represented by its center, decay, and magnitude.
+    point : numpy.ndarray
+        The point at which to calculate the flow field.
+    vortices : list
+        A list of vortices, where each vortex is represented by its center, decay, and magnitude.
 
     Returns:
-    numpy.ndarray: The flow field at the given point.
+    numpy.ndarray
+        The flow field at the given point.
     """
     init = True
     for vortex in vortices:

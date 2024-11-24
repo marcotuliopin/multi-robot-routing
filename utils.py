@@ -7,8 +7,7 @@ def get_last_valid_idx(path: list, distmx: np.ndarray, budget: int) -> int:
     """
     Get the last valid index of a path given a budget constraint.
     
-    Parameters
-    ----------
+    Parameters:
     path : list
         A list of indices representing the path.
     distmx : np.ndarray
@@ -16,8 +15,7 @@ def get_last_valid_idx(path: list, distmx: np.ndarray, budget: int) -> int:
     budget : int
         The budget constraint.
         
-    Returns
-    -------
+    Returns:
     int
         The last valid index.
     """
@@ -50,8 +48,7 @@ def disentangle_paths(path1: np.ndarray, path2: np.ndarray, positions: np.ndarra
     """
     Disentangle two paths that intersect. The paths are disentangled by swapping the last intersecting point.
     
-    Parameters
-    ----------
+    Parameters:
     path1 : np.ndarray
         The first path.
     path2 : np.ndarray
@@ -59,8 +56,7 @@ def disentangle_paths(path1: np.ndarray, path2: np.ndarray, positions: np.ndarra
     positions : np.ndarray
         The positions of the rewards.
         
-    Returns
-    -------
+    Returns:
     tuple
         The disentangled paths.
     """
@@ -126,8 +122,7 @@ def interpolate_path(path: list, positions: np.ndarray, n: float) -> np.ndarray:
     """
     Create samples along the path at every n units of distance.
 
-    Parameters
-    ----------
+    Parameters:
     path : list
         The path to sample, represented as a list of indices to rewards.
     positions : np.ndarray
@@ -135,8 +130,7 @@ def interpolate_path(path: list, positions: np.ndarray, n: float) -> np.ndarray:
     n : float
         The distance interval between samples.
 
-    Returns
-    -------
+    Returns:
     np.ndarray
         The array of sampled points along the path.
     """

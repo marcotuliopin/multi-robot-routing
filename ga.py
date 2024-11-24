@@ -4,8 +4,19 @@ from sklearn.neighbors import KDTree
 from utils import get_last_valid_idx, get_points_in_range, interpolate_paths
 from deap import tools
 
-
 def init_individual(icls, num_rewards: list, rpositions: np.ndarray, maxdist:np.ndarray, kdtree: KDTree) -> list:
+    if random.random() > 0.8:
+        return valid_individual(icls, num_rewards, rpositions, maxdist, kdtree)
+    return random_individual(icls, num_rewards)
+
+
+def random_individual(icls, num_rewards: list) -> list:
+    perm1 = np.random.permutation(num_rewards)
+    perm2 = np.random.permutation(num_rewards)
+    return icls(np.array([perm1, perm2]))
+
+
+def valid_individual(icls, num_rewards: list, rpositions: np.ndarray, maxdist:np.ndarray, kdtree: KDTree) -> list:
     perm1 = []
     perm2 = []
 
