@@ -1,3 +1,4 @@
+import os
 from matplotlib import pyplot as plt
 from utils import interpolate_paths, translate_path_to_coordinates
 import numpy as np
@@ -33,7 +34,7 @@ def plot_path(
         prev = curr
 
 
-def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, save_plot=None):
+def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, directory=None):
     fig, ax = plt.subplots(figsize=(7, 5))
     plot_rewards(ax, rpositions, rvalues)
     
@@ -47,14 +48,17 @@ def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, save_plot=Non
     plt.ylim(0, None)
     plt.xlim(0, None)
 
-    if save_plot:
-        plt.savefig(f'{save_plot}_path.png')
+    if directory:
+        os.makedirs(directory, exist_ok=True, parents=True)
+        plt.savefig(f'{directory}/paths.png')
 
     plt.show()
 
 
-def plot_distances(path1, path2, positions, max_distance, num_samples=100, save_plot=None):
+def plot_distances(path1, path2, positions, max_distance, num_samples=100, directory=None):
     interpolated_paths = interpolate_paths(path1, path2, positions, num_samples)
+    # interpolated_paths[0].append(path1[-1])
+    # interpolated_paths[1].append(path2[-1])
     
     distances = np.linalg.norm(interpolated_paths[0] - interpolated_paths[1], axis=1)
     
@@ -67,8 +71,11 @@ def plot_distances(path1, path2, positions, max_distance, num_samples=100, save_
     ax.set_title("Interpolated Distances Between Agents")
     plt.grid(True)
     plt.tight_layout()
-    if save_plot:
-        plt.savefig(f'{save_plot}_distances.png')
+
+    if directory:
+        os.makedirs(directory, exist_ok=True, parents=True)
+        plt.savefig(f'{directory}/distances.png')
+
     plt.show()
 
 
@@ -117,7 +124,7 @@ def plot_pareto_front(population):
 def plot_interpolated_individual(
     individual: list,
     maxdist: float,
-    save_plot=None
+    directory=None
 ):
     fig, ax = plt.subplots(figsize=(7, 5))
     plot_path(ax, individual[0], maxdist, color='orange')
@@ -129,7 +136,8 @@ def plot_interpolated_individual(
     plt.ylim(0, None)
     plt.xlim(0, None)
 
-    if save_plot:
-        plt.savefig(f'{save_plot}_interpolated_path.png')
+    if directory:
+        os.makedirs(directory, exist_ok=True, parents=True)
+        plt.savefig(f'{directory}/interpolation.png')
 
     plt.show()

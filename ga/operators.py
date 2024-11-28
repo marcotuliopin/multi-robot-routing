@@ -1,7 +1,8 @@
 import random
 import numpy as np
 from sklearn.neighbors import KDTree
-from utils import get_last_valid_idx, get_points_in_range, interpolate_paths
+from .utils import get_last_valid_idx, get_points_in_range
+from utils import interpolate_paths
 from deap import tools
 
 def init_individual(icls, num_rewards: list, rpositions: np.ndarray, maxdist:np.ndarray, kdtree: KDTree) -> list:
