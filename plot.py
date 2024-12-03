@@ -49,7 +49,7 @@ def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, directory=Non
     plt.xlim(0, None)
 
     if directory:
-        os.makedirs(directory, exist_ok=True, parents=True)
+        os.makedirs(directory, exist_ok=True)
         plt.savefig(f'{directory}/paths.png')
 
     plt.show()
@@ -57,6 +57,7 @@ def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, directory=Non
 
 def plot_distances(path1, path2, positions, max_distance, num_samples=100, directory=None):
     interpolated_paths = interpolate_paths(path1, path2, positions, num_samples)
+    # TODO
     # interpolated_paths[0].append(path1[-1])
     # interpolated_paths[1].append(path2[-1])
     
@@ -73,7 +74,7 @@ def plot_distances(path1, path2, positions, max_distance, num_samples=100, direc
     plt.tight_layout()
 
     if directory:
-        os.makedirs(directory, exist_ok=True, parents=True)
+        os.makedirs(directory, exist_ok=True)
         plt.savefig(f'{directory}/distances.png')
 
     plt.show()
@@ -137,7 +138,7 @@ def plot_interpolated_individual(
     plt.xlim(0, None)
 
     if directory:
-        os.makedirs(directory, exist_ok=True, parents=True)
+        os.makedirs(directory, exist_ok=True)
         plt.savefig(f'{directory}/interpolation.png')
 
     plt.show()

@@ -1,8 +1,9 @@
 import random
 from typing import List, Tuple
 import numpy as np
-from .utils import get_last_valid_idx
-import ga.operators as operators
+from src.shared.utils import get_last_valid_idx
+from src.ga.evaluation import evaluate
+import src.ga.operators as operators
 from sklearn.neighbors import KDTree
 from scipy.spatial.distance import cdist
 from deap import tools, creator, base
@@ -35,7 +36,7 @@ def create_toolbox(num_rewards: int, kdtree: KDTree, rpositions: np.ndarray, max
     toolbox.register("mate", operators.cx_individual)
     toolbox.register("mutate", operators.mut_individual, indpb=0.3)
     toolbox.register("select", tools.selNSGA2)
-    toolbox.register("evaluate", operators.evaluate)
+    toolbox.register("evaluate", evaluate)
 
     stats = tools.Statistics(lambda ind: ind.fitness.values)
     stats.register("avg", np.mean)
@@ -119,10 +120,11 @@ def main(
     rvalues: np.ndarray,
     max_distance_between_agents: float,
     budget: int,
-    seed=None,
+    seed: int = None,
 ):
     distmx = cdist(rpositions, rpositions, metric="euclidean")
     kdtree = KDTree(rpositions)
+
     population, logbook = evolve(
         num_rewards,
         rpositions,

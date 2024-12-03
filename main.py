@@ -2,8 +2,8 @@ from utils import interpolate_paths
 import plot
 import numpy as np
 import argparse
-import ga.main as ga
-import vns
+import src.ga.main as ga
+import src.vns.main as vns
 
 MAX_DISTANCE_BETWEEN_AGENTS = 3
 BUDGET = 100
@@ -41,7 +41,7 @@ if __name__ == "__main__":
                 seed=42,
             )
         case "vns":
-            path1, path2, logbook = vns.main(
+            path1, path2 = vns.main(
                 num_rewards,
                 rpositions,
                 rvalues,

@@ -21,4 +21,8 @@ install: venv
 
 .PHONY: run-ga
 run-ga:
-	python main.py --method nsga2 --map maps/grid_asymetric.txt --plot-path --plot-distances
+	python main.py --method nsga2 --map maps/grid_asymetric.txt --plot-path --plot-distances --save-plot nsga2
+
+.PHONY: run-vns
+run-vns:
+	python main.py --method vns --map maps/grid_asymetric.txt --plot-path --plot-interpolation --plot-distances --save-plot vns

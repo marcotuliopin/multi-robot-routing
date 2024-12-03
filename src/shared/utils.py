@@ -22,3 +22,10 @@ def get_points_in_range(p: int, rpositions: np.ndarray, maxdist: float, kdtree: 
     current_point = rpositions[p]
     indices_within_radius = kdtree.query_radius([current_point], r=maxdist)[0]
     return indices_within_radius
+
+
+def get_path_length(path: list, distmx: np.ndarray) -> float:
+    length = 0
+    for i in range(1, len(path)):
+        length += distmx[path[i - 1], path[i]]
+    return length
