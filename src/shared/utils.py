@@ -6,16 +6,16 @@ def get_last_valid_idx(path: list, distmx: np.ndarray, budget: int) -> int:
     total_distance = 0
     curr_reward = 0
 
-    valid_idx = 0
     for i in range(len(path)):
         next_reward = path[i]
-        total_distance += distmx[curr_reward, next_reward] + distmx[next_reward, 0]
-        if total_distance > budget:
-            break
-        valid_idx = i
+        total_distance += distmx[curr_reward, next_reward]
+
+        if total_distance + distmx[next_reward, 0] > budget:
+            return i
+
         curr_reward = next_reward
 
-    return valid_idx
+    return len(path) - 1
 
 
 def get_points_in_range(p: int, rpositions: np.ndarray, maxdist: float, kdtree: KDTree) -> list:
