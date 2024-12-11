@@ -11,7 +11,7 @@ def get_last_valid_idx(path: list, distmx: np.ndarray, budget: int) -> int:
         total_distance += distmx[curr_reward, next_reward]
 
         if total_distance + distmx[next_reward, 0] > budget:
-            return i
+            return i - 1
 
         curr_reward = next_reward
 
