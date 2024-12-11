@@ -1,5 +1,4 @@
 import random
-import time
 import numpy as np
 from src.vns.evaluation import evaluate
 
