@@ -18,30 +18,27 @@ def movns(
     random.seed(seed)
 
     # Each solution is composed of num_agents paths
-    initial_solution: Solution = init_solution(num_agents, num_rewards)
-    initial_solution.score = evaluate(initial_solution, rvalues, distmx, budget)
+    best_solution: Solution = init_solution(num_agents, num_rewards)
+    best_solution.score = evaluate(best_solution, rvalues, distmx, budget)
 
     no_improve = 0
     kmax = 4 # Number of neighborhoods
-    archive = [initial_solution]
-
 
     while no_improve < max_no_improve:
         k = 1
         while k <= kmax:
-            path = perturb_solution(best_path, k)
-            path, score = local_search(path, k, rvalues, distmx, budget)
+            solution = perturb_solution(best_solution, k)
+            solution = local_search(solution, k, rvalues, distmx, budget)
 
-            if score > best_score:
-                best_path = path.copy()
-                best_score = score
+            if solution.score > best_solution.score:
+                best_solution = solution.copy()
                 no_improve = 0
                 k = 1
             else:
                 no_improve += 1
                 k += 1
 
-    return best_path, best_score
+    return best_solution
 
 
 def main(
@@ -60,15 +57,10 @@ def main(
     # Matrix of distances between rewards
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
-    best_paths, best_score = movns(num_agents, num_rewards, rvalues, budget, distmx, max_no_improve, seed)
+    best_solution: Solution = movns(num_agents, num_rewards, rvalues, budget, distmx, max_no_improve, seed)
 
-    last_idx1 = get_last_valid_idx(best_paths[0], distmx, budget) + 1
-    path1 = list(best_paths[0][:last_idx1])
+    bounded_solution = best_solution.get_solution(distmx)
+    print(best_solution.score)
+    print(best_solution.get_solution_length(distmx))
 
-    path1.append(begin)
-    path1.insert(0, end)
-
-    print(best_score)
-    print(get_path_length(path1, distmx))
-
-    return path1
+    return bounded_solution

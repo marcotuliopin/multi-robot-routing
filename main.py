@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 seed=42,
             )
         case "movns":
-            path1, path2 = movns.main(
+            path1 = movns.main(
                 num_rewards,
                 rpositions,
                 rvalues,

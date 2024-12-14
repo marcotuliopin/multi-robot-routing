@@ -22,56 +22,60 @@ def perturb_solution(path: list, k: int) -> tuple:
 
 
 def local_search(
-    path: np.ndarray,
+    solution: Solution,
     k: int,
     rvalues: np.ndarray,
     distmx: np.ndarray,
     budget: int,
 ):
-    best_path = path.copy()
-    best_score = evaluate(best_path, rvalues, distmx, budget)
+    best_solution = solution.copy()
 
     better_solution_found = True
 
     while better_solution_found:
         better_solution_found = False
 
-        new_path = step(best_path, k, rvalues, distmx, budget)
-        score = evaluate(new_path, rvalues, distmx, budget)
+        num_agents = len(best_solution.unbound_solution)
+        for i in range(num_agents):
+            new_solution = step(i, best_solution, k, rvalues, distmx, budget)
 
-        if score > best_score:
-            best_path = new_path.copy()
-            best_score = score
-            better_solution_found = True
+            if new_solution.score > best_solution.score:
+                best_solution = new_solution
+                better_solution_found = True
 
-    return best_path, best_score
+    return best_solution
 
 
 def step(
-    path: np.ndarray,
+    agent: int,
+    solution: Solution,
     k: int,
     rvalues: np.ndarray,
     distmx: np.ndarray,
     budget: int
 ):
-    best_path = path.copy()
-    best_score = evaluate(path, rvalues, distmx, budget)
+    best_solution = solution.copy()
+    path = best_solution.unbound_solution[agent] 
 
+    # Select the operator according to the neighborhood
     if k % 2 == 0:
         op = move_point
     else:
         op = swap_points
-    
+
     for i in range(len(path)):
         for j in range(i + 1, len(path)):
             new_path = op(path, i, j)
-            new_score = evaluate(new_path, rvalues, distmx, budget)
 
-            if new_score > best_score:
-                best_path = new_path.copy()
-                best_score = new_score
+            new_solution = best_solution.copy()
+            new_solution.unbound_solution[agent] = new_path
+            new_solution.score = evaluate(new_path, rvalues, distmx, budget)
+
+            if new_solution.score > best_solution.score:
+                best_solution.unbound_solution[agent] = new_path
+                best_solution.score = new_solution.score
             
-    return best_path
+    return best_solution
 
 
 def move_point(path: np.ndarray, i: int, j: int) -> np.ndarray:

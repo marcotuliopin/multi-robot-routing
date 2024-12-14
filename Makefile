@@ -19,10 +19,14 @@ venv:
 install: venv
 	pip install -r $(REQUIREMENTS)
 
-.PHONY: run-ga
-run-ga:
+.PHONY: ga
+ga:
 	python main.py --method nsga2 --map maps/grid_asymetric.txt --plot-path --plot-distances --save-plot nsga2
 
-.PHONY: run-vns
-run-vns:
+.PHONY: vns
+vns:
 	python main.py --method vns --map maps/grid_asymetric.txt --plot-path --plot-interpolation --plot-distances --save-plot vns
+
+.PHONY: movns
+movns:
+	python main.py --method movns --map maps/grid_asymetric.txt --plot-path --plot-interpolation --plot-distances --save-plot movns
