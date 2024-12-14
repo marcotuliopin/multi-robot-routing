@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from src.movns.entity import Solution
+from src.movns.entity.Solution import Solution
 from src.movns.evaluation import evaluate
 
 
@@ -9,16 +9,18 @@ def init_solution(num_agents, num_rewards: int) -> tuple:
     return Solution(val)
 
 
-def perturb_solution(path: list, k: int) -> tuple:
-    if k == 0:
-        new_path, _ = cx_individual(path, path)
-    elif k == 1:
-        i, j = np.random.choice(len(path) - 1, 2, replace=False)
-        new_path = two_opt(path, i, j)
-    else:
-        new_path = swap_subpaths(path)
+def perturb_solution(solution: Solution, k: int) -> Solution:
+    new_solution = solution.copy()
 
-    return new_path
+    paths = new_solution.unbound_solution
+    for idx in range(len(paths)):
+        if k < 2:
+            i, j = np.random.choice(len(paths[idx]) - 1, 2, replace=False)
+            paths[idx] = two_opt(paths[idx], i, j)
+        else:
+            paths[idx] = swap_subpaths(paths[idx])
+
+    return new_solution
 
 
 def local_search(
@@ -27,7 +29,7 @@ def local_search(
     rvalues: np.ndarray,
     distmx: np.ndarray,
     budget: int,
-):
+) -> Solution:
     best_solution = solution.copy()
 
     better_solution_found = True
@@ -37,7 +39,7 @@ def local_search(
 
         num_agents = len(best_solution.unbound_solution)
         for i in range(num_agents):
-            new_solution = step(i, best_solution, k, rvalues, distmx, budget)
+            new_solution = step(best_solution, i, k, rvalues, distmx, budget)
 
             if new_solution.score > best_solution.score:
                 best_solution = new_solution
@@ -47,13 +49,13 @@ def local_search(
 
 
 def step(
-    agent: int,
     solution: Solution,
+    agent: int,
     k: int,
     rvalues: np.ndarray,
     distmx: np.ndarray,
     budget: int
-):
+) -> Solution:
     best_solution = solution.copy()
     path = best_solution.unbound_solution[agent] 
 
