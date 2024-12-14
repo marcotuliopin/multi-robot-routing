@@ -6,8 +6,8 @@ class Solution:
     _END: int = 0
     _BUDGET: float = 0
 
-    def __init__(self, val: list[np.ndarray], score: float = None) -> None:
-        self.unbound_solution = val  # It is called _unbound_solution because it is not guaranteed to obey the budget constraint
+    def __init__(self, val: list[np.ndarray], score: float = -1) -> None:
+        self.unbounded_paths = val  # It is called unbounded_paths because it is not guaranteed to obey the budget constraint
         self.score = score
         self.crowding_distance = -1
 
@@ -21,38 +21,35 @@ class Solution:
         """Check if the current solution dominates the other solution."""
         return all(self.score[i] >= other.score[i] for i in range(len(self.score)))
 
-    def get_solution(self, distmx: np.ndarray) -> list[np.ndarray]:
-        """Get the solution that obeys the budget constraint."""
+    def get_solution_paths(self, distmx: np.ndarray) -> list[np.ndarray]:
+        """Get the solution paths that obeys the budget constraint."""
         solution = []
-        for path in self.unbound_solution:
-            untrimmed_val = np.insert(path, 0, Solution._BEGIN)
-            trimmed_val = self.trim_solution(untrimmed_val, distmx)
-            trimmed_val = np.append(trimmed_val, Solution._END)
-            solution.append(trimmed_val)
+        for path in self.unbounded_paths:
+            new_path = path.copy()
+            unbounded_val = np.insert(new_path, 0, Solution._BEGIN)
+            bounded_val = self.bound_solution(unbounded_val, distmx)
+            bounded_val = np.append(bounded_val, Solution._END)
+            solution.append(bounded_val)
         return solution
 
     def get_solution_length(self, distmx: np.ndarray) -> float:
         """Get the length of the solution that obeys the budget constraint."""
-        solution = self.get_solution(distmx)
-        total_lengths = 0
-        for path in solution:
-            total_lengths += np.sum(distmx[path[:-1], path[1:]])
-        return total_lengths
+        paths = self.get_solution_paths(distmx)
+        lengths = []
+        for path in paths:
+            lengths.append(np.sum(distmx[path[:-1], path[1:]]))
+        return lengths
 
-    def trim_solution(self, val: np.ndarray, distmx: np.ndarray) -> np.ndarray:
-        """Trim one element of the solution to obey the budget constraint."""
+    def bound_solution(self, val: np.ndarray, distmx: np.ndarray) -> np.ndarray:
+        """Bound one element of the solution to obey the budget constraint."""
         total = 0
-        previous = Solution._BEGIN
-
-        for i in range(len(val)):
-            current = val[i]
+        for idx, (previous, current) in enumerate(zip(val[:-1], val[1:])):
             total += distmx[previous, current]
             if total + distmx[current, Solution._END] > Solution._BUDGET:
-                return val[:i]
-            previous = current
+                return val[:idx + 1]
 
         return val
 
     def copy(self) -> "Solution":
         """Create a copy of the current solution."""
-        return Solution([val.copy() for val in self.unbound_solution], self.score)
+        return Solution([val.copy() for val in self.unbounded_paths], self.score)

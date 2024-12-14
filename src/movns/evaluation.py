@@ -1,19 +1,19 @@
 import numpy as np
-from src.shared.utils import get_last_valid_idx
+from src.movns.entity.Solution import Solution
 
 
-def maximize_reward(path: np.ndarray, rvalues: np.ndarray) -> float:
-    return rvalues[path].sum()
+def maximize_reward(path1: np.ndarray, path2, rvalues: np.ndarray) -> float:
+    diff_elements = path1[~np.isin(path1, path2)]
+    common_elements = path1[np.isin(path1, path2)]
+
+    return rvalues[diff_elements].sum() + rvalues[common_elements].sum() / 2
 
 
 def evaluate(
-    path: np.ndarray,
+    solution: Solution,
     rvalues: np.ndarray,
     distmx: np.ndarray,
-    budget: int,
 ) -> float:
-    last_idx_path = get_last_valid_idx(path, distmx, budget) + 1
-    path = path[:last_idx_path]
-
-    max_reward = maximize_reward(path, rvalues)
+    bounded_paths: list[np.ndarray] = solution.get_solution_paths(distmx)
+    max_reward = maximize_reward(bounded_paths[0], bounded_paths[1], rvalues) + maximize_reward(bounded_paths[1], bounded_paths[0], rvalues)
     return max_reward

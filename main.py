@@ -7,7 +7,7 @@ import src.vns.main as vns
 import src.movns.main as movns
 
 MAX_DISTANCE_BETWEEN_AGENTS = 3
-BUDGET = 50
+BUDGET = 30
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the multi-objective GA.")
@@ -49,8 +49,9 @@ if __name__ == "__main__":
                 BUDGET,
                 seed=42,
             )
+            path2 = path1
         case "movns":
-            path1 = movns.main(
+            path1, path2 = movns.main(
                 num_rewards,
                 rpositions,
                 rvalues,
@@ -69,15 +70,15 @@ if __name__ == "__main__":
         plot.plot_paths_with_rewards(
             rpositions,
             rvalues,
-            [path1, path1],
+            [path1, path2],
             MAX_DISTANCE_BETWEEN_AGENTS,
             directory=directory
         )
 
     if args.plot_interpolation:
-        interpolated_paths = interpolate_paths(path1, path1, rpositions, 1)
+        interpolated_paths = interpolate_paths(path1, path2, rpositions, 1)
         plot.plot_interpolated_individual(
-            interpolate_paths(path1, path1, rpositions, 1),
+            interpolate_paths(path1, path2, rpositions, 1),
             MAX_DISTANCE_BETWEEN_AGENTS,
             directory=directory
         )
@@ -85,7 +86,7 @@ if __name__ == "__main__":
     if args.plot_distances:
         plot.plot_distances(
             path1,
-            path1,
+            path2,
             rpositions,
             MAX_DISTANCE_BETWEEN_AGENTS,
             1,
