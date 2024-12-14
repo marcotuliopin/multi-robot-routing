@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 import src.ga.main as ga
 import src.vns.main as vns
+import src.movns.main as movns
 
 MAX_DISTANCE_BETWEEN_AGENTS = 3
 BUDGET = 50
@@ -42,6 +43,14 @@ if __name__ == "__main__":
             )
         case "vns":
             path1 = vns.main(
+                num_rewards,
+                rpositions,
+                rvalues,
+                BUDGET,
+                seed=42,
+            )
+        case "movns":
+            path1, path2 = movns.main(
                 num_rewards,
                 rpositions,
                 rvalues,

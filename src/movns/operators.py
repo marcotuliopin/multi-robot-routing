@@ -1,14 +1,15 @@
 import random
 import numpy as np
-from src.vns.evaluation import evaluate
+from src.movns.entity import Solution
+from src.movns.evaluation import evaluate
 
 
-def init_individual(num_rewards: int) -> tuple:
-    return np.random.permutation(num_rewards)
+def init_solution(num_agents, num_rewards: int) -> tuple:
+    val = [np.random.permutation(num_rewards) for _ in range(num_agents)]
+    return Solution(val)
 
 
 def perturb_solution(path: list, k: int) -> tuple:
-
     if k == 0:
         new_path, _ = cx_individual(path, path)
     elif k == 1:
