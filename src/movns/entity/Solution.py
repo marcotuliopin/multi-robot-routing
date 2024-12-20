@@ -6,7 +6,7 @@ class Solution:
     _END: int = 0
     _BUDGET: float = 0
 
-    def __init__(self, val: list[np.ndarray], score: float = -1) -> None:
+    def __init__(self, val: list[np.ndarray], score: tuple = (-1, -1)) -> None:
         self.unbounded_paths = val  # It is called unbounded_paths because it is not guaranteed to obey the budget constraint
         self.score = score
         self.crowding_distance = -1

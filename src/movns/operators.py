@@ -16,9 +16,7 @@ def perturb_solution(solution: Solution, k: int) -> Solution:
 
     paths = new_solution.unbounded_paths
     for idx in range(len(paths)):
-        if k == 1:
-            paths[idx] = cx_individual(paths[idx], paths[idx])[0]
-        if k < 2:
+        if k <= 2:
             paths[idx] = two_opt(paths[idx])
         else:
             paths[idx] = swap_subpaths(paths[idx])
@@ -30,25 +28,16 @@ def local_search(
     solution: Solution,
     k: int,
     rvalues: np.ndarray,
+    rpositions: np.ndarray,
     distmx: np.ndarray,
 ) -> Solution:
-    best_solution = solution.copy()
+    neighbors = []
 
-    better_solution_found = True
+    num_paths = len(solution.unbounded_paths)
+    for i in range(num_paths):
+        neighbors.extend(step(solution, i, k, rvalues, rpositions, distmx))
 
-    num_paths = len(best_solution.unbounded_paths)
-    i = 0
-    while better_solution_found or i < num_paths:
-        better_solution_found = False
-        new_solution = step(best_solution, i % num_paths, k, rvalues, distmx)
-
-        if new_solution.score > best_solution.score:
-            best_solution = new_solution
-            better_solution_found = True
-        else:
-            i += 1
-
-    return best_solution
+    return neighbors
 
 
 def step(
@@ -56,10 +45,10 @@ def step(
     agent: int,
     k: int,
     rvalues: np.ndarray,
+    rpositions: np.ndarray,
     distmx: np.ndarray,
 ) -> Solution:
-    best_solution = solution.copy()
-    path = best_solution.unbounded_paths[agent]
+    neighbors = []
 
     # Select the operator according to the neighborhood
     if k % 2 == 0:
@@ -67,20 +56,20 @@ def step(
     else:
         op = swap_points
 
-    for i in range(len(path)):
-        for j in range(i + 1, len(path)):
-            new_solution = best_solution.copy()
+    for i in range(len(solution.unbounded_paths[agent])):
+        for j in range(i + 1, len(solution.unbounded_paths[agent])):
+            new_solution = solution.copy()
 
-            new_path = new_solution.unbounded_paths[agent]
-            op(new_path, i, j)
+            new_path = new_solution.unbounded_paths[agent] # TODO: Optimize to avoid operations outside budget
+            new_path[:] = op(new_path, i, j)
 
-            new_solution.score = evaluate(new_solution, rvalues, distmx)
+            new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 
-            if new_solution.score > best_solution.score:
-                best_solution.unbounded_paths[agent] = new_path
-                best_solution.score = new_solution.score
+            if not any(neigh.dominates(new_solution) for neigh in neighbors):
+                neighbors = [neigh for neigh in neighbors if not new_solution.dominates(neigh)]
+                neighbors.append(new_solution)
 
-    return best_solution
+    return neighbors
 
 
 def move_point(path: np.ndarray, i: int, j: int) -> np.ndarray:
@@ -103,30 +92,6 @@ def two_opt(path: list) -> list:
     return new_path
 
 
-def cx_individual(ind1: np.ndarray, ind2: np.ndarray) -> tuple:
-    size = len(ind1)
-    cxpoint1, cxpoint2 = sorted(random.sample(range(size), 2))
-    p1, p2 = np.zeros(size, dtype=int), np.zeros(size, dtype=int)
-
-    for i in range(size):
-        p1[ind1[i]] = i
-        p2[ind2[i]] = i
-
-    for i in range(cxpoint1, cxpoint2):
-        temp1 = ind1[i]
-        temp2 = ind2[i]
-
-        ind1[i], ind2[i] = temp2, temp1
-
-        ind1[p1[temp2]] = temp1
-        ind2[p2[temp1]] = temp2
-
-        p1[temp1], p1[temp2] = p1[temp2], p1[temp1]
-        p2[temp1], p2[temp2] = p2[temp2], p2[temp1]
-
-    return ind1, ind2
-
-
 def swap_subpaths(path: np.ndarray) -> np.ndarray:
     new_path = path.copy()
     l = np.random.randint(1, len(path) / 2 - 1)
@@ -137,3 +102,32 @@ def swap_subpaths(path: np.ndarray) -> np.ndarray:
         new_path[i : i + l].copy(),
     )
     return new_path
+
+
+def solution_relinking(
+    solution1: Solution,
+    solution2: Solution,
+    rvalues: np.ndarray,
+    rpositions: np.ndarray,
+    distmx: np.ndarray,
+) -> list[Solution]:
+    neighbors = []
+    num_paths = len(solution1.unbounded_paths)
+    new_solution = solution1.copy()
+
+    for i in range(num_paths):
+        path1 = new_solution.unbounded_paths[i]
+        path2 = solution2.unbounded_paths[i]
+
+        for j in range(len(path1)):
+            if path1[j] == path2[j]:
+                continue
+            swap_idx = np.where(path1 == path2[j])[0][0]
+            path1[j], path1[swap_idx] = path1[swap_idx], path1[j]
+            new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
+
+            if not any(neigh.dominates(new_solution) for neigh in neighbors):
+                neighbors = [neigh for neigh in neighbors if not new_solution.dominates(neigh)]
+                neighbors.append(new_solution)
+
+    return neighbors

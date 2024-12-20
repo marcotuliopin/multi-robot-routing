@@ -29,4 +29,4 @@ vns:
 
 .PHONY: movns
 movns:
-	python main.py --method movns --map maps/grid_asymetric.txt --plot-path --plot-interpolation --plot-distances --save-plot movns
+	python main.py --method movns --map maps/grid_asymetric.txt --plot-path --plot-interpolation --plot-distances --save-plot movns1

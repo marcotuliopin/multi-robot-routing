@@ -1,9 +1,9 @@
 import numpy as np
 
 
-def interpolate_paths(path1: list, path2: list, positions: np.ndarray, n: float) -> tuple:
-    interpolated_path1 = interpolate_path(path1, positions, n)
-    interpolated_path2 = interpolate_path(path2, positions, n)
+def interpolate_paths(path1: list, path2: list, positions: np.ndarray, step: float) -> tuple:
+    interpolated_path1 = interpolate_path(path1, positions, step)
+    interpolated_path2 = interpolate_path(path2, positions, step)
 
     if len(interpolated_path1) > len(interpolated_path2):
         interpolated_path2 = np.vstack((interpolated_path2, [interpolated_path2[-1]] * (len(interpolated_path1) - len(interpolated_path2))))
@@ -13,7 +13,7 @@ def interpolate_paths(path1: list, path2: list, positions: np.ndarray, n: float)
     return [interpolated_path1, interpolated_path2]
 
 
-def interpolate_path(path: list, positions: np.ndarray, n: float) -> np.ndarray:
+def interpolate_path(path: list, positions: np.ndarray, step: float) -> np.ndarray:
 
     def cumulative_distances(path):
         distances = [0.0]
@@ -25,9 +25,9 @@ def interpolate_path(path: list, positions: np.ndarray, n: float) -> np.ndarray:
     cum_dist = cumulative_distances(path)
     
     total_distance = cum_dist[-1]
-    sample_distances = np.arange(0, total_distance, n)
+    sample_distances = np.arange(0, total_distance, step)
 
-    sampled_points = []
+    sampled_points = [positions[path[0]]]
 
     for d in sample_distances:
         # Find the two points between which the sample will be interpolated

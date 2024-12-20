@@ -1,5 +1,7 @@
 import os
 from matplotlib import pyplot as plt
+from src.movns.evaluation import calculate_rssi
+from src.movns.entity.Solution import Solution
 from utils import interpolate_paths, translate_path_to_coordinates
 import numpy as np
 
@@ -52,8 +54,6 @@ def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, directory=Non
         os.makedirs(directory, exist_ok=True)
         plt.savefig(f'{directory}/paths.png')
 
-    plt.show()
-
 
 def plot_distances(path1, path2, positions, max_distance, num_samples=100, directory=None):
     interpolated_paths = interpolate_paths(path1, path2, positions, num_samples)
@@ -76,8 +76,6 @@ def plot_distances(path1, path2, positions, max_distance, num_samples=100, direc
     if directory:
         os.makedirs(directory, exist_ok=True)
         plt.savefig(f'{directory}/distances.png')
-
-    plt.show()
 
 
 def plot_objectives(logbook):
@@ -107,18 +105,23 @@ def plot_objectives(logbook):
     plt.show()
 
 
-def plot_pareto_front(population):
-    fitnesses = [ind.fitness.values for ind in population]
-    rewards = [fit[0] for fit in fitnesses]
-    distances = [fit[1] for fit in fitnesses]
+def plot_pareto_front(archive: list[Solution]):
+    scores = [ind.score for ind in archive]
+    rewards = [score[0] for score in scores]
+    rssi = [score[1] for score in scores]
 
     plt.figure(figsize=(8, 6))
-    plt.scatter(distances, rewards, c="blue", label="Soluções")
-    plt.xlabel("Distância Mínima (Segundo Objetivo)")
+    plt.scatter(rssi, rewards, c="blue", label="Soluções")
+    plt.xlabel("RSSI (Segundo Objetivo)")
     plt.ylabel("Recompensa Máxima (Primeiro Objetivo)")
     plt.title("Frente de Pareto")
     plt.legend()
     plt.grid(True)
+
+    directory = 'imgs/movns/movns1'
+    os.makedirs(directory, exist_ok=True)
+    plt.savefig(f'{directory}/front.png')
+
     plt.show()
 
 
@@ -141,4 +144,21 @@ def plot_interpolated_individual(
         os.makedirs(directory, exist_ok=True)
         plt.savefig(f'{directory}/interpolation.png')
 
-    plt.show()
+
+def plot_rssi(path1, path2, positions, num_samples=100, directory=None):
+    interpolated_paths = interpolate_paths(path1, path2, positions, num_samples)
+    
+    distances = calculate_rssi(interpolated_paths[0], interpolated_paths[1], positions)
+    
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(distances, color='red')
+    ax.fill_between(range(len(distances)), distances, color='red', alpha=0.3)
+    ax.set_ylabel("Distance between agents")
+    ax.set_xlabel("Interpolated steps along paths")
+    ax.set_title("Interpolated RSSI Between Agents")
+    plt.grid(True)
+    plt.tight_layout()
+
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+        plt.savefig(f'{directory}/rssi.png')
