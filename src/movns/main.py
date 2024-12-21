@@ -61,7 +61,6 @@ def movns(
         neighbors2 = solution_relinking(
             solution1, solution2, rvalues, rpositions, distmx
         )
-        print(neighbors1) 
         archive[:] = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
 
     return archive
