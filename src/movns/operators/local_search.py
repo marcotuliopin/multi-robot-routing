@@ -44,9 +44,10 @@ def step(
 
             new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 
-            if not any(neigh.dominates(new_solution) for neigh in neighbors):
-                neighbors = [neigh for neigh in neighbors if not new_solution.dominates(neigh)]
-                neighbors.append(new_solution)
+            # if not any(neigh.dominates(new_solution) for neigh in neighbors):
+            #     neighbors = [neigh for neigh in neighbors if not new_solution.dominates(neigh)]
+            #     neighbors.append(new_solution)
+            neighbors.append(new_solution)
 
     return neighbors
 

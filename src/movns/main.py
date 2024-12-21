@@ -1,4 +1,5 @@
 import random
+import time
 import numpy as np
 from scipy.spatial.distance import cdist
 import plot
@@ -12,6 +13,12 @@ def init_solution(num_agents, num_rewards: int) -> tuple:
     return Solution(val)
 
 
+def save_stats(front, dominated, log):
+    front.sort(key=lambda s: s.score[0])
+    dominated.sort(key=lambda s: s.score[0])
+    log.append({'front': [s.score for s in front], 'dominated': [s.score for s in dominated]})
+
+
 def movns(
     num_agents: int,
     num_rewards: int,
@@ -21,21 +28,25 @@ def movns(
     max_it: int,
     seed: int,
 ):
+    start = time.time()
+
     random.seed(seed)
+    log = []
 
     # Each solution is composed of num_agents paths
     solution: Solution = init_solution(num_agents, num_rewards)
     solution.score = evaluate(solution, rvalues, rpositions, distmx)
 
     # The archive is composed of the non-dominated solutions
-    archive_max_size = 30
+    archive_max_size = 60
     archive = [solution]
 
     kmax = 4  # Number of neighborhoods
 
     for k in range(kmax):
         neighbors = local_search(solution, k, rvalues, rpositions, distmx)
-        archive[:] = update_archive(archive, neighbors, archive_max_size)
+        archive[:], front, dominated = update_archive(archive, neighbors, archive_max_size)
+        save_stats(front, dominated, log)
 
     visited = set()
 
@@ -61,9 +72,14 @@ def movns(
         neighbors2 = solution_relinking(
             solution1, solution2, rvalues, rpositions, distmx
         )
-        archive[:] = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
+        archive[:], front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
 
-    return archive
+        save_stats(front, dominated, log)
+
+    end = time.time() - start
+    print(f"Execution time: {end / 60:.2f} minutes")
+
+    return archive, log
 
 
 def main(
@@ -82,12 +98,13 @@ def main(
     # Matrix of distances between rewards
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
-    archive: list[Solution] = movns(
+    archive, log = movns(
         num_agents, num_rewards, rvalues, rpositions, distmx, max_it, seed
     )
     archive.sort(key=lambda solution: solution.score[0])
 
     plot.plot_pareto_front(archive)
+    plot.plot_parento_front_evolution(log)
 
     bounded_paths = [s.get_solution_paths(distmx) for s in archive]
     print(archive[0].score, archive[len(archive) // 2].score, archive[len(archive) - 1].score)

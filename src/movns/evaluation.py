@@ -1,3 +1,4 @@
+import random
 import numpy as np
 from .entities import Solution
 from utils import calculate_rssi
@@ -26,15 +27,22 @@ def update_archive(archive: list[Solution], neighbors: list[Solution], archive_m
     archive.extend(neighbors)
 
     non_dominated = []
+    dominated = []
     for s in archive:
         if not any(other.dominates(s) for other in archive if other != s):
             non_dominated.append(s)
-    archive[:] = non_dominated
+        else:
+            dominated.append(s)
+    
+    # archive[:] = non_dominated
 
-    if len(archive) > archive_max_size:
-        archive[:] = select_by_crowding_distance(archive, archive_max_size)
+    if len(non_dominated) > archive_max_size:
+        non_dominated[:] = select_by_crowding_distance(archive, archive_max_size)
 
-    return archive
+    selected_dominated = select_by_crowding_distance(dominated, min(archive_max_size, len(dominated)))
+    archive[:] = non_dominated + selected_dominated
+
+    return archive, non_dominated, selected_dominated
 
 
 def select_by_crowding_distance(archive: list[Solution], k: int) -> list[Solution]:

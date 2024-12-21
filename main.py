@@ -64,42 +64,42 @@ if __name__ == "__main__":
     else: 
         directory = None
 
-    if args.plot_path:
-        for i, (path1, path2) in enumerate(paths):
-            plot.plot_paths_with_rewards(
-                rpositions,
-                rvalues,
-                [path1, path2],
-                MAX_DISTANCE_BETWEEN_AGENTS,
-                directory=directory+f'{i}'
-            )
+    # if args.plot_path:
+    #     for i, (path1, path2) in enumerate(paths):
+    #         plot.plot_paths_with_rewards(
+    #             rpositions,
+    #             rvalues,
+    #             [path1, path2],
+    #             MAX_DISTANCE_BETWEEN_AGENTS,
+    #             directory=directory+f'{i}'
+    #         )
 
-    if args.plot_interpolation:
-        for i, (path1, path2) in enumerate(paths):
-            interpolated_paths = interpolate_paths(path1, path2, rpositions, 1)
-            plot.plot_interpolated_individual(
-                interpolate_paths(path1, path2, rpositions, 1),
-                MAX_DISTANCE_BETWEEN_AGENTS,
-                directory=directory+f'{i}'
-            )
+    # if args.plot_interpolation:
+    #     for i, (path1, path2) in enumerate(paths):
+    #         interpolated_paths = interpolate_paths(path1, path2, rpositions, 1)
+    #         plot.plot_interpolated_individual(
+    #             interpolate_paths(path1, path2, rpositions, 1),
+    #             MAX_DISTANCE_BETWEEN_AGENTS,
+    #             directory=directory+f'{i}'
+    #         )
 
-    if args.plot_distances:
-        for i, (path1, path2) in enumerate(paths):
-            plot.plot_distances(
-                path1,
-                path2,
-                rpositions,
-                MAX_DISTANCE_BETWEEN_AGENTS,
-                1,
-                directory=directory+f'{i}'
-            )
+    # if args.plot_distances:
+    #     for i, (path1, path2) in enumerate(paths):
+    #         plot.plot_distances(
+    #             path1,
+    #             path2,
+    #             rpositions,
+    #             MAX_DISTANCE_BETWEEN_AGENTS,
+    #             1,
+    #             directory=directory+f'{i}'
+    #         )
 
-    if args.plot_distances and args.method == 'movns':
-        for i, (path1, path2) in enumerate(paths):
-            plot.plot_rssi(
-                path1,
-                path2,
-                rpositions,
-                1,
-                directory=directory+f'{i}'
-            )
+    # if args.plot_distances and args.method == 'movns':
+    #     for i, (path1, path2) in enumerate(paths):
+    #         plot.plot_rssi(
+    #             path1,
+    #             path2,
+    #             rpositions,
+    #             1,
+    #             directory=directory+f'{i}'
+    #         )

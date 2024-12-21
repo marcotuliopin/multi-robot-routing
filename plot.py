@@ -1,5 +1,5 @@
 import os
-from matplotlib import pyplot as plt
+from matplotlib import animation, pyplot as plt
 from utils import interpolate_paths, translate_path_to_coordinates, calculate_rssi
 import numpy as np
 
@@ -120,6 +120,44 @@ def plot_pareto_front(archive):
     os.makedirs(directory, exist_ok=True)
     plt.savefig(f'{directory}/front.png')
 
+    plt.show()
+
+
+def plot_parento_front_evolution(log):
+    iterations = len(log)
+    fig, ax = plt.subplots()
+
+    # Configuração inicial do gráfico
+    scatter = ax.scatter([], [], s=30, alpha=0.6)
+    ax.set_xlabel('Score 1')
+    ax.set_ylabel('Score 2')
+    ax.set_title('Evolução do Archive')
+
+
+    def update(iteration):
+        current_data = log[iteration]
+        ax.clear()
+
+        scores_x, scores_y = zip(*[(s[1], s[0]) for s in current_data['front']])
+        ax.plot(scores_x, scores_y, linewidth=2, color='purple', marker='o', markersize=6, label='Pareto Front')
+
+        x_dominated, y_dominated = zip(*[(s[1], s[0]) for s in current_data['dominated']])
+        ax.scatter(x_dominated, y_dominated, s=30, alpha=0.6, color='gray', label='Dominated')
+
+        ax.set_xlim(-60, 0)
+        ax.set_ylim(0, 1000)
+        ax.set_xlabel('Score 1')
+        ax.set_ylabel('Score 2')
+        plt.xlabel("RSSI (Segundo Objetivo)")
+        plt.ylabel("Recompensa Máxima (Primeiro Objetivo)")
+        ax.set_title(f'Evolução da Frente de Pareto - Iteração {iteration}')
+
+    # Cria a animação
+    ani = animation.FuncAnimation(
+        fig, update, frames=iterations, repeat=False, interval=500
+    )
+
+    # Mostra a animação ou salva em um arquivo
     plt.show()
 
 
