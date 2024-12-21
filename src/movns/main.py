@@ -2,14 +2,14 @@ import random
 import numpy as np
 from scipy.spatial.distance import cdist
 import plot
-from src.movns.evaluation import evaluate, update_archive
-from src.movns.operators import (
-    init_solution,
-    local_search,
-    perturb_solution,
-    solution_relinking,
-)
-from src.movns.entity.Solution import Solution
+from .evaluation import evaluate, update_archive
+from .operators import *
+from .entities import Solution
+
+
+def init_solution(num_agents, num_rewards: int) -> tuple:
+    val = [np.random.permutation(num_rewards) for _ in range(num_agents)]
+    return Solution(val)
 
 
 def movns(
@@ -61,7 +61,7 @@ def movns(
         neighbors2 = solution_relinking(
             solution1, solution2, rvalues, rpositions, distmx
         )
-
+        print(neighbors1) 
         archive[:] = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
 
     return archive
@@ -74,7 +74,7 @@ def main(
     budget: int,
     begin: int = 0,
     end: int = 0,
-    max_it: int = 1000,
+    max_it: int = 300,
     num_agents: int = 2,
     seed: int = 42,
 ):

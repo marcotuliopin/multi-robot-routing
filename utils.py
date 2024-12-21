@@ -44,3 +44,25 @@ def interpolate_path(path: list, positions: np.ndarray, step: float) -> np.ndarr
 
 def translate_path_to_coordinates(path: list, positions: np.ndarray) -> list:
     return [positions[reward] for reward in path]
+
+
+def calculate_rssi(
+    path1: np.ndarray,
+    path2: np.ndarray,
+    rpositions: np.ndarray,
+    tx_power: float = -30,
+    path_loss_exponent: float = 2.0,
+    noise_std: float = 1.0,
+) -> float:
+    interpolated_points = interpolate_paths(path1, path2, rpositions, 1)
+    distance = np.max(
+        np.linalg.norm(interpolated_points[0] - interpolated_points[1], axis=1)
+    )
+
+    if distance < 1e-3:
+        distance = 0.1
+
+    rssi = tx_power - 10 * path_loss_exponent * np.log10(distance)
+    rssi += np.random.normal(0, noise_std)
+
+    return rssi

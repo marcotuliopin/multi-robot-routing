@@ -1,10 +1,8 @@
 from utils import interpolate_paths
+from src import movns, ga, vns
 import plot
 import numpy as np
 import argparse
-import src.ga.main as ga
-import src.vns.main as vns
-import src.movns.main as movns
 
 MAX_DISTANCE_BETWEEN_AGENTS = 3
 BUDGET = 40
@@ -33,7 +31,7 @@ if __name__ == "__main__":
     # Run the GA
     match args.method:
         case "nsga2":
-            path1, path2, logbook = ga.main(
+            path1, path2, logbook = ga(
                 num_rewards,
                 rpositions,
                 rvalues,
@@ -42,7 +40,7 @@ if __name__ == "__main__":
                 seed=42,
             )
         case "vns":
-            path1 = vns.main(
+            path1 = vns(
                 num_rewards,
                 rpositions,
                 rvalues,
@@ -51,7 +49,7 @@ if __name__ == "__main__":
             )
             path2 = path1
         case "movns":
-            paths = movns.main(
+            paths = movns(
                 num_rewards,
                 rpositions,
                 rvalues,

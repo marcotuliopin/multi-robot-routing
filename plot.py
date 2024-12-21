@@ -1,8 +1,6 @@
 import os
 from matplotlib import pyplot as plt
-from src.movns.evaluation import calculate_rssi
-from src.movns.entity.Solution import Solution
-from utils import interpolate_paths, translate_path_to_coordinates
+from utils import interpolate_paths, translate_path_to_coordinates, calculate_rssi
 import numpy as np
 
 
@@ -105,7 +103,7 @@ def plot_objectives(logbook):
     plt.show()
 
 
-def plot_pareto_front(archive: list[Solution]):
+def plot_pareto_front(archive):
     scores = [ind.score for ind in archive]
     rewards = [score[0] for score in scores]
     rssi = [score[1] for score in scores]

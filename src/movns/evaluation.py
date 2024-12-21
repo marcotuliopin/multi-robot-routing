@@ -1,6 +1,6 @@
 import numpy as np
-from src.movns.entity.Solution import Solution
-from utils import interpolate_paths
+from .entities import Solution
+from utils import calculate_rssi
 
 
 def evaluate(
@@ -20,28 +20,6 @@ def maximize_reward(path1: np.ndarray, path2, rvalues: np.ndarray) -> float:
     common_elements = path1[np.isin(path1, path2)]
 
     return rvalues[diff_elements].sum() + rvalues[common_elements].sum() / 2
-
-
-def calculate_rssi(
-    path1: np.ndarray,
-    path2: np.ndarray,
-    rpositions: np.ndarray,
-    tx_power: float = -30,
-    path_loss_exponent: float = 2.0,
-    noise_std: float = 1.0,
-) -> float:
-    interpolated_points = interpolate_paths(path1, path2, rpositions, 1)
-    distance = np.max(
-        np.linalg.norm(interpolated_points[0] - interpolated_points[1], axis=1)
-    )
-
-    if distance < 1e-3:
-        distance = 0.1
-
-    rssi = tx_power - 10 * path_loss_exponent * np.log10(distance)
-    rssi += np.random.normal(0, noise_std)
-
-    return rssi
 
 
 def update_archive(archive: list[Solution], neighbors: list[Solution], archive_max_size: int) -> None:
