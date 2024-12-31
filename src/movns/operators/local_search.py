@@ -39,14 +39,12 @@ def step(
         for j in range(i + 1, len(solution.unbounded_paths[agent])):
             new_solution = solution.copy()
 
-            new_path = new_solution.unbounded_paths[agent] # TODO: Optimize to avoid operations outside budget
+            new_path = new_solution.unbounded_paths[agent]
             new_path[:] = op(new_path, i, j)
 
             new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 
-            # if not any(neigh.dominates(new_solution) for neigh in neighbors):
-            #     neighbors = [neigh for neigh in neighbors if not new_solution.dominates(neigh)]
-            #     neighbors.append(new_solution)
+            # Dominated and non-dominated solutions are stored together and separeted during the archive update
             neighbors.append(new_solution)
 
     return neighbors
