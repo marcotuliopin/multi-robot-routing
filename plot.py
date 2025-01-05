@@ -25,16 +25,23 @@ def plot_path(
 
     for curr in path[1:]:
         if show_path:
-            ax.plot([prev[0], curr[0]], [prev[1], curr[1]], linewidth=2, color=color, marker="o", markersize=6)
+            ax.plot([prev[0], curr[0]], [prev[1], curr[1]], linewidth=2, color=color, alpha=0.06)
+            
+            dx, dy = curr[0] - prev[0], curr[1] - prev[1]
+            ax.quiver(
+                prev[0], prev[1], dx, dy,
+                angles='xy', scale_units='xy', scale=1,
+                color=color, width=0.005, headwidth=7, headlength=10
+            )
 
         if show_radius:
-            circle = plt.Circle((curr[0], curr[1]), maxdist, color=color, alpha=0.08)
+            circle = plt.Circle((curr[0], curr[1]), maxdist, color=color, alpha=0.04)
             ax.add_patch(circle)
 
         prev = curr
 
 
-def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, directory=None):
+def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, directory=None, fname=None):
     fig, ax = plt.subplots(figsize=(7, 5))
     plot_rewards(ax, rpositions, rvalues)
     
@@ -50,7 +57,8 @@ def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, directory=Non
 
     if directory:
         os.makedirs(directory, exist_ok=True)
-        plt.savefig(f'{directory}/paths.png')
+        plt.savefig(f'{directory}/{fname if fname else 'paths'}.png')
+    plt.close()
 
 
 def plot_distances(path1, path2, positions, max_distance, num_samples=100, directory=None):
@@ -103,7 +111,7 @@ def plot_objectives(logbook):
     plt.show()
 
 
-def plot_pareto_front(archive):
+def plot_pareto_front(archive, directory=None):
     scores = [ind.score for ind in archive]
     rewards = [score[0] for score in scores]
     rssi = [score[1] for score in scores]
@@ -116,7 +124,6 @@ def plot_pareto_front(archive):
     plt.legend()
     plt.grid(True)
 
-    directory = 'imgs/movns/movns1'
     os.makedirs(directory, exist_ok=True)
     plt.savefig(f'{directory}/front.png')
 
@@ -133,16 +140,25 @@ def plot_parento_front_evolution(log):
     ax.set_ylabel('Score 2')
     ax.set_title('Evolução do Archive')
 
+    initial_data = log[0]
+    scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data['front']])
+    ax.plot(scores_x, scores_y, linewidth=2, color='green', marker='o', markersize=6, alpha=0.6, label='Pareto Front')
+
 
     def update(iteration):
-        current_data = log[iteration]
         ax.clear()
 
+        initial_data = log[0]
+        scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data['front']])
+        ax.plot(scores_x, scores_y, linewidth=2, color='green', marker='o', markersize=6, alpha=0.6, label='Pareto Front')
+
+        current_data = log[iteration]
         scores_x, scores_y = zip(*[(s[1], s[0]) for s in current_data['front']])
         ax.plot(scores_x, scores_y, linewidth=2, color='purple', marker='o', markersize=6, label='Pareto Front')
 
-        x_dominated, y_dominated = zip(*[(s[1], s[0]) for s in current_data['dominated']])
-        ax.scatter(x_dominated, y_dominated, s=30, alpha=0.6, color='gray', label='Dominated')
+        if current_data['dominated']:
+            x_dominated, y_dominated = zip(*[(s[1], s[0]) for s in current_data['dominated']])
+            ax.scatter(x_dominated, y_dominated, s=30, alpha=0.6, color='gray', label='Dominated')
 
         ax.set_xlim(-60, 0)
         ax.set_ylim(0, 1000)
@@ -154,7 +170,7 @@ def plot_parento_front_evolution(log):
 
     # Cria a animação
     ani = animation.FuncAnimation(
-        fig, update, frames=iterations, repeat=False, interval=500
+        fig, update, frames=iterations, repeat=False, interval=150
     )
 
     # Mostra a animação ou salva em um arquivo
