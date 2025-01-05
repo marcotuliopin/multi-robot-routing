@@ -30,7 +30,7 @@ def step(
     neighbors = []
 
     # Select the operator according to the neighborhood
-    if k % 2 == 0:
+    if k == 0 or k == 3:
         op = move_point
     else:
         op = swap_points
@@ -41,6 +41,12 @@ def step(
 
             new_path = new_solution.unbounded_paths[agent]
             new_path[:] = op(new_path, i, j)
+
+            if k == 2 or k == 5:
+                for a in range(len(solution.unbounded_paths)):
+                    if a != agent:
+                        new_path = new_solution.unbounded_paths[a]
+                        new_path[:] = op(new_path, i, j)
 
             new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 

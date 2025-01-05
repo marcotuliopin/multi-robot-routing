@@ -24,9 +24,6 @@ def solution_relinking(
             swap_idx = np.where(path1 == path2[j])[0][0]
             path1[j], path1[swap_idx] = path1[swap_idx], path1[j]
             new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
-
-            if not any(neigh.dominates(new_solution) for neigh in neighbors):
-                neighbors = [neigh for neigh in neighbors if not new_solution.dominates(neigh)]
-                neighbors.append(new_solution)
+            neighbors.append(new_solution)
 
     return neighbors
