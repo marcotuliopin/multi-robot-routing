@@ -19,7 +19,13 @@ class Solution:
 
     def dominates(self, other: "Solution") -> bool:
         """Check if the current solution dominates the other solution."""
-        return all(self.score[i] >= other.score[i] for i in range(len(self.score)))
+        is_better = False
+        for i in range(len(self.score)):
+            if self.score[i] > other.score[i]:
+                is_better = True
+            elif self.score[i] < other.score[i]:
+                return False
+        return is_better
 
     def get_solution_paths(self, distmx: np.ndarray) -> list[np.ndarray]:
         """Get the solution paths that obeys the budget constraint."""
