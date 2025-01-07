@@ -22,27 +22,37 @@ def maximize_reward(path1: np.ndarray, path2, rvalues: np.ndarray) -> float:
     return rvalues[diff_elements].sum() + rvalues[common_elements].sum() / 2
 
 
-def update_archive(archive: list[Solution], neighbors: list[Solution], archive_max_size: int) -> None:
-    archive.extend(neighbors)
+def update_archive(archive: list[Solution], neighbors: list[Solution], archive_max_size: int) -> tuple:
+    all_solutions = archive + (neighbors)
 
     non_dominated = []
     dominated = []
-    for s in archive:
-        if not any(other.dominates(s) for other in archive if other != s):
-            non_dominated.append(s)
-        else:
-            dominated.append(s)
+    assigned = set()
+    for i in range(len(all_solutions)):
+        for j in range(i + 1, len(all_solutions)):
+            if i in assigned or j in assigned:
+                continue
+
+            if all_solutions[i].dominates(all_solutions[j]):
+                dominated.append(all_solutions[j])
+                assigned.add(j)
+            elif all_solutions[j].dominates(all_solutions[i]):
+                dominated.append(all_solutions[i])
+                assigned.add(i)
+
+        if i not in assigned:
+            non_dominated.append(all_solutions[i])
     
     if len(non_dominated) > archive_max_size:
-        non_dominated[:] = select_by_crowding_distance(non_dominated, archive_max_size)
+        non_dominated = select_by_crowding_distance(non_dominated, archive_max_size)
+        print("Crowding distance", len(non_dominated))
 
     # If there is space left in the archive, add the non-dominated solutions
     selected_dominated = []
     if len(non_dominated) < archive_max_size:
-        selected_dominated = select_by_crowding_distance(dominated, archive_max_size - len(non_dominated))
-    archive[:] = non_dominated + selected_dominated
+        selected_dominated = select_by_crowding_distance(dominated, min(archive_max_size - len(non_dominated), len(dominated)))
 
-    return archive, non_dominated, selected_dominated
+    return non_dominated + selected_dominated, non_dominated, selected_dominated
 
 
 def select_by_crowding_distance(archive: list[Solution], k: int) -> list[Solution]:
