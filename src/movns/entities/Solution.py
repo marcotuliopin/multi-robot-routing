@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 
 
@@ -10,6 +11,7 @@ class Solution:
         self.unbounded_paths = val  # It is called unbounded_paths because it is not guaranteed to obey the budget constraint
         self.score = score
         self.crowding_distance = -1
+        self.visited = False
 
     @classmethod
     def set_parameters(cls, begin: int, end: int, budget: float) -> None:
@@ -52,10 +54,24 @@ class Solution:
         for idx, (previous, current) in enumerate(zip(val[:-1], val[1:])):
             total += distmx[previous, current]
             if total + distmx[current, Solution._END] > Solution._BUDGET:
-                return val[:idx + 1]
+                return val[: idx + 1]
 
         return val
 
     def copy(self) -> "Solution":
         """Create a copy of the current solution."""
-        return Solution([val.copy() for val in self.unbounded_paths], self.score)
+        return Solution(
+            [val.copy() for val in self.unbounded_paths], copy.deepcopy(self.score)
+        )
+
+    def __hash__(self):
+        return hash(tuple(map(tuple, self.unbounded_paths)))
+
+    def __eq__(self, other):
+        return (
+            all(
+                np.array_equal(up1, up2)
+                for up1, up2 in zip(self.unbounded_paths, other.unbounded_paths)
+            )
+            and self.score == other.score
+        )

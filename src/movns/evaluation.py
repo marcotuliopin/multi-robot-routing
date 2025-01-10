@@ -23,56 +23,63 @@ def maximize_reward(path1: np.ndarray, path2, rvalues: np.ndarray) -> float:
 
 
 def update_archive(archive: list[Solution], neighbors: list[Solution], archive_max_size: int) -> tuple:
-    all_solutions = archive + (neighbors)
+    all_solutions = archive + neighbors
 
-    non_dominated = []
-    dominated = []
-    assigned = set()
-    for i in range(len(all_solutions)):
-        for j in range(i + 1, len(all_solutions)):
-            if i in assigned or j in assigned:
-                continue
-
-            if all_solutions[i].dominates(all_solutions[j]):
-                dominated.append(all_solutions[j])
-                assigned.add(j)
-            elif all_solutions[j].dominates(all_solutions[i]):
-                dominated.append(all_solutions[i])
-                assigned.add(i)
-
-        if i not in assigned:
-            non_dominated.append(all_solutions[i])
+    non_dominated, dominated = get_non_dominated_solutions(all_solutions)
     
     if len(non_dominated) > archive_max_size:
         non_dominated = select_by_crowding_distance(non_dominated, archive_max_size)
-        print("Crowding distance", len(non_dominated))
 
     # If there is space left in the archive, add the non-dominated solutions
     selected_dominated = []
     if len(non_dominated) < archive_max_size:
         selected_dominated = select_by_crowding_distance(dominated, min(archive_max_size - len(non_dominated), len(dominated)))
 
-    return non_dominated + selected_dominated, non_dominated, selected_dominated
+    archive = non_dominated + selected_dominated[:max(0, archive_max_size - len(non_dominated))]
+
+    return archive, non_dominated, selected_dominated
 
 
-def select_by_crowding_distance(archive: list[Solution], k: int) -> list[Solution]:
-    assign_crowding_distance(archive)
-    archive.sort(key=lambda s: s.crowding_distance, reverse=True)
-    return archive[:k]
+def get_non_dominated_solutions(solutions: list[Solution]) -> list[Solution]:
+    non_dominated = []
+    dominated = []
+    solutions.sort(key=lambda s: s.score)
+
+    for i in range(len(solutions)):
+        if any(s.dominates(solutions[i]) for s in solutions):
+            dominated.append(solutions[i])
+        else:
+            non_dominated.append(solutions[i])
+        
+    return non_dominated, dominated
 
 
-def assign_crowding_distance(archive: list[Solution]) -> None:
-    num_solutions = len(archive)
+def select_by_crowding_distance(solutions: list[Solution], k: int) -> list[Solution]:
+    assign_crowding_distance(solutions)
+    solutions.sort(key=lambda s: s.crowding_distance, reverse=True)
+    return solutions[:k]
+
+
+def assign_crowding_distance(solutions: list[Solution]) -> None:
+    num_solutions = len(solutions)
     if num_solutions == 0:
         return
 
-    for s in archive:
+    for s in solutions:
         s.crowding_distance = 0
 
-    for i in range(len(archive[0].score)):
-        archive.sort(key=lambda s: s.score[i])
-        archive[0].crowding_distance = float('inf')
-        archive[-1].crowding_distance = float('inf')
+    for i in range(len(solutions[0].score)):
+        solutions.sort(key=lambda s: s.score[i])
+        solutions[0].crowding_distance = float('inf')
+        solutions[-1].crowding_distance = float('inf')
+
+        max_score = solutions[-1].score[i]
+        min_score = solutions[0].score[i]
+        if max_score == min_score:
+            continue  # Skip this objective if all scores are the same
 
         for j in range(1, num_solutions - 1):
-            archive[j].crowding_distance += archive[j + 1].score[i] - archive[j - 1].score[i]
+            if solutions[j + 1].score[i] != solutions[j - 1].score[i]:
+                solutions[j].crowding_distance += (solutions[j + 1].score[i] - solutions[j - 1].score[i]) / (max_score - min_score)
+            else:
+                solutions[j].crowding_distance += 0

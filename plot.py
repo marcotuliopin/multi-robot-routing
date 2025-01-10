@@ -41,7 +41,7 @@ def plot_path(
         prev = curr
 
 
-def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, directory=None, fname=None):
+def plot_paths_with_rewards(rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None):
     fig, ax = plt.subplots(figsize=(7, 5))
     plot_rewards(ax, rpositions, rvalues)
     
@@ -49,7 +49,7 @@ def plot_paths_with_rewards(rpositions, rvalues, individual, MAXD, directory=Non
     plot_path(ax, individual[0], MAXD, color='orange')
     plot_path(ax, individual[1], MAXD, color='green')
 
-    ax.set_title("Individual Paths")
+    ax.set_title("Individual Paths - score: " + str([int(score) for score in scores]))
     plt.grid(True)
     plt.axis('equal')
     plt.ylim(0, None)
@@ -118,9 +118,9 @@ def plot_pareto_front(archive, directory=None):
 
     plt.figure(figsize=(8, 6))
     plt.scatter(rssi, rewards, c="blue", label="Soluções")
-    plt.xlabel("RSSI (Segundo Objetivo)")
-    plt.ylabel("Recompensa Máxima (Primeiro Objetivo)")
-    plt.title("Frente de Pareto")
+    plt.xlabel("RSSI")
+    plt.ylabel("Reward")
+    plt.title("Pareto Frontier")
     plt.legend()
     plt.grid(True)
 
@@ -130,15 +130,17 @@ def plot_pareto_front(archive, directory=None):
     plt.show()
 
 
-def plot_parento_front_evolution(log):
+def plot_pareto_front_evolution(log):
     iterations = len(log)
     fig, ax = plt.subplots()
 
     # Configuração inicial do gráfico
     scatter = ax.scatter([], [], s=30, alpha=0.6)
-    ax.set_xlabel('Score 1')
-    ax.set_ylabel('Score 2')
-    ax.set_title('Evolução do Archive')
+    ax.set_xlabel('Maximum RSSI')
+    ax.set_ylabel('Percetage of Total Reward Obtained')
+    ax.set_title('Pareto Frontier Evolution')
+    ax.set_xlim(-60, 0)
+    ax.set_ylim(0, 100)
 
     initial_data = log[0]
     scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data['front']])
@@ -150,23 +152,31 @@ def plot_parento_front_evolution(log):
 
         initial_data = log[0]
         scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data['front']])
-        ax.plot(scores_x, scores_y, linewidth=2, color='green', marker='o', markersize=6, alpha=0.6, label='Pareto Front')
+        ax.plot(scores_x, scores_y, linewidth=2, color='green', marker='o', markersize=6, alpha=0.6, label='Initial pareto front')
 
+        o = 0
+        v = []
         current_data = log[iteration]
+        for i in range(len(current_data['front'])):
+            for j in range(i + 1, len(current_data['front'])):
+                if current_data['front'][i][0] == current_data['front'][j][0] and current_data['front'][i][1] == current_data['front'][j][1] and i not in v and j not in v:
+                    o += 1
+                    v.append(j)
+                
         scores_x, scores_y = zip(*[(s[1], s[0]) for s in current_data['front']])
-        ax.plot(scores_x, scores_y, linewidth=2, color='purple', marker='o', markersize=6, label='Pareto Front')
+        ax.plot(scores_x, scores_y, linewidth=2, color='purple', marker='o', markersize=6, label='Pareto front')
 
         if current_data['dominated']:
             x_dominated, y_dominated = zip(*[(s[1], s[0]) for s in current_data['dominated']])
             ax.scatter(x_dominated, y_dominated, s=30, alpha=0.6, color='gray', label='Dominated')
 
         ax.set_xlim(-60, 0)
-        ax.set_ylim(0, 1000)
-        ax.set_xlabel('Score 1')
-        ax.set_ylabel('Score 2')
-        plt.xlabel("RSSI (Segundo Objetivo)")
-        plt.ylabel("Recompensa Máxima (Primeiro Objetivo)")
-        ax.set_title(f'Evolução da Frente de Pareto - Iteração {iteration}')
+        ax.set_ylim(0, 100)
+        ax.set_xlabel('Maximum RSSI')
+        ax.set_ylabel('Percetage of Total Reward Obtained')
+        ax.set_title('Archive Evolution')
+        ax.set_title(f'Pareto Frontier Evolution - Iteration {iteration}')
+        ax.legend()
 
     # Cria a animação
     ani = animation.FuncAnimation(
@@ -175,6 +185,9 @@ def plot_parento_front_evolution(log):
 
     # Mostra a animação ou salva em um arquivo
     plt.show()
+    os.makedirs("imgs/movns/movns/", exist_ok=True)
+
+    ani.save("imgs/movns/movns/animacao.gif", writer="pillow")
 
 
 def plot_interpolated_individual(

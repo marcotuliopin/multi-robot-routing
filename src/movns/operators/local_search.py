@@ -15,7 +15,7 @@ def local_search(
     num_paths = len(solution.unbounded_paths)
     for i in range(num_paths):
         neighbors.extend(step(solution, i, k, rvalues, rpositions, distmx))
-
+            
     return neighbors
 
 
@@ -42,17 +42,11 @@ def step(
             new_path = new_solution.unbounded_paths[agent]
             new_path[:] = op(new_path, i, j)
 
-            if k == 2 or k == 5:
-                for a in range(len(solution.unbounded_paths)):
-                    if a != agent:
-                        new_path = new_solution.unbounded_paths[a]
-                        new_path[:] = op(new_path, i, j)
-
             new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 
             # Dominated and non-dominated solutions are stored together and separeted during the archive update
+            # if not any(other.dominates(new_solution) for other in neighbors):
             neighbors.append(new_solution)
-
     return neighbors
 
 
