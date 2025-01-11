@@ -137,7 +137,7 @@ def plot_pareto_front_evolution(log):
     # Configuração inicial do gráfico
     scatter = ax.scatter([], [], s=30, alpha=0.6)
     ax.set_xlabel('Maximum RSSI')
-    ax.set_ylabel('Percetage of Total Reward Obtained')
+    ax.set_ylabel('Percentage of Total Reward Obtained')
     ax.set_title('Pareto Frontier Evolution')
     ax.set_xlim(-60, 0)
     ax.set_ylim(0, 100)
@@ -173,7 +173,7 @@ def plot_pareto_front_evolution(log):
         ax.set_xlim(-60, 0)
         ax.set_ylim(0, 100)
         ax.set_xlabel('Maximum RSSI')
-        ax.set_ylabel('Percetage of Total Reward Obtained')
+        ax.set_ylabel('Percentage of Total Reward Obtained')
         ax.set_title('Archive Evolution')
         ax.set_title(f'Pareto Frontier Evolution - Iteration {iteration}')
         ax.legend()
