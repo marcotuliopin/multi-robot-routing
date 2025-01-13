@@ -5,7 +5,7 @@ import numpy as np
 import argparse
 
 MAX_DISTANCE_BETWEEN_AGENTS = 3
-BUDGET = 40
+BUDGET = 70
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the multi-objective GA.")

@@ -31,7 +31,7 @@ def plot_path(
             ax.quiver(
                 prev[0], prev[1], dx, dy,
                 angles='xy', scale_units='xy', scale=1,
-                color=color, width=0.005, headwidth=7, headlength=10
+                color=color, width=0.005, headwidth=3, headlength=5
             )
 
         if show_radius:
@@ -41,15 +41,20 @@ def plot_path(
         prev = curr
 
 
+def get_path_length(path):
+    return np.sum(np.linalg.norm(np.diff(path, axis=0), axis=1))
+
+
 def plot_paths_with_rewards(rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None):
-    fig, ax = plt.subplots(figsize=(7, 5))
+    fig, ax = plt.subplots(figsize=(10, 8))
     plot_rewards(ax, rpositions, rvalues)
     
     individual = translate_path_to_coordinates(individual, rpositions)
+    length = [get_path_length(ind) for ind in individual]
     plot_path(ax, individual[0], MAXD, color='orange')
     plot_path(ax, individual[1], MAXD, color='green')
 
-    ax.set_title("Individual Paths - score: " + str([int(score) for score in scores]))
+    ax.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + "- length: " + str([int(l) for l in length]))
     plt.grid(True)
     plt.axis('equal')
     plt.ylim(0, None)
@@ -61,11 +66,46 @@ def plot_paths_with_rewards(rpositions, rvalues, individual, scores, MAXD, direc
     plt.close()
 
 
+def plot_animated_paths(rpositions, rvalues, individual, MAXD, directory=None, fname=None):
+    velocity = 1
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    plot_rewards(ax, rpositions, rvalues)
+    
+    individual = translate_path_to_coordinates(individual, rpositions)
+    length = [get_path_length(ind) for ind in individual]
+
+    interpolation = interpolate_paths(individual[0], individual[1], rpositions, 1)
+
+    ax.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + "- length: " + str([int(l) for l in length]))
+    plt.grid(True)
+    plt.axis('equal')
+    plt.ylim(0, None)
+    plt.xlim(0, None)
+
+    
+    def update(i):
+        ax.clear()
+        plot_rewards(ax, rpositions, rvalues)
+        ax.plot(*interpolation[0][i], 'o', color='orange')
+        ax.plot(*interpolation[1][i], 'o', color='green')
+        plot_path(ax, interpolation[0][:i+1], MAXD, color='orange')
+        plot_path(ax, interpolation[1][:i+1], MAXD, color='green')
+
+    ani = animation.FuncAnimation(
+        fig, update, frames=len(interpolation[0]), repeat=False, interval=150
+    )
+
+    # Mostra a animação ou salva em um arquivo
+    plt.show()
+    os.makedirs("imgs/movns/movns/", exist_ok=True)
+
+    ani.save("imgs/movns/movns/animacao.gif", writer="pillow")
+    
+
+
 def plot_distances(path1, path2, positions, max_distance, num_samples=100, directory=None):
     interpolated_paths = interpolate_paths(path1, path2, positions, num_samples)
-    # TODO
-    # interpolated_paths[0].append(path1[-1])
-    # interpolated_paths[1].append(path2[-1])
     
     distances = np.linalg.norm(interpolated_paths[0] - interpolated_paths[1], axis=1)
     

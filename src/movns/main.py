@@ -7,6 +7,7 @@ from scipy.spatial.distance import cdist
 from .evaluation import evaluate, update_archive
 from .operators import *
 from .entities import Solution
+import pickle
 
 
 def init_solution(num_agents, num_rewards: int) -> tuple:
@@ -22,7 +23,7 @@ def save_stats(front, dominated, log):
 
 def select_solution(front, dominated):
     choosen_set = random.random()
-    if choosen_set < 0.9:
+    if choosen_set < 0.9 or not dominated:
         candidates = get_candidates(front)
     else:
         candidates = get_candidates(dominated)
@@ -108,7 +109,7 @@ def main(
     budget: int,
     begin: int = 0,
     end: int = 0,
-    max_it: int = 100,
+    max_it: int = 150,
     num_agents: int = 2,
     seed: int = 42,
 ):
@@ -128,11 +129,13 @@ def main(
 
     bounded_paths = [s.get_solution_paths(distmx) for s in front]
     scores = [s.score for s in front]
-    print(scores)
+    for i, bounded_path in enumerate(bounded_paths):
+        with open(f'out/bounded_path_{i}.pkl', 'wb') as f:
+            pickle.dump(bounded_path, f)
+            pickle.dump(scores[i], f)
 
     directory = 'imgs/movns/movns'
 
-    # plot.plot_pareto_front(front, directory)
     plot.plot_pareto_front_evolution(log)
 
     for i, bounded_path in enumerate(bounded_paths):
