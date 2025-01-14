@@ -14,13 +14,11 @@ def evaluate(
     max_communication = calculate_rssi(bounded_paths[0], bounded_paths[1], rpositions)
     return max_reward, max_communication
 
-
 def maximize_reward(path1: np.ndarray, path2, rvalues: np.ndarray) -> float:
     diff_elements = path1[~np.isin(path1, path2)]
     common_elements = path1[np.isin(path1, path2)]
 
     return rvalues[diff_elements].sum() + rvalues[common_elements].sum() / 2
-
 
 def update_archive(archive: list[Solution], neighbors: list[Solution], archive_max_size: int) -> tuple:
     all_solutions = archive + neighbors
@@ -39,7 +37,6 @@ def update_archive(archive: list[Solution], neighbors: list[Solution], archive_m
 
     return archive, non_dominated, selected_dominated
 
-
 def get_non_dominated_solutions(solutions: list[Solution]) -> list[Solution]:
     non_dominated = []
     dominated = []
@@ -53,12 +50,10 @@ def get_non_dominated_solutions(solutions: list[Solution]) -> list[Solution]:
         
     return non_dominated, dominated
 
-
 def select_by_crowding_distance(solutions: list[Solution], k: int) -> list[Solution]:
     assign_crowding_distance(solutions)
     solutions.sort(key=lambda s: s.crowding_distance, reverse=True)
     return solutions[:k]
-
 
 def assign_crowding_distance(solutions: list[Solution]) -> None:
     num_solutions = len(solutions)

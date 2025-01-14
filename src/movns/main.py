@@ -14,12 +14,10 @@ def init_solution(num_agents, num_rewards: int) -> tuple:
     val = [np.random.permutation(num_rewards) for _ in range(num_agents)]
     return Solution(val)
 
-
 def save_stats(front, dominated, log):
     front.sort(key=lambda s: s.score[0])
     dominated.sort(key=lambda s: s.score[0])
     log.append({'front': [s.score for s in front], 'dominated': [s.score for s in dominated]})
-
 
 def select_solution(front, dominated):
     choosen_set = random.random()
@@ -33,7 +31,6 @@ def select_solution(front, dominated):
 
     return solution.copy()
 
-
 def get_candidates(solutions):
     candidates = [s for s in solutions if not s.visited]
     if not candidates:
@@ -41,7 +38,6 @@ def get_candidates(solutions):
             s.visited = False
         candidates = solutions
     return candidates
-
 
 def movns(
     num_agents: int,
@@ -101,7 +97,6 @@ def movns(
 
     return archive, front, log
 
-
 def main(
     num_rewards: int,
     rpositions: np.ndarray,
@@ -125,7 +120,6 @@ def main(
         num_agents, num_rewards, percentual_values, rpositions, distmx, max_it, seed
     )
     archive.sort(key=lambda solution: solution.score[0])
-
 
     bounded_paths = [s.get_solution_paths(distmx) for s in front]
     scores = [s.score for s in front]

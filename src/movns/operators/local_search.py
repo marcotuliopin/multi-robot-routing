@@ -18,7 +18,6 @@ def local_search(
             
     return neighbors
 
-
 def step(
     solution: Solution,
     agent: int,
@@ -45,17 +44,14 @@ def step(
             new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 
             # Dominated and non-dominated solutions are stored together and separeted during the archive update
-            # if not any(other.dominates(new_solution) for other in neighbors):
             neighbors.append(new_solution)
     return neighbors
-
 
 def move_point(path: np.ndarray, i: int, j: int) -> np.ndarray:
     element = path[i]
     path = np.delete(path, i)
     path = np.insert(path, j, element)
     return path
-
 
 def swap_points(path: np.ndarray, i: int, j: int) -> np.ndarray:
     path[i], path[j] = path[j], path[i]
