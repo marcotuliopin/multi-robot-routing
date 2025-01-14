@@ -66,3 +66,26 @@ def calculate_rssi(
     rssi += np.random.normal(0, noise_std)
 
     return rssi
+
+
+def calculate_rssi_history(
+    path1: np.ndarray,
+    path2: np.ndarray,
+    rpositions: np.ndarray,
+    tx_power: float = -30,
+    path_loss_exponent: float = 2.0,
+    noise_std: float = 1.0,
+    step: float = 1.0,
+) -> np.ndarray:
+    interpolated_points = interpolate_paths(path1, path2, rpositions, step)
+    interpolated_points = np.hstack((interpolated_points, np.zeros((len(interpolated_points), 1, 2))))
+    distances = np.linalg.norm(interpolated_points[0] - interpolated_points[1], axis=1)
+    rssi_history = []
+    for distance in distances:
+        if distance < 1e-3:
+            distance = 0.1
+
+        rssi = tx_power - 10 * path_loss_exponent * np.log10(distance)
+        rssi += np.random.normal(0, noise_std)
+        rssi_history.append(rssi)
+    return rssi_history

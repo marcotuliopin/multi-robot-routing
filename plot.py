@@ -1,6 +1,6 @@
 import os
 from matplotlib import animation, pyplot as plt
-from utils import interpolate_paths, translate_path_to_coordinates, calculate_rssi
+from utils import calculate_rssi_history, interpolate_paths, translate_path_to_coordinates, calculate_rssi
 import numpy as np
 
 
@@ -71,62 +71,82 @@ def plot_paths_with_rewards(rpositions, rvalues, individual, scores, MAXD, direc
     plt.close()
 
 
-def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None):
-    interpolation = interpolate_paths(individual[0], individual[1], rpositions, 1)
-    interpolation = np.hstack((interpolation, np.zeros((len(interpolation), 1, 2))))
-
-    coordinates = translate_path_to_coordinates(individual, rpositions)
-    length = [get_path_length(i) for i in coordinates]
-
-    collected_rewards = set()
-    collected_value = 0
+def get_collection_history(interpolation, individual, coordinates, rvalues):
+    collected_rewards = [set()]
+    collected_values = [0]
     path_idx = [0, 0]
+    collection_idx = []
 
-    fig, ax = plt.subplots(figsize=(10, 8))
-    plot_rewards(ax, rpositions, rvalues)
-    
-    ax.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + f" - {collected_value} collected")
-    plt.grid(True)
-    plt.axis('equal')
-    plt.ylim(0, None)
-    plt.xlim(0, None)
-
- 
-    def update(i):
-        nonlocal collected_value
-
+    for i in range(len(interpolation[0])):
         for j, idx in enumerate(path_idx):
             if idx >= len(individual[j]):
                 continue
             if all(abs(coordinates[j][idx][z] - interpolation[j][i][z]) < 1 for z in range(2)):
-                collected_rewards.add(individual[j][idx])
+                collected_rewards.append(collected_rewards[-1].union({individual[j][idx]}))
+                collected_values.append(collected_values[-1] + rvalues[individual[j][idx]])
+                collection_idx.append(i)
                 path_idx[j] += 1
-                collected_value += rvalues[individual[j][idx]]
 
-        ax.clear()
+    return collected_rewards, collected_values, collection_idx
 
-        ax.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + f" - {collected_value} collected")
 
-        plt.grid(True)
-        plt.axis('equal')
-        plt.ylim(0, None)
-        plt.xlim(0, None)
+def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None):
+    step = .5
+    interpolation = interpolate_paths(individual[0], individual[1], rpositions, step)
+    interpolation = np.hstack((interpolation, np.zeros((len(interpolation), 1, 2))))
 
-        plot_rewards(ax, rpositions, rvalues, collected_rewards)
-        plot_path(ax, interpolation[0][i:i+2], MAXD, color='orange')
-        plot_path(ax, interpolation[1][i:i+2], MAXD, color='green')
-        plot_path(ax, interpolation[0][:i+1], MAXD, color='orange', show_arrow=False)
-        plot_path(ax, interpolation[1][:i+1], MAXD, color='green', show_arrow=False)
+    coordinates = translate_path_to_coordinates(individual, rpositions)
+    collected_rewards, collected_values, collection_idx = get_collection_history(interpolation, individual, coordinates, rvalues)
 
-    ani = animation.FuncAnimation(
-        fig, update, frames=len(interpolation[0]), repeat=False, interval=150
-    )
+    rssi_history = calculate_rssi_history(individual[0], individual[1], rpositions, step=step)
 
-    # Mostra a animação ou salva em um arquivo
-    plt.show()
-    os.makedirs(directory, exist_ok=True)
-    ani.save(f"{directory}/{fname}.gif", writer="pillow")
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 16))
+    plt.subplots_adjust(hspace=0.5)
     
+    # Plot rewards on the first axis
+    plot_rewards(ax1, rpositions, rvalues)
+    ax1.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + f" - {collected_values[0]} collected")
+    ax1.grid(True)
+    ax1.axis('equal')
+    ax1.set_ylim(0, None)
+    ax1.set_xlim(0, None)
+
+    # Plot RSSI history on the second axis
+    ax2.plot(rssi_history)
+    ax2.set_title("RSSI History")
+    ax2.grid(True)
+    ax2.set_ylim(min(rssi_history) - 1, 0)
+    ax2.set_xlim(0, len(rssi_history))
+
+    def update(i):
+        idx = len(collection_idx) - 1
+        for j in range(len(collection_idx)):
+            if i <= collection_idx[j]:
+                idx = j
+                break
+
+        ax1.clear()
+        plot_rewards(ax1, rpositions, rvalues, collected_rewards[idx])
+        plot_path(ax1, interpolation[0][i:i+2], MAXD, color='orange')
+        plot_path(ax1, interpolation[1][i:i+2], MAXD, color='green')
+        plot_path(ax1, interpolation[0][:i+1], MAXD, color='orange', show_arrow=False)
+        plot_path(ax1, interpolation[1][:i+1], MAXD, color='green', show_arrow=False)
+        ax1.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + f" - {collected_values[idx]} collected")
+        ax1.grid(True)
+        ax1.axis('equal')
+        ax1.set_ylim(0, None)
+        ax1.set_xlim(0, None)
+
+        ax2.clear()
+        ax2.plot(rssi_history[:i+1])
+        ax2.set_title("RSSI History")
+        ax2.grid(True)
+        ax2.set_ylim(min(rssi_history) - 1, 0)
+        ax2.set_xlim(0, len(rssi_history))
+
+    ani = animation.FuncAnimation(fig, update, frames=len(interpolation[0]), repeat=False)
+    plt.show()
+    ani.save(f"{directory}/{fname}.gif", writer='pillow', fps=10)
 
 
 def plot_distances(path1, path2, positions, max_distance, num_samples=100, directory=None):
