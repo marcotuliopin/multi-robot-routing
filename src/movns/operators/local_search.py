@@ -18,7 +18,6 @@ def local_search(
             
     return neighbors
 
-
 def step(
     solution: Solution,
     agent: int,
@@ -35,8 +34,9 @@ def step(
     else:
         op = swap_points
 
-    for i in range(len(solution.unbounded_paths[agent])):
-        for j in range(i + 1, len(solution.unbounded_paths[agent])):
+    len_path = len(solution.unbounded_paths[agent])
+    for i in range(len_path):
+        for j in range(i + 1, len_path):
             new_solution = solution.copy()
 
             new_path = new_solution.unbounded_paths[agent]
@@ -49,13 +49,11 @@ def step(
             neighbors.append(new_solution)
     return neighbors
 
-
 def move_point(path: np.ndarray, i: int, j: int) -> np.ndarray:
     element = path[i]
     path = np.delete(path, i)
     path = np.insert(path, j, element)
     return path
-
 
 def swap_points(path: np.ndarray, i: int, j: int) -> np.ndarray:
     path[i], path[j] = path[j], path[i]
