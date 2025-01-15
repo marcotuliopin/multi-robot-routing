@@ -3,8 +3,16 @@ from matplotlib import animation, pyplot as plt
 from utils import calculate_rssi_history, interpolate_paths, translate_path_to_coordinates, calculate_rssi
 import numpy as np
 
-
 def plot_rewards(ax, reward_p: np.ndarray, reward_value: np.ndarray, not_plot: set = set()):
+    """
+    Plots the rewards on the given axis.
+
+    Parameters:
+    ax (matplotlib.axes.Axes): The axis to plot on.
+    reward_p (np.ndarray): The positions of the rewards.
+    reward_value (np.ndarray): The values of the rewards.
+    not_plot (set): The set of rewards to not plot.
+    """
     rewards_to_plot = [i for i in range(len(reward_p)) if i not in not_plot]
     ax.scatter(reward_p[rewards_to_plot, 0], reward_p[rewards_to_plot, 1], c="b", s=20, label="Rewards")
     for i, (x, y) in enumerate(reward_p):
@@ -15,16 +23,19 @@ def plot_rewards(ax, reward_p: np.ndarray, reward_value: np.ndarray, not_plot: s
     ax.set_xlabel("X Coordinates")
     ax.set_ylabel("Y Coordinates")
 
+def plot_path(ax, path: list, maxdist: float, show_radius=False, show_path=True, color="orange", show_arrow=True):
+    """
+    Plots a path on the given axis.
 
-def plot_path(
-    ax,
-    path: list,
-    maxdist: float,
-    show_radius=False,
-    show_path=True,
-    color="orange",
-    show_arrow=True,
-):
+    Parameters:
+    ax (matplotlib.axes.Axes): The axis to plot on.
+    path (list): The path to plot.
+    maxdist (float): The maximum distance for the radius.
+    show_radius (bool): Whether to show the radius.
+    show_path (bool): Whether to show the path.
+    color (str): The color of the path.
+    show_arrow (bool): Whether to show arrows on the path.
+    """
     prev = path[0]
 
     for curr in path[1:]:
@@ -45,19 +56,44 @@ def plot_path(
 
         prev = curr
 
-
 def get_path_length(path):
+    """
+    Calculates the length of a path.
+
+    Parameters:
+    path (list): The path to calculate the length of.
+
+    Returns:
+    float: The length of the path.
+    """
     return np.sum(np.linalg.norm(np.diff(path, axis=0), axis=1))
 
-
 def plot_paths_with_rewards(rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None):
+    """
+    Plots the paths with rewards.
+
+    Parameters:
+    rpositions (np.ndarray): The positions of the rewards.
+    rvalues (np.ndarray): The values of the rewards.
+    individual (list): The paths of the individual.
+    scores (list): The scores of the individual.
+    MAXD (float): The maximum distance for the radius.
+    directory (str): The directory to save the plot.
+    fname (str): The filename to save the plot.
+    """
+    n_agents = len(individual)
+    colormap = plt.cm.get_cmap('viridis', n_agents)
+    colors = [colormap(i) for i in range(n_agents)]
+
     fig, ax = plt.subplots(figsize=(10, 8))
+    fig.patch.set_facecolor('grey')
+    ax.set_facecolor('grey')
     plot_rewards(ax, rpositions, rvalues)
     
     individual = translate_path_to_coordinates(individual, rpositions)
     length = [get_path_length(ind) for ind in individual]
-    plot_path(ax, individual[0], MAXD, color='orange')
-    plot_path(ax, individual[1], MAXD, color='green')
+    for i in range(n_agents):
+        plot_path(ax, individual[i], MAXD, color=colors[i])
 
     ax.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + "- length: " + str([int(l) for l in length]))
     plt.grid(True)
@@ -70,11 +106,22 @@ def plot_paths_with_rewards(rpositions, rvalues, individual, scores, MAXD, direc
         plt.savefig(f'{directory}/{fname if fname else 'paths'}.png')
     plt.close()
 
-
 def get_collection_history(interpolation, individual, coordinates, rvalues):
+    """
+    Gets the collection history of the rewards.
+
+    Parameters:
+    interpolation (list): The interpolated paths.
+    individual (list): The paths of the individual.
+    coordinates (np.ndarray): The coordinates of the rewards.
+    rvalues (np.ndarray): The values of the rewards.
+
+    Returns:
+    tuple: The collected rewards, collected values, and collection indices.
+    """
     collected_rewards = [set()]
     collected_values = [0]
-    path_idx = [0, 0]
+    path_idx = [0] * len(individual)
     collection_idx = []
 
     for i in range(len(interpolation[0])):
@@ -89,10 +136,27 @@ def get_collection_history(interpolation, individual, coordinates, rvalues):
 
     return collected_rewards, collected_values, collection_idx
 
-
 def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None):
+    """
+    Plots the animated paths.
+
+    Parameters:
+    rpositions (np.ndarray): The positions of the rewards.
+    rvalues (np.ndarray): The values of the rewards.
+    individual (list): The paths of the individual.
+    scores (list): The scores of the individual.
+    MAXD (float): The maximum distance for the radius.
+    directory (str): The directory to save the animation.
+    fname (str): The filename to save the animation.
+    """
+    n_agents = len(individual)
+    colormap = plt.cm.get_cmap('viridis', n_agents)
+    colors = [colormap(i) for i in range(n_agents)]
+    background_color = '#ddd9dc';
+
     step = .5
-    interpolation = interpolate_paths(individual[0], individual[1], rpositions, step)
+    n_agents = len(individual)
+    interpolation = interpolate_paths(individual, rpositions, step)
     interpolation = np.hstack((interpolation, np.zeros((len(interpolation), 1, 2))))
 
     coordinates = translate_path_to_coordinates(individual, rpositions)
@@ -101,6 +165,9 @@ def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory
     rssi_history = calculate_rssi_history(individual[0], individual[1], rpositions, step=step)
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 16))
+    fig.patch.set_facecolor(background_color)
+    ax1.set_facecolor(background_color)
+    ax2.set_facecolor(background_color)
     plt.subplots_adjust(hspace=0.5)
     
     # Plot rewards on the first axis
@@ -119,6 +186,12 @@ def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory
     ax2.set_xlim(0, len(rssi_history))
 
     def update(i):
+        """
+        Updates the animation.
+
+        Parameters:
+        i (int): The current frame index.
+        """
         idx = len(collection_idx) - 1
         for j in range(len(collection_idx)):
             if i <= collection_idx[j]:
@@ -127,10 +200,9 @@ def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory
 
         ax1.clear()
         plot_rewards(ax1, rpositions, rvalues, collected_rewards[idx])
-        plot_path(ax1, interpolation[0][i:i+2], MAXD, color='orange')
-        plot_path(ax1, interpolation[1][i:i+2], MAXD, color='green')
-        plot_path(ax1, interpolation[0][:i+1], MAXD, color='orange', show_arrow=False)
-        plot_path(ax1, interpolation[1][:i+1], MAXD, color='green', show_arrow=False)
+        for k in range(n_agents):
+            plot_path(ax1, interpolation[k][i:i+2], MAXD, color=colors[k])
+            plot_path(ax1, interpolation[k][:i+1], MAXD, color=colors[k], show_arrow=False)
         ax1.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + f" - {collected_values[idx]} collected")
         ax1.grid(True)
         ax1.axis('equal')
@@ -148,13 +220,25 @@ def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory
     plt.show()
     ani.save(f"{directory}/{fname}.gif", writer='pillow', fps=10)
 
-
 def plot_distances(path1, path2, positions, max_distance, num_samples=100, directory=None):
+    """
+    Plots the distances between two paths.
+
+    Parameters:
+    path1 (list): The first path.
+    path2 (list): The second path.
+    positions (np.ndarray): The positions of the rewards.
+    max_distance (float): The maximum distance.
+    num_samples (int): The number of samples.
+    directory (str): The directory to save the plot.
+    """
     interpolated_paths = interpolate_paths(path1, path2, positions, num_samples)
     
     distances = np.linalg.norm(interpolated_paths[0] - interpolated_paths[1], axis=1)
     
     fig, ax = plt.subplots(figsize=(10, 5))
+    fig.patch.set_facecolor('grey')
+    ax.set_facecolor('grey')
     ax.plot(distances, color='red')
     ax.fill_between(range(len(distances)), distances, color='red', alpha=0.3)
     ax.axhline(max_distance, color="blue", linestyle="--", label=f"Max distance: {max_distance}")
@@ -168,8 +252,13 @@ def plot_distances(path1, path2, positions, max_distance, num_samples=100, direc
         os.makedirs(directory, exist_ok=True)
         plt.savefig(f'{directory}/distances.png')
 
-
 def plot_objectives(logbook):
+    """
+    Plots the objectives over generations.
+
+    Parameters:
+    logbook (deap.tools.Logbook): The logbook containing the data.
+    """
     generations = logbook.select("gen")
     max_rewards = logbook.select("max_reward")
     avg_rewards = logbook.select("avg_reward")
@@ -177,6 +266,8 @@ def plot_objectives(logbook):
     avg_distances = logbook.select("avg_distance")
 
     fig, ax1 = plt.subplots(figsize=(10, 6))
+    fig.patch.set_facecolor('grey')
+    ax1.set_facecolor('grey')
 
     ax1.set_xlabel("Geração")
     ax1.set_ylabel("Recompensa", color="tab:blue")
@@ -186,6 +277,7 @@ def plot_objectives(logbook):
     ax1.legend(loc="upper left")
 
     ax2 = ax1.twinx()
+    ax2.set_facecolor('grey')
     ax2.set_ylabel("Distância", color="tab:red")
     ax2.plot(generations, min_distances, label="Mínima Distância", color="tab:red", linestyle="--")
     ax2.plot(generations, avg_distances, label="Distância Média", color="tab:red")
@@ -195,13 +287,20 @@ def plot_objectives(logbook):
     plt.title("Evolução dos Objetivos")
     plt.show()
 
-
 def plot_pareto_front(archive, directory=None):
+    """
+    Plots the Pareto front.
+
+    Parameters:
+    archive (list): The archive of solutions.
+    directory (str): The directory to save the plot.
+    """
     scores = [ind.score for ind in archive]
     rewards = [score[0] for score in scores]
     rssi = [score[1] for score in scores]
 
     plt.figure(figsize=(8, 6))
+    plt.gca().set_facecolor('grey')
     plt.scatter(rssi, rewards, c="blue", label="Soluções")
     plt.xlabel("RSSI")
     plt.ylabel("Reward")
@@ -214,10 +313,17 @@ def plot_pareto_front(archive, directory=None):
 
     plt.show()
 
-
 def plot_pareto_front_evolution(log):
+    """
+    Plots the evolution of the Pareto front.
+
+    Parameters:
+    log (list): The log of the Pareto front evolution.
+    """
     iterations = len(log)
     fig, ax = plt.subplots()
+    fig.patch.set_facecolor('grey')
+    ax.set_facecolor('grey')
 
     # Configuração inicial do gráfico
     scatter = ax.scatter([], [], s=30, alpha=0.6)
@@ -231,8 +337,13 @@ def plot_pareto_front_evolution(log):
     scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data['front']])
     ax.plot(scores_x, scores_y, linewidth=2, color='green', marker='o', markersize=6, alpha=0.6, label='Pareto Front')
 
-
     def update(iteration):
+        """
+        Updates the animation.
+
+        Parameters:
+        iteration (int): The current iteration.
+        """
         ax.clear()
 
         initial_data = log[0]
@@ -274,12 +385,15 @@ def plot_pareto_front_evolution(log):
 
     ani.save("imgs/movns/movns/animacao.gif", writer="pillow")
 
+def plot_interpolated_individual(individual: list, maxdist: float, directory=None):
+    """
+    Plots the interpolated individual paths.
 
-def plot_interpolated_individual(
-    individual: list,
-    maxdist: float,
-    directory=None
-):
+    Parameters:
+    individual (list): The paths of the individual.
+    maxdist (float): The maximum distance for the radius.
+    directory (str): The directory to save the plot.
+    """
     fig, ax = plt.subplots(figsize=(7, 5))
     plot_path(ax, individual[0], maxdist, color='orange')
     plot_path(ax, individual[1], maxdist, color='green')
@@ -294,8 +408,17 @@ def plot_interpolated_individual(
         os.makedirs(directory, exist_ok=True)
         plt.savefig(f'{directory}/interpolation.png')
 
-
 def plot_rssi(path1, path2, positions, num_samples=100, directory=None):
+    """
+    Plots the RSSI between two paths.
+
+    Parameters:
+    path1 (list): The first path.
+    path2 (list): The second path.
+    positions (np.ndarray): The positions of the rewards.
+    num_samples (int): The number of samples.
+    directory (str): The directory to save the plot.
+    """
     interpolated_paths = interpolate_paths(path1, path2, positions, num_samples)
     
     distances = calculate_rssi(interpolated_paths[0], interpolated_paths[1], positions)
