@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("--run-animation", action="store_true", help="Run the animation of the best path.")
     parser.add_argument("--map", type=str, default="maps/grid_asymetric.txt", help="Path to the map image.")
     parser.add_argument("--method", type=str, default="nsga2", help="Optimization method.")
+    parser.add_argument("--num-agents", type=int, default=2, help="Number of agents.")
     args = parser.parse_args()
     
     # Read the rewards from the map file
@@ -55,6 +56,7 @@ if __name__ == "__main__":
                 rvalues,
                 BUDGET,
                 seed=42,
+                num_agents=args.num_agents,
             )
         case _:
             raise ValueError(f"Invalid method: {args.method}")

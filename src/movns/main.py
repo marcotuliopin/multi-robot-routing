@@ -104,7 +104,7 @@ def main(
     budget: int,
     begin: int = 0,
     end: int = 0,
-    max_it: int = 150,
+    max_it: int = 50,
     num_agents: int = 3,
     seed: int = 42,
 ):
@@ -135,6 +135,6 @@ def main(
 
     for i, bounded_path in enumerate(bounded_paths):
         print('Bounded Path', i)
-        plot.plot_paths_with_rewards(rpositions, rvalues, [bounded_path[0], bounded_path[1]], scores[i], 4, directory=directory, fname=f'paths{i}')
+        plot.plot_paths_with_rewards(rpositions, rvalues, bounded_path, scores[i], 4, directory=directory, fname=f'paths{i}')
 
     return bounded_paths

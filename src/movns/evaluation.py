@@ -10,16 +10,21 @@ def evaluate(
     distmx: np.ndarray,
 ) -> float:
     bounded_paths: list[np.ndarray] = solution.get_solution_paths(distmx)
-    max_reward = maximize_reward(bounded_paths[0], bounded_paths[1], rvalues) + maximize_reward(bounded_paths[1], bounded_paths[0], rvalues)
-    max_communication = calculate_rssi(bounded_paths[0], bounded_paths[1], rpositions)
+    max_reward = maximize_reward(bounded_paths, rvalues)
+    max_communication = calculate_rssi(bounded_paths, rpositions)
     return max_reward, max_communication
 
 
-def maximize_reward(path1: np.ndarray, path2, rvalues: np.ndarray) -> float:
-    diff_elements = path1[~np.isin(path1, path2)]
-    common_elements = path1[np.isin(path1, path2)]
-
-    return rvalues[diff_elements].sum() + rvalues[common_elements].sum() / 2
+def maximize_reward(paths: list[np.ndarray], rvalues: np.ndarray) -> float:
+    all_elements = np.concatenate(paths)
+    unique_elements, counts = np.unique(all_elements, return_counts=True)
+    reward = 0
+    for element, count in zip(unique_elements, counts):
+        if count == 1:
+            reward += rvalues[element]
+        else:
+            reward += rvalues[element] / count
+    return reward
 
 
 def update_archive(archive: list[Solution], neighbors: list[Solution], archive_max_size: int) -> tuple:
