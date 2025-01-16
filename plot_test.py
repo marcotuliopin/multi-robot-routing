@@ -5,7 +5,7 @@ import numpy as np
 import plot
 
 
-with open('out/bounded_path_17.pkl', 'rb') as f:
+with open('out/bounded_path_11.pkl', 'rb') as f:
     bounded_path = pickle.load(f)
     score = pickle.load(f)
 

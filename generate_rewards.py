@@ -22,32 +22,32 @@ if __name__ == "__main__":
     args = [
         {
             "num_rewards": 10,
-            "dispersion": 10.0,
+            "dispersion": 70.0,
             "output_file": "maps/dispersed_small.txt",
         },
         {
             "num_rewards": 30,
-            "dispersion": 10.0,
+            "dispersion": 70.0,
             "output_file": "maps/dispersed_large.txt",
         },
         {
             "num_rewards": 50,
-            "dispersion": 15.0,
+            "dispersion": 70.0,
             "output_file": "maps/dispersed_huge.txt",
         },
         {
             "num_rewards": 100,
-            "dispersion": 20.0,
+            "dispersion": 70.0,
             "output_file": "maps/dispersed_gigantic.txt",
         },
         {
             "num_rewards": 200,
-            "dispersion": 30.0,
+            "dispersion": 70.0,
             "output_file": "maps/dispersed_colossal.txt",
         },
         {
             "num_rewards": 500,
-            "dispersion": 50.0,
+            "dispersion": 70.0,
             "output_file": "maps/dispersed_titanic.txt",
         },
         {

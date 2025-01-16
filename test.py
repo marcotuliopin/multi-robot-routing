@@ -38,43 +38,76 @@ def read_map(m):
 
 
 # Analisar o aumento do tempo de execução conforme o número de recompensas aumenta. Para isso, executar cada mapa
-# 5 vezes para 3 agentes e calcular a média e o desvio padrão do tempo de execução.
+# 5 vezes para 2 agentes e calcular a média e o desvio padrão do tempo de execução.
 
-map_exec_time = {}
+# for m in args["maps"]:
+#     print(f"Executing map {m}...")
 
-for m in args["maps"]:
-    print(f"Executing map {m}...")
+#     num_rewards, dispersion, rpositions, rvalues = read_map(m)
+#     budget = dispersion * 10
 
-    num_rewards, dispersion, rpositions, rvalues = read_map(m)
-    budget = dispersion * 20
+#     exec_time = []
+#     for i in range(5):
+#         start = time.time()
+#         paths = movns(
+#             num_rewards,
+#             rpositions,
+#             rvalues,
+#             budget,
+#             seed=42,
+#             num_agents=2,
+#         )
+#         end = time.time()
+#         duration = end - start
+#         exec_time.append(duration)
+#         with open(f"tests/exec_time_{num_rewards}.txt", "a") as f:
+#             f.write(str(duration))
+
+#     exec_time_avg = np.mean(exec_time)
+#     exec_time_std = np.std(exec_time)
+#     exec_time = {
+#         "avg": exec_time_avg,
+#         "std": exec_time_std,
+#     }
+#     with open(f"tests/exec_time_{num_rewards}.pkl", "wb") as f:
+#         pickle.dump(exec_time, f)
+
+# Analisar o aumento do tempo de execução conforme o número de agentes aumenta. Para isso, executar o mapa de 50 recompensas
+# 5 vezes para cada número de agentes e calcular a média e o desvio padrão do tempo de execução.
+
+for a in args["num_agents"]:
+    print(f"Executing with {a} agents...")
+
+    num_rewards, dispersion, rpositions, rvalues = read_map(args["maps"][0])
+    budget = dispersion * 10
 
     exec_time = []
     for i in range(5):
         start = time.time()
+
         paths = movns(
             num_rewards,
             rpositions,
             rvalues,
             budget,
             seed=42,
-            num_agents=3,
+            num_agents=a,
         )
         end = time.time()
         duration = end - start
+
         exec_time.append(duration)
+        with open(f"tests/num_agents_{a}.txt", "a") as f:
+            f.write(str(duration))
 
     exec_time_avg = np.mean(exec_time)
     exec_time_std = np.std(exec_time)
-    map_exec_time[num_rewards] = {
+    exec_time = {
         "avg": exec_time_avg,
         "std": exec_time_std,
     }
-
-with open("tests/map_exec_time.pkl", "wb") as f:
-    pickle.dump(map_exec_time, f)
-
-# Analisar o aumento do tempo de execução conforme o número de agentes aumenta. Para isso, executar o mapa de 100 recompensas
-# 10 vezes para cada número de agentes e calcular a média e o desvio padrão do tempo de execução.
+    with open(f"tests/num_agents_{a}.pkl", "wb") as f:
+        pickle.dump(exec_time, f)
 
 # Analisar o aumento do tempo de execução conforme o budget aumenta.
 
