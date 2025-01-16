@@ -47,19 +47,37 @@ def update_archive(archive: list[Solution], neighbors: list[Solution], archive_m
 
     return archive, non_dominated, selected_dominated
 
-# Time complexity: O(n^2), where n is the number of solutions.
+# Time complexity: O(n log n), where n is the number of solutions.
 # Space complexity: O(n), as it stores the non-dominated and dominated solutions.
-def get_non_dominated_solutions(solutions: list[Solution]) -> list[Solution]:
-    non_dominated = []
-    dominated = []
-    solutions.sort(key=lambda s: s.score)
+def get_non_dominated_solutions(solutions: list[Solution]) -> tuple[list[Solution], list[Solution]]:
+    if len(solutions) <= 1:
+        return solutions, []
 
-    for i in range(len(solutions)):
-        if any(s.dominates(solutions[i]) for s in solutions):
-            dominated.append(solutions[i])
+    mid = len(solutions) // 2
+    left_non_dominated, left_dominated = get_non_dominated_solutions(solutions[:mid])
+    right_non_dominated, right_dominated = get_non_dominated_solutions(solutions[mid:])
+
+    non_dominated = []
+    dominated = left_dominated + right_dominated
+
+    i = j = 0
+    while i < len(left_non_dominated) and j < len(right_non_dominated):
+        if left_non_dominated[i].score <= right_non_dominated[j].score:
+            if not any(right_non_dominated[k].dominates(left_non_dominated[i]) for k in range(j, len(right_non_dominated))):
+                non_dominated.append(left_non_dominated[i])
+            else:
+                dominated.append(left_non_dominated[i])
+            i += 1
         else:
-            non_dominated.append(solutions[i])
-        
+            if not any(left_non_dominated[k].dominates(right_non_dominated[j]) for k in range(i, len(left_non_dominated))):
+                non_dominated.append(right_non_dominated[j])
+            else:
+                dominated.append(right_non_dominated[j])
+            j += 1
+
+    non_dominated.extend(left_non_dominated[i:])
+    non_dominated.extend(right_non_dominated[j:])
+
     return non_dominated, dominated
 
 # Time complexity: O(n log n), where n is the number of solutions.
