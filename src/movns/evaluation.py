@@ -2,7 +2,8 @@ import numpy as np
 from .entities import Solution
 from utils import calculate_rssi
 
-
+# Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+# Space complexity: O(1), as it uses a constant amount of additional space.
 def evaluate(
     solution: Solution,
     rvalues: np.ndarray,
@@ -14,7 +15,8 @@ def evaluate(
     max_communication = calculate_rssi(bounded_paths, rpositions)
     return max_reward, max_communication
 
-
+# Time complexity: O(n), where n is the number of points in the paths.
+# Space complexity: O(1), as it uses a constant amount of additional space.
 def maximize_reward(paths: list[np.ndarray], rvalues: np.ndarray) -> float:
     all_elements = np.concatenate(paths)
     unique_elements, counts = np.unique(all_elements, return_counts=True)
@@ -26,7 +28,8 @@ def maximize_reward(paths: list[np.ndarray], rvalues: np.ndarray) -> float:
             reward += rvalues[element] / count
     return reward
 
-
+# Time complexity: O(n log n), where n is the number of solutions in the archive and neighbors.
+# Space complexity: O(n), as it stores the non-dominated and dominated solutions.
 def update_archive(archive: list[Solution], neighbors: list[Solution], archive_max_size: int) -> tuple:
     all_solutions = archive + neighbors
 
@@ -44,7 +47,8 @@ def update_archive(archive: list[Solution], neighbors: list[Solution], archive_m
 
     return archive, non_dominated, selected_dominated
 
-
+# Time complexity: O(n^2), where n is the number of solutions.
+# Space complexity: O(n), as it stores the non-dominated and dominated solutions.
 def get_non_dominated_solutions(solutions: list[Solution]) -> list[Solution]:
     non_dominated = []
     dominated = []
@@ -58,13 +62,15 @@ def get_non_dominated_solutions(solutions: list[Solution]) -> list[Solution]:
         
     return non_dominated, dominated
 
-
+# Time complexity: O(n log n), where n is the number of solutions.
+# Space complexity: O(n), as it stores the selected solutions.
 def select_by_crowding_distance(solutions: list[Solution], k: int) -> list[Solution]:
     assign_crowding_distance(solutions)
     solutions.sort(key=lambda s: s.crowding_distance, reverse=True)
     return solutions[:k]
 
-
+# Time complexity: O(n log n), where n is the number of solutions.
+# Space complexity: O(1), as it uses a constant amount of additional space.
 def assign_crowding_distance(solutions: list[Solution]) -> None:
     num_solutions = len(solutions)
     if num_solutions == 0:

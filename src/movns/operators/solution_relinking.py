@@ -2,7 +2,8 @@ import numpy as np
 from ..entities import Solution
 from ..evaluation import evaluate
 
-
+# Time complexity: O(n * m^2), where n is the number of paths and m is the number of points in each path.
+# Space complexity: O(n), as it stores the neighbors.
 def solution_relinking(
     solution1: Solution,
     solution2: Solution,

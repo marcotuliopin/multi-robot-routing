@@ -1,7 +1,8 @@
 import numpy as np
 from ..entities import Solution
 
-
+# Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+# Space complexity: O(n * m), as it stores the new solution.
 def perturb_solution(solution: Solution, k: int) -> Solution:
     new_solution = solution.copy()
     new_solution.score = -1
@@ -15,6 +16,8 @@ def perturb_solution(solution: Solution, k: int) -> Solution:
 
     return new_solution
 
+# Time complexity: O(n), where n is the number of points in the path.
+# Space complexity: O(n), as it stores the new path.
 def two_opt(path: list) -> list:
     i, j = np.random.choice(len(path) - 1, 2, replace=False)
     if i > j:
@@ -22,6 +25,8 @@ def two_opt(path: list) -> list:
     new_path = np.concatenate([path[:i], path[i : j + 1][::-1], path[j + 1 :]])
     return new_path
 
+# Time complexity: O(n), where n is the number of points in the path.
+# Space complexity: O(n), as it stores the new path.
 def swap_subpaths(path: np.ndarray) -> np.ndarray:
     new_path = path.copy()
     l = np.random.randint(1, len(path) / 2 - 1)

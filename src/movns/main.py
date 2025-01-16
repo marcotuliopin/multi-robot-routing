@@ -9,16 +9,21 @@ from .operators import *
 from .entities import Solution
 import pickle
 
-
+# Time complexity: O(n * m), where n is the number of agents and m is the number of rewards.
+# Space complexity: O(n * m), as it stores the initial solution.
 def init_solution(num_agents, num_rewards: int) -> tuple:
     val = [np.random.permutation(num_rewards) for _ in range(num_agents)]
     return Solution(val)
 
+# Time complexity: O(n log n), where n is the number of solutions in the front and dominated lists.
+# Space complexity: O(n), as it stores the sorted solutions.
 def save_stats(front, dominated, log):
     front.sort(key=lambda s: s.score[0])
     dominated.sort(key=lambda s: s.score[0])
     log.append({'front': [s.score for s in front], 'dominated': [s.score for s in dominated]})
 
+# Time complexity: O(n), where n is the number of solutions in the front and dominated lists.
+# Space complexity: O(1), as it uses a constant amount of additional space.
 def select_solution(front, dominated):
     choosen_set = random.random()
     if choosen_set < 0.9 or not dominated:
@@ -31,6 +36,8 @@ def select_solution(front, dominated):
 
     return solution.copy()
 
+# Time complexity: O(n), where n is the number of solutions.
+# Space complexity: O(n), as it stores the candidates.
 def get_candidates(solutions):
     candidates = [s for s in solutions if not s.visited]
     if not candidates:
@@ -39,6 +46,8 @@ def get_candidates(solutions):
         candidates = solutions
     return candidates
 
+# Time complexity: O(n * m^2 * k), where n is the number of agents, m is the number of rewards, and k is the number of iterations.
+# Space complexity: O(n * m), as it stores the solutions and the archive.
 def movns(
     num_agents: int,
     num_rewards: int,
@@ -64,22 +73,22 @@ def movns(
 
     kmax = 4  # Number of neighborhoods
 
-    for k in range(kmax):
-        print(f"Initializing neighborhood {k}")
+    print(f"Initializing neighborhood")
+    for k in tqdm(range(kmax), desc="Progress", unit="neighborhood"):
         neighbors = local_search(solution, k, rvalues, rpositions, distmx)
         archive, front, dominated = update_archive(archive, neighbors, archive_max_size)
     save_stats(front, dominated, log)
 
     for it in tqdm(range(max_it), desc="Progress", unit="iteration"):
         # Select neighborhood
-        k = it % kmax + 1
+        k = np.random.randint(1, kmax)
         
-        solution = select_solution(front, dominated)
+        solution = select_solution(front, dominated) # O(n) where n is the number of solutions in the front and dominated lists
 
         # First phase
-        shaken_solution = perturb_solution(solution, k)
-        shaken_solution.score = evaluate(shaken_solution, rvalues, rpositions, distmx)
-        neighbors1 = local_search(shaken_solution, k, rvalues, rpositions, distmx)
+        shaken_solution = perturb_solution(solution, k) # O(n * m) where n is the number of paths and m is the number of points in each path
+        shaken_solution.score = evaluate(shaken_solution, rvalues, rpositions, distmx) # O(n * m) where n is the number of paths and m is the number of points in each path
+        neighbors1 = local_search(shaken_solution, k, rvalues, rpositions, distmx) # O(n * m^2) where n is the number of paths and m is the number of points in each path
 
         # Second phase
         neighbors2 = []
@@ -87,9 +96,9 @@ def movns(
             solution1, solution2 = random.sample(front, 2)
             neighbors2 = solution_relinking(
                 solution1.copy(), solution2.copy(), rvalues, rpositions, distmx
-            )
+            ) # O(n * m^2) where n is the number of paths and m is the number of points in each path
 
-        archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
+        archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size) # O(n log n) where n is the number of solutions in the archive and neighbors
         save_stats(front, dominated, log)
 
     end = time.time() - start
@@ -124,17 +133,18 @@ def main(
 
     bounded_paths = [s.get_solution_paths(distmx) for s in front]
     scores = [s.score for s in front]
-    for i, bounded_path in enumerate(bounded_paths):
-        with open(f'out/bounded_path_{i}.pkl', 'wb') as f:
-            pickle.dump(bounded_path, f)
-            pickle.dump(scores[i], f)
 
-    directory = 'imgs/movns/movns'
+    # for i, bounded_path in enumerate(bounded_paths):
+    #     with open(f'out/bounded_path_{i}.pkl', 'wb') as f:
+    #         pickle.dump(bounded_path, f)
+    #         pickle.dump(scores[i], f)
 
-    plot.plot_pareto_front_evolution(log)
+    # directory = 'imgs/movns/movns'
 
-    for i, bounded_path in enumerate(bounded_paths):
-        print('Bounded Path', i)
-        plot.plot_paths_with_rewards(rpositions, rvalues, bounded_path, scores[i], 4, directory=directory, fname=f'paths{i}')
+    # plot.plot_pareto_front_evolution(log)
+
+    # for i, bounded_path in enumerate(bounded_paths):
+    #     print('Bounded Path', i)
+    #     plot.plot_paths_with_rewards(rpositions, rvalues, bounded_path, scores[i], 4, directory=directory, fname=f'paths{i}')
 
     return bounded_paths

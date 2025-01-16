@@ -1,6 +1,7 @@
 import numpy as np
 
-
+# Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+# Space complexity: O(n * m), as it stores the interpolated paths.
 def interpolate_paths(paths: list, positions: np.ndarray, step: float) -> list:
     interpolated_paths = [interpolate_path(path, positions, step) for path in paths]
     
@@ -11,7 +12,8 @@ def interpolate_paths(paths: list, positions: np.ndarray, step: float) -> list:
     
     return interpolated_paths
 
-
+# Time complexity: O(n), where n is the number of points in the path.
+# Space complexity: O(n), as it stores the sampled points.
 def interpolate_path(path: list, positions: np.ndarray, step: float) -> np.ndarray:
 
     def cumulative_distances(path):
@@ -40,11 +42,13 @@ def interpolate_path(path: list, positions: np.ndarray, step: float) -> np.ndarr
 
     return np.array(sampled_points)
 
-
+# Time complexity: O(n), where n is the number of points in the path.
+# Space complexity: O(n), as it stores the translated coordinates.
 def translate_path_to_coordinates(path: list, positions: np.ndarray) -> list:
     return [positions[reward] for reward in path]
 
-
+# Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+# Space complexity: O(1), as it uses a constant amount of additional space.
 def calculate_rssi(
     paths: list,
     rpositions: np.ndarray,
@@ -63,7 +67,6 @@ def calculate_rssi(
     rssi += np.random.normal(0, noise_std)
 
     return rssi
-
 
 def calculate_rssi_history(
     path1: np.ndarray,

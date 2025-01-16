@@ -13,12 +13,16 @@ class Solution:
         self.crowding_distance = -1
         self.visited = False
 
+    # Time complexity: O(1), as it sets class-level parameters.
+    # Space complexity: O(1), as it uses a constant amount of additional space.
     @classmethod
     def set_parameters(cls, begin: int, end: int, budget: float) -> None:
         cls._BEGIN = begin
         cls._END = end
         cls._BUDGET = budget
 
+    # Time complexity: O(n), where n is the number of score elements.
+    # Space complexity: O(1), as it uses a constant amount of additional space.
     def dominates(self, other: "Solution") -> bool:
         """Check if the current solution dominates the other solution."""
         is_better = False
@@ -29,6 +33,8 @@ class Solution:
                 return False
         return is_better
 
+    # Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+    # Space complexity: O(n * m), as it stores the bounded paths.
     def get_solution_paths(self, distmx: np.ndarray) -> list[np.ndarray]:
         """Get the solution paths that obeys the budget constraint."""
         solution = []
@@ -40,6 +46,8 @@ class Solution:
             solution.append(bounded_val)
         return solution
 
+    # Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+    # Space complexity: O(n), as it stores the lengths of the paths.
     def get_solution_length(self, distmx: np.ndarray) -> float:
         """Get the length of the solution that obeys the budget constraint."""
         paths = self.get_solution_paths(distmx)
@@ -48,6 +56,8 @@ class Solution:
             lengths.append(np.sum(distmx[path[:-1], path[1:]]))
         return lengths
 
+    # Time complexity: O(n), where n is the number of points in the path.
+    # Space complexity: O(1), as it uses a constant amount of additional space.
     def bound_solution(self, val: np.ndarray, distmx: np.ndarray) -> np.ndarray:
         """Bound one element of the solution to obey the budget constraint."""
         total = 0
@@ -58,15 +68,21 @@ class Solution:
 
         return val
 
+    # Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+    # Space complexity: O(n * m), as it stores the copied paths.
     def copy(self) -> "Solution":
         """Create a copy of the current solution."""
         return Solution(
             [val.copy() for val in self.unbounded_paths], copy.deepcopy(self.score)
         )
 
+    # Time complexity: O(1), as it calculates the hash of the solution.
+    # Space complexity: O(1), as it uses a constant amount of additional space.
     def __hash__(self):
         return hash(tuple(map(tuple, self.unbounded_paths)))
 
+    # Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+    # Space complexity: O(1), as it uses a constant amount of additional space.
     def __eq__(self, other):
         return (
             all(

@@ -2,7 +2,8 @@ import numpy as np
 from ..entities import Solution
 from ..evaluation import evaluate
 
-
+# Time complexity: O(n * m^2), where n is the number of paths and m is the number of points in each path.
+# Space complexity: O(n), as it stores the neighbors.
 def local_search(
     solution: Solution,
     k: int,
@@ -18,6 +19,8 @@ def local_search(
             
     return neighbors
 
+# Time complexity: O(m^2), where m is the number of points in the path.
+# Space complexity: O(n), as it stores the neighbors.
 def step(
     solution: Solution,
     agent: int,
@@ -49,12 +52,16 @@ def step(
             neighbors.append(new_solution)
     return neighbors
 
+# Time complexity: O(m), where m is the number of points in the path.
+# Space complexity: O(m), as it stores the modified path.
 def move_point(path: np.ndarray, i: int, j: int) -> np.ndarray:
     element = path[i]
     path = np.delete(path, i)
     path = np.insert(path, j, element)
     return path
 
+# Time complexity: O(1), as it swaps two points in the path.
+# Space complexity: O(1), as it uses a constant amount of additional space.
 def swap_points(path: np.ndarray, i: int, j: int) -> np.ndarray:
     path[i], path[j] = path[j], path[i]
     return path
