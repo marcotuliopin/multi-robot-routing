@@ -80,6 +80,8 @@ def movns(
     save_stats(front, dominated, log)
 
     for it in tqdm(range(max_it), desc="Progress", unit="iteration"):
+        start_it = time.perf_counter()
+
         # Select neighborhood
         k = np.random.randint(1, kmax)
         
@@ -99,6 +101,10 @@ def movns(
             ) # O(n * m^2) where n is the number of paths and m is the number of points in each path
 
         archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size) # O(n log n) where n is the number of solutions in the archive and neighbors
+        end_it = time.perf_counter()
+        with open(f"tests/it_time_{num_agents}.txt", "a") as f:
+            f.write(f"{str(end_it - start_it)}\n")
+
         save_stats(front, dominated, log)
 
     end = time.time() - start
