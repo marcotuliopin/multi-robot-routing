@@ -6,7 +6,6 @@ from ..evaluation import evaluate
 # Space complexity: O(n), as it stores the neighbors.
 def local_search(
     solution: Solution,
-    agent_speed: float,
     k: int,
     rvalues: np.ndarray,
     rpositions: np.ndarray,
@@ -16,7 +15,7 @@ def local_search(
 
     num_paths = len(solution.unbounded_paths)
     for agent in range(num_paths):
-        neighbors.extend(step(solution, agent, agent_speed, k, rvalues, rpositions, distmx))
+        neighbors.extend(step(solution, agent, k, rvalues, rpositions, distmx))
             
     return neighbors
 
@@ -25,7 +24,6 @@ def local_search(
 def step(
     solution: Solution,
     agent: int,
-    agent_speed: float,
     k: int,
     rvalues: np.ndarray,
     rpositions: np.ndarray,
@@ -47,7 +45,7 @@ def step(
             new_path = new_solution.unbounded_paths[agent]
             new_path[:] = op(new_path, i, j)
 
-            new_solution.score = evaluate(new_solution, agent_speed, rvalues, rpositions, distmx)
+            new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 
             # Dominated and non-dominated solutions are stored together and separeted during the archive update
             # if not any(other.dominates(new_solution) for other in neighbors):

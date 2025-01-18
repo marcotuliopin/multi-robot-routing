@@ -50,7 +50,6 @@ def get_candidates(solutions):
 # Space complexity: O(n * m), as it stores the solutions and the archive.
 def movns(
     num_agents: int,
-    agent_speed: float,
     num_rewards: int,
     rvalues: np.ndarray,
     rpositions: np.ndarray,
@@ -65,7 +64,7 @@ def movns(
 
     # Each solution is composed of num_agents paths
     solution: Solution = init_solution(num_agents, num_rewards)
-    solution.score = evaluate(solution, agent_speed, rvalues, rpositions, distmx)
+    solution.score = evaluate(solution, rvalues, rpositions, distmx)
 
     # The archive is composed of the non-dominated solutions
     archive_max_size = 25
@@ -90,8 +89,8 @@ def movns(
 
         # First phase
         shaken_solution = perturb_solution(solution, k)
-        shaken_solution.score = evaluate(shaken_solution, agent_speed, rvalues, rpositions, distmx)
-        neighbors1 = local_search(shaken_solution, agent_speed, k, rvalues, rpositions, distmx)
+        shaken_solution.score = evaluate(shaken_solution, rvalues, rpositions, distmx)
+        neighbors1 = local_search(shaken_solution, k, rvalues, rpositions, distmx)
 
         # Second phase
         neighbors2 = []
@@ -126,7 +125,7 @@ def main(
     agent_speed: float = 1,
     seed: int = 42,
 ):
-    Solution.set_parameters(begin, end, budget)
+    Solution.set_parameters(begin, end, budget, agent_speed)
 
     total_rewards = rvalues.sum()
     percentual_values = (rvalues / total_rewards) * 100
@@ -135,7 +134,7 @@ def main(
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
     archive, front, log = movns(
-        num_agents, agent_speed, num_rewards, percentual_values, rpositions, distmx, max_it, seed
+        num_agents, num_rewards, percentual_values, rpositions, distmx, max_it, seed
     )
     archive.sort(key=lambda solution: solution.score[0])
 
