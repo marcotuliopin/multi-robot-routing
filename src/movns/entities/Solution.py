@@ -6,6 +6,7 @@ class Solution:
     _BEGIN: int = 0
     _END: int = 0
     _BUDGET: float = 0
+    _SPEED: float = 1
 
     def __init__(self, val: list[np.ndarray], score: tuple = (-1, -1)) -> None:
         self.unbounded_paths = val  # It is called unbounded_paths because it is not guaranteed to obey the budget constraint
@@ -16,10 +17,11 @@ class Solution:
     # Time complexity: O(1), as it sets class-level parameters.
     # Space complexity: O(1), as it uses a constant amount of additional space.
     @classmethod
-    def set_parameters(cls, begin: int, end: int, budget: float) -> None:
+    def set_parameters(cls, begin: int, end: int, budget: float, speed: float) -> None:
         cls._BEGIN = begin
         cls._END = end
         cls._BUDGET = budget
+        cls._SPEED = speed
 
     # Time complexity: O(n), where n is the number of score elements.
     # Space complexity: O(1), as it uses a constant amount of additional space.
@@ -75,6 +77,30 @@ class Solution:
         return Solution(
             [val.copy() for val in self.unbounded_paths], copy.deepcopy(self.score)
         )
+
+    # Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+    # Space complexity: O(n * m), as it store the travel times of the paths.
+    def get_travel_times(self, distmx: np.ndarray, bounded_paths: np.ndarray = None) -> list[float]:
+        if not bounded_paths:
+            bounded_paths = self.get_solution_paths(distmx)
+
+        last_end_time = 0
+        travel_times = []
+        for agent, path in enumerate(bounded_paths):
+            segment_times = []
+            start_time = 0
+            for segment, (previous, current) in enumerate(zip(path[:-1], path[1:])):
+                elapsed_time = distmx[previous, current] / Solution._SPEED
+                segment_times.append((start_time, 'begin', agent, segment))
+                segment_times.append((start_time + elapsed_time, 'end', agent, segment))
+                start_time += elapsed_time
+                last_end_time = start_time
+            travel_times.append(segment_times)
+        
+        for agent, path in enumerate(bounded_paths):
+            travel_times[agent].append((trave_times[agent][-1][0], 'begin', agent, ))
+
+        return travel_times
 
     # Time complexity: O(1), as it calculates the hash of the solution.
     # Space complexity: O(1), as it uses a constant amount of additional space.
