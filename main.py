@@ -5,7 +5,7 @@ import numpy as np
 import argparse
 
 MAX_DISTANCE_BETWEEN_AGENTS = 3
-BUDGET = 70
+BUDGET = 150
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the multi-objective GA.")
@@ -17,13 +17,14 @@ if __name__ == "__main__":
     parser.add_argument("--run-animation", action="store_true", help="Run the animation of the best path.")
     parser.add_argument("--map", type=str, default="maps/grid_asymetric.txt", help="Path to the map image.")
     parser.add_argument("--method", type=str, default="nsga2", help="Optimization method.")
-    parser.add_argument("--num-agents", type=int, default=2, help="Number of agents.")
+    parser.add_argument("--num-agents", type=int, default=4, help="Number of agents.")
     args = parser.parse_args()
     
     # Read the rewards from the map file
     with open(args.map, "r") as f:
         lines = f.readlines()
-        num_rewards = int(lines[0])
+        num_rewards, _ = lines[0].split()
+        num_rewards = int(num_rewards)
         rpositions = np.array(
             [list(map(float, line.split())) for line in lines[1 : num_rewards + 1]]
         )

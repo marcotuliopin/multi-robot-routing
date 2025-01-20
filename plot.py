@@ -47,7 +47,7 @@ def plot_path(ax, path: list, maxdist: float, show_radius=False, show_path=True,
                 ax.quiver(
                     prev[0], prev[1], dx, dy,
                     angles='xy', scale_units='xy', scale=1,
-                    color=color, width=0.005, headwidth=3, headlength=5
+                    color=color
                 )
 
         if show_radius:
@@ -192,6 +192,7 @@ def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory
         Parameters:
         i (int): The current frame index.
         """
+        print(i)
         idx = len(collection_idx) - 1
         for j in range(len(collection_idx)):
             if i <= collection_idx[j]:
@@ -217,8 +218,8 @@ def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory
         ax2.set_xlim(0, len(rssi_history))
 
     ani = animation.FuncAnimation(fig, update, frames=len(interpolation[0]), repeat=False)
-    plt.show()
-    ani.save(f"{directory}/{fname}.gif", writer='pillow', fps=10)
+    # plt.show()
+    ani.save(f"{directory}/{fname}.gif", writer='pillow', fps=22)
 
 def plot_distances(path1, path2, positions, max_distance, num_samples=100, directory=None):
     """
@@ -322,8 +323,6 @@ def plot_pareto_front_evolution(log):
     """
     iterations = len(log)
     fig, ax = plt.subplots()
-    fig.patch.set_facecolor('grey')
-    ax.set_facecolor('grey')
 
     # Configuração inicial do gráfico
     scatter = ax.scatter([], [], s=30, alpha=0.6)

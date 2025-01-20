@@ -102,7 +102,7 @@ def movns(
 
         archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size) # O(n log n) where n is the number of solutions in the archive and neighbors
         end_it = time.perf_counter()
-        with open(f"tests/it_time_{num_agents}.txt", "a") as f:
+        with open(f"tests/it_time_{num_agents}_bdg_{Solution._BUDGET}.txt", "a") as f:
             f.write(f"{str(end_it - start_it)}\n")
 
         save_stats(front, dominated, log)
@@ -119,8 +119,8 @@ def main(
     budget: int,
     begin: int = 0,
     end: int = 0,
-    max_it: int = 50,
-    num_agents: int = 3,
+    max_it: int = 100,
+    num_agents: int = 4,
     seed: int = 42,
 ):
     Solution.set_parameters(begin, end, budget)
@@ -140,10 +140,10 @@ def main(
     bounded_paths = [s.get_solution_paths(distmx) for s in front]
     scores = [s.score for s in front]
 
-    # for i, bounded_path in enumerate(bounded_paths):
-    #     with open(f'out/bounded_path_{i}.pkl', 'wb') as f:
-    #         pickle.dump(bounded_path, f)
-    #         pickle.dump(scores[i], f)
+    for i, bounded_path in enumerate(bounded_paths):
+        with open(f'out/bounded_path_{i}_{num_agents}_agents_{budget}_bgt.pkl', 'wb') as f:
+            pickle.dump(bounded_path, f)
+            pickle.dump(scores[i], f)
 
     # directory = 'imgs/movns/movns'
 
@@ -151,6 +151,6 @@ def main(
 
     # for i, bounded_path in enumerate(bounded_paths):
     #     print('Bounded Path', i)
-    #     plot.plot_paths_with_rewards(rpositions, rvalues, bounded_path, scores[i], 4, directory=directory, fname=f'paths{i}')
+    #     plot.plot_paths_with_rewards(rpositions, rvalues, bounded_path, scores[i], 4, directory=directory, fname=f'{num_agents}_agents_{budget}_bgt_paths{i}')
 
     return bounded_paths
