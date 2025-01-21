@@ -47,7 +47,7 @@ def interpolate_path(path: list, positions: np.ndarray, step: float) -> np.ndarr
 def translate_path_to_coordinates(path: list, positions: np.ndarray) -> list:
     return [positions[reward] for reward in path]
 
-# Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+# Time complexity: O(n^2 * m), where n is the number of paths and m is the number of points in each path.
 # Space complexity: O(1), as it uses a constant amount of additional space.
 def calculate_rssi(
     paths: list,

@@ -76,33 +76,14 @@ def read_map(m):
 # 5 vezes para cada número de agentes e calcular a média e o desvio padrão do tempo de execução.
 
 num_rewards, dispersion, rpositions, rvalues = read_map(args["maps"][0])
-budget = dispersion * 10
+budget = 200
 
-for i in range(3):
-    start = time.perf_counter()
-
-    paths = movns(
-        num_rewards,
-        rpositions,
-        rvalues,
-        budget,
-        seed=42,
-        num_agents=6,
-    )
-    end = time.perf_counter()
-    duration = end - start
-
-    with open(f"tests/num_agents_{6}.txt", "a") as f:
-        f.write(f"{str(duration)}\n")
-
-for a in args["num_agents"][3:]:
+for a in args["num_agents"]:
     print(f"Executing with {a} agents map {args["maps"][0]}...")
-
-    num_rewards, dispersion, rpositions, rvalues = read_map(args["maps"][0])
-    budget = dispersion * 10
 
     exec_time = []
     for i in range(5):
+        print(f"Executing iteration {i}...")
         start = time.perf_counter()
 
         paths = movns(
@@ -117,7 +98,7 @@ for a in args["num_agents"][3:]:
         duration = end - start
 
         exec_time.append(duration)
-        with open(f"tests/num_agents_{a}.txt", "a") as f:
+        with open(f"tests/num_agents_{a}_{budget}_bgt.txt", "a") as f:
             f.write(f"{str(duration)}\n")
 
 # Analisar o aumento do tempo de execução conforme o budget aumenta.

@@ -89,7 +89,7 @@ def movns(
 
         # First phase
         shaken_solution = perturb_solution(solution, k) # O(n * m) where n is the number of paths and m is the number of points in each path
-        shaken_solution.score = evaluate(shaken_solution, rvalues, rpositions, distmx) # O(n * m) where n is the number of paths and m is the number of points in each path
+        shaken_solution.score = evaluate(shaken_solution, rvalues, rpositions, distmx) # O(n^2 * m) where n is the number of paths and m is the number of points in each path
         neighbors1 = local_search(shaken_solution, k, rvalues, rpositions, distmx) # O(n * m^2) where n is the number of paths and m is the number of points in each path
 
         # Second phase

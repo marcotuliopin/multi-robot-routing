@@ -2,7 +2,7 @@ import numpy as np
 from .entities import Solution
 from utils import calculate_rssi
 
-# Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
+# Time complexity: O(n^2 * m), where n is the number of paths and m is the number of points in each path.
 # Space complexity: O(1), as it uses a constant amount of additional space.
 def evaluate(
     solution: Solution,

@@ -136,7 +136,7 @@ def get_collection_history(interpolation, individual, coordinates, rvalues):
 
     return collected_rewards, collected_values, collection_idx
 
-def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None):
+def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None, side_by_side=False):
     """
     Plots the animated paths.
 
@@ -148,6 +148,7 @@ def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory
     MAXD (float): The maximum distance for the radius.
     directory (str): The directory to save the animation.
     fname (str): The filename to save the animation.
+    side_by_side (bool): Whether to display the plots side by side.
     """
     n_agents = len(individual)
     colormap = plt.cm.get_cmap('viridis', n_agents)
@@ -164,11 +165,15 @@ def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory
 
     rssi_history = calculate_rssi_history(individual[0], individual[1], rpositions, step=step)
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 16))
+    if side_by_side:
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+    else:
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 16))
+    
     fig.patch.set_facecolor(background_color)
     ax1.set_facecolor(background_color)
     ax2.set_facecolor(background_color)
-    plt.subplots_adjust(hspace=0.5)
+    plt.subplots_adjust(hspace=0.5 if not side_by_side else 0.3, wspace=0.3 if side_by_side else 0.5)
     
     # Plot rewards on the first axis
     plot_rewards(ax1, rpositions, rvalues)
