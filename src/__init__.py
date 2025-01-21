@@ -1,5 +1,3 @@
-from .movns import movns
-from .ga import ga
-from .vns import vns
+from .main import main as movns
 
-__all__ = ["movns", "ga", "vns"]
+__all__ = ["movns"]

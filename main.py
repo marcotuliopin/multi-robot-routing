@@ -1,11 +1,6 @@
-from utils import interpolate_paths
-from src import movns, ga, vns
-import plot
+from src import movns
 import numpy as np
 import argparse
-
-MAX_DISTANCE_BETWEEN_AGENTS = 3
-BUDGET = 150
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the multi-objective GA.")
@@ -16,8 +11,8 @@ if __name__ == "__main__":
     parser.add_argument("--save-plot", type=str, default=None, help="Save the plot to the specified directory.")
     parser.add_argument("--run-animation", action="store_true", help="Run the animation of the best path.")
     parser.add_argument("--map", type=str, default="maps/grid_asymetric.txt", help="Path to the map image.")
-    parser.add_argument("--method", type=str, default="nsga2", help="Optimization method.")
     parser.add_argument("--num-agents", type=int, default=4, help="Number of agents.")
+    parser.add_argument("--budget", type=int, default=150, help="Budget.")
     args = parser.parse_args()
     
     # Read the rewards from the map file
@@ -31,37 +26,15 @@ if __name__ == "__main__":
         rvalues = np.array([float(line) for line in lines[num_rewards + 1 :]])
 
     # Run the GA
-    match args.method:
-        case "nsga2":
-            path1, path2, logbook = ga(
-                num_rewards,
-                rpositions,
-                rvalues,
-                MAX_DISTANCE_BETWEEN_AGENTS,
-                BUDGET,
-                seed=42,
-            )
-        case "vns":
-            path1 = vns(
-                num_rewards,
-                rpositions,
-                rvalues,
-                BUDGET,
-                seed=42,
-            )
-            path2 = path1
-        case "movns":
-            paths = movns(
-                num_rewards,
-                rpositions,
-                rvalues,
-                BUDGET,
-                seed=42,
-                num_agents=args.num_agents,
-            )
-        case _:
-            raise ValueError(f"Invalid method: {args.method}")
-        
+    paths = movns(
+        num_rewards,
+        rpositions,
+        rvalues,
+        args.budget,
+        seed=42,
+        num_agents=args.num_agents,
+    )
+    
     if args.save_plot:
         directory = f"imgs/{args.method}/{args.save_plot}"
     else: 

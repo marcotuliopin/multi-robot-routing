@@ -29,8 +29,8 @@ vns:
 
 .PHONY: movns
 movns:
-	python main.py --method movns --map maps/grid_asymetric.txt --plot-path --plot-interpolation --plot-distances --save-plot movns1
+	python main.py --map maps/grid_asymetric.txt --plot-path --plot-interpolation --plot-distances --save-plot movns1
 	
 .PHONY: movns-large
 movns-large:
-	python main.py --method movns --map maps/dispersed_large.txt --plot-path --plot-interpolation --plot-distances --save-plot movnslarge
+	python main.py --map maps/dispersed_large.txt --plot-path --plot-interpolation --plot-distances --save-plot movnslarge
