@@ -8,21 +8,28 @@ class Solution:
     _BUDGET: float = 0
     _NUM_AGENTS: int = 0
 
-    def __init__(self, val: list[np.ndarray], score: tuple = (-1, -1)) -> None:
-        self.unbounded_paths = val  # It is called unbounded_paths because it is not guaranteed to obey the budget constraint
+    def __init__(
+        self, distmx: np.ndarray, val: np.ndarray = None, score: tuple = (-1, -1)
+    ) -> None:
+        self.paths = val if val else self.init_paths(distmx.shape[0])
         self.score = score
         self.crowding_distance = -1
         self.visited = False
+        self.prob_neg = 0.5
 
     @classmethod
-    def set_parameters(cls, begin: int, end: int, budget: float, num_agents: int) -> None:
+    def set_parameters(
+        cls, begin: int, end: int, budget: float, num_agents: int
+    ) -> None:
         cls._BEGIN = begin
         cls._END = end
         cls._BUDGET = budget
         cls._NUM_AGENTS = num_agents
 
     def init_paths(self, num_rewards: int) -> list[np.ndarray]:
-        return np.random.uniform(low=-1, high=1, size=(Solution._NUM_AGENTS, num_rewards))
+        unbounded_paths = np.random.uniform(
+            low=-1, high=1, size=(Solution._NUM_AGENTS, num_rewards)
+        )
 
     def dominates(self, other: "Solution") -> bool:
         is_better = False
@@ -50,16 +57,49 @@ class Solution:
             lengths.append(np.sum(distmx[path[:-1], path[1:]]))
         return lengths
 
-    def bound_solution(self, val: np.ndarray, distmx: np.ndarray) -> np.ndarray:
-        total = 0
-        for idx, (previous, current) in enumerate(zip(val[:-1], val[1:])):
-            total += distmx[previous, current]
-            if total + distmx[current, Solution._END] > Solution._BUDGET:
-                return val[: idx + 1]
+    def bound_solution(
+        self, unbounded_paths: np.ndarray, distmx: np.ndarray
+    ) -> np.ndarray:
+        return [self.bound_path(path, distmx) for path in unbounded_paths]
 
-        return val
+    def bound_path(
+        self, path: np.ndarray, distmx: np.ndarray, rvalues: np.ndarray
+    ) -> np.ndarray:
+        positive_indices = np.whhre(path > 0)[0]
+        total_length = self.__update_path_length(path, positive_indices, distmx)
+
+        probabilities = np.zeros_like(path, dtype=float)
+        probabilities[positive_indices] = 1 / rvalues[positive_indices]
+        probabilities /= probabilities.sum()
+
+        while total_length > Solution._BUDGET:
+            if len(positive_indices) == 0:
+                break
+
+            removed_node_index = np.random.choice(positive_indices, p=probabilities[positive_indices])
+            path[removed_node_index] = -path[removed_node_index]
+
+            positive_indices = positive_indices[positive_indices != removed_node_index]
+            probabilities[removed_node_index] = 0
+            probabilities /= probabilities.sum()
+
+            total_length = self.__update_path_length(path, positive_indices, distmx)
+
+        return path
+    
+    def __update_path_length(self, path: np.ndarray, positive_indices: list, distmx: np.ndarray) -> float:
+        trajectory = path[positive_indices]
+        trajectory.sort()
+        total_length = (
+            np.sum(distmx[trajectory[:-1], trajectory[1:]])
+            + distmx[Solution._BEGIN, trajectory[0]]
+            + distmx[trajectory[-1], Solution._END]
+        )
+        return total_length
 
     # Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
     # Space complexity: O(n * m), as it stores the copied paths.
     def copy(self) -> "Solution":
-        return Solution([val.copy() for val in self.unbounded_paths], copy.deepcopy(self.score))
+        return Solution(
+            [val.copy() for val in self.unbounded_paths], copy.deepcopy(self.score)
+        )
