@@ -123,22 +123,22 @@ def main(
     archive, front, log = movns(percentual_values, rpositions, distmx, max_it, seed)
     archive.sort(key=lambda solution: solution.score[0])
 
-    bounded_paths = [s.get_solution_paths(distmx) for s in front]
+    paths = [s.get_solution_paths() for s in front]
     scores = [s.score for s in front]
 
-    for i, bounded_path in enumerate(bounded_paths):
+    for i, path in enumerate(paths):
         with open(
             f"out/bounded_path_{i}_{num_agents}_agents_{budget}_bgt.pkl", "wb"
         ) as f:
-            pickle.dump(bounded_path, f)
+            pickle.dump(path, f)
             pickle.dump(scores[i], f)
 
     # directory = 'imgs/movns/movns'
 
     # plot.plot_pareto_front_evolution(log)
 
-    # for i, bounded_path in enumerate(bounded_paths):
-    #     print('Bounded Path', i)
-    #     plot.plot_paths_with_rewards(rpositions, rvalues, bounded_path, scores[i], 4, directory=directory, fname=f'{num_agents}_agents_{budget}_bgt_paths{i}')
+    # for i, bounded_path in enumerate(paths):
+    #     print('Path', i)
+    #     plot.plot_paths_with_rewards(rpositions, rvalues, path, scores[i], 4, directory=directory, fname=f'{num_agents}_agents_{budget}_bgt_paths{i}')
 
-    return bounded_paths
+    return paths
