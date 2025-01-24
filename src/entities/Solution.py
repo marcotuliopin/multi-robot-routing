@@ -10,14 +10,14 @@ class Solution:
 
     def __init__(
         self,
-        distmx: np.ndarray,
-        rvalues: np.ndarray,
+        distmx: np.ndarray = None,
+        rvalues: np.ndarray = None,
         val: np.ndarray = None,
-        score: tuple = (-1, -1),
+        score: tuple = None,
     ) -> None:
         self.paths = val if val else self.init_paths(distmx.shape[0])
         self.paths = self.bound_solution(self.paths, distmx, rvalues)
-        self.score = score
+        self.score = score if score else (-1, -1)
         self.crowding_distance = -1
         self.visited = False
 
@@ -107,4 +107,9 @@ class Solution:
         return total_length
 
     def copy(self) -> "Solution":
-        return Solution([val.copy() for val in self.paths], copy.deepcopy(self.score))
+        return Solution(
+            distmx=None,
+            rvalues=None,
+            val=np.copy(self.paths),
+            score=copy.deepcopy(self.score),
+        )
