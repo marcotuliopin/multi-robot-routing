@@ -65,7 +65,10 @@ class Solution:
     def bound_path(
         self, path: np.ndarray, distmx: np.ndarray, rvalues: np.ndarray
     ) -> np.ndarray:
-        positive_indices = np.whhre(path > 0)[0]
+        positive_indices = np.where(path > 0)[0]
+        if len(positive_indices) == 0:
+            return path
+
         total_length = self.__update_path_length(path, positive_indices, distmx)
 
         probabilities = np.zeros_like(path, dtype=float)
@@ -73,13 +76,13 @@ class Solution:
         probabilities /= probabilities.sum()
 
         while total_length > Solution._BUDGET:
-            if len(positive_indices) == 0:
-                break
-
             removed_node_index = np.random.choice(positive_indices, p=probabilities[positive_indices])
             path[removed_node_index] = -path[removed_node_index]
 
             positive_indices = positive_indices[positive_indices != removed_node_index]
+            if len(positive_indices) == 0:
+                break
+
             probabilities[removed_node_index] = 0
             probabilities /= probabilities.sum()
 
