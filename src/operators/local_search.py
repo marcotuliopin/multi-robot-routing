@@ -2,8 +2,6 @@ import numpy as np
 from ..entities import Solution
 from ..evaluation import evaluate
 
-# Time complexity: O(n * m^2), where n is the number of paths and m is the number of points in each path.
-# Space complexity: O(n), as it stores the neighbors.
 def local_search(
     solution: Solution,
     k: int,
@@ -13,14 +11,12 @@ def local_search(
 ) -> Solution:
     neighbors = []
 
-    num_paths = len(solution.unbounded_paths)
+    num_paths = len(solution.paths)
     for i in range(num_paths):
         neighbors.extend(step(solution, i, k, rvalues, rpositions, distmx))
             
     return neighbors
 
-# Time complexity: O(m^2), where m is the number of points in the path.
-# Space complexity: O(n), as it stores the neighbors.
 def step(
     solution: Solution,
     agent: int,
@@ -37,19 +33,19 @@ def step(
     else:
         op = swap_points
 
-    len_path = len(solution.unbounded_paths[agent])
-    for i in range(len_path):
-        for j in range(i + 1, len_path):
+    positive_indices = np.where(solution.paths[agent] > 0)[0]
+    
+    for i in range(len(positive_indices)):
+        for j in range(i + 1, len(positive_indices)):
             new_solution = solution.copy()
 
-            new_path = new_solution.unbounded_paths[agent]
-            new_path[:] = op(new_path, i, j)
+            new_path = new_solution.paths[agent]
+            new_path[:] = op(new_path, positive_indices[i], positive_indices[j])
 
             new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 
-            # Dominated and non-dominated solutions are stored together and separeted during the archive update
-            # if not any(other.dominates(new_solution) for other in neighbors):
             neighbors.append(new_solution)
+
     return neighbors
 
 # Time complexity: O(m), where m is the number of points in the path.

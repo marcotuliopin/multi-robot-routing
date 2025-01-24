@@ -72,7 +72,7 @@ def movns(
         start_it = time.perf_counter()
 
         # Select neighborhood
-        k = np.random.randint(1, kmax)
+        k = np.random.randint(0, kmax)
 
         solution = select_solution(front, dominated)
 
