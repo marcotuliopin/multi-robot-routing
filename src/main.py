@@ -102,7 +102,6 @@ def movns(
 
 
 def main(
-    num_rewards: int,
     rpositions: np.ndarray,
     rvalues: np.ndarray,
     budget: int,

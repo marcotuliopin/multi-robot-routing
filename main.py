@@ -25,9 +25,7 @@ if __name__ == "__main__":
         )
         rvalues = np.array([float(line) for line in lines[num_rewards + 1 :]])
 
-    # Run the GA
     paths = movns(
-        num_rewards,
         rpositions,
         rvalues,
         args.budget,
