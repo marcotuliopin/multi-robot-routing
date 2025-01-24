@@ -9,9 +9,8 @@ from .operators import *
 from .entities import Solution
 import pickle
 
-
-def init_solution(num_rewards: int) -> tuple:
-    return Solution(num_rewards)
+archive_max_size = 25
+kmax = 4  # Number of neighborhoods
 
 
 def save_stats(front, dominated, log):
@@ -45,7 +44,6 @@ def get_candidates(solutions):
 
 
 def movns(
-    num_rewards: int,
     rvalues: np.ndarray,
     rpositions: np.ndarray,
     distmx: np.ndarray,
@@ -58,31 +56,25 @@ def movns(
     log = []
 
     # Each solution is composed of num_agents paths
-    solution: Solution = init_solution(num_rewards)
+    solution = Solution(distmx=distmx, rvalues=rvalues)
     solution.score = evaluate(solution, rvalues, rpositions, distmx)
 
     # The archive is composed of the non-dominated solutions
-    archive_max_size = 25
     archive = [solution]
     front = []
 
-    kmax = 4  # Number of neighborhoods
-
-    print(f"Initializing neighborhood")
     for k in tqdm(range(kmax), desc="Progress", unit="neighborhood"):
         neighbors = local_search(solution, k, rvalues, rpositions, distmx)
         archive, front, dominated = update_archive(archive, neighbors, archive_max_size)
     save_stats(front, dominated, log)
 
-    for it in tqdm(range(max_it), desc="Progress", unit="iteration"):
+    for _ in tqdm(range(max_it), desc="Progress", unit="iteration"):
         start_it = time.perf_counter()
 
         # Select neighborhood
         k = np.random.randint(1, kmax)
 
-        solution = select_solution(
-            front, dominated
-        )  # O(n) where n is the number of solutions in the front and dominated lists
+        solution = select_solution(front, dominated)
 
         # First phase
         shaken_solution = perturb_solution(solution, k)
@@ -96,6 +88,7 @@ def movns(
             neighbors2 = solution_relinking(solution1.copy(), solution2.copy(), rvalues, rpositions, distmx)
 
         archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
+
         end_it = time.perf_counter()
         with open(f"tests/it_time_{Solution._NUM_AGENTS}_bdg_{Solution._BUDGET}.txt", "a") as f:
             f.write(f"{str(end_it - start_it)}\n")
@@ -127,9 +120,7 @@ def main(
     # Matrix of distances between rewards
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
-    archive, front, log = movns(
-        num_rewards, percentual_values, rpositions, distmx, max_it, seed
-    )
+    archive, front, log = movns(percentual_values, rpositions, distmx, max_it, seed)
     archive.sort(key=lambda solution: solution.score[0])
 
     bounded_paths = [s.get_solution_paths(distmx) for s in front]
