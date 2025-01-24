@@ -9,13 +9,17 @@ class Solution:
     _NUM_AGENTS: int = 0
 
     def __init__(
-        self, distmx: np.ndarray, val: np.ndarray = None, score: tuple = (-1, -1)
+        self,
+        distmx: np.ndarray,
+        rvalues: np.ndarray,
+        val: np.ndarray = None,
+        score: tuple = (-1, -1),
     ) -> None:
         self.paths = val if val else self.init_paths(distmx.shape[0])
+        self.paths = self.bound_solution(self.paths, distmx, rvalues)
         self.score = score
         self.crowding_distance = -1
         self.visited = False
-        self.prob_neg = 0.5
 
     @classmethod
     def set_parameters(
@@ -27,7 +31,7 @@ class Solution:
         cls._NUM_AGENTS = num_agents
 
     def init_paths(self, num_rewards: int) -> list[np.ndarray]:
-        unbounded_paths = np.random.uniform(
+        return np.random.uniform(
             low=-1, high=1, size=(Solution._NUM_AGENTS, num_rewards)
         )
 
@@ -40,27 +44,25 @@ class Solution:
                 return False
         return is_better
 
-    def get_solution_paths(self, distmx: np.ndarray) -> list[np.ndarray]:
-        solution = []
-        for path in self.unbounded_paths:
-            new_path = path.copy()
-            unbounded_val = np.insert(new_path, 0, Solution._BEGIN)
-            bounded_val = self.bound_solution(unbounded_val, distmx)
-            bounded_val = np.append(bounded_val, Solution._END)
-            solution.append(bounded_val)
+    def get_solution_paths(self) -> np.ndarray:
+        positive_paths = np.where(self.paths > 0, self.paths, 0)  # Zera valores negativos
+        trajectories = positive_paths[positive_paths > 0].reshape(-1, self.paths.shape[1])
+        solution = np.hstack([
+            np.full((trajectories.shape[0], 1), Solution._BEGIN), 
+            trajectories, 
+            np.full((trajectories.shape[0], 1), Solution._END)
+        ])
         return solution
 
     def get_solution_length(self, distmx: np.ndarray) -> float:
-        paths = self.get_solution_paths(distmx)
-        lengths = []
-        for path in paths:
-            lengths.append(np.sum(distmx[path[:-1], path[1:]]))
+        paths = self.get_solution_paths()
+        lengths = np.sum(distmx[paths[:, :-1], paths[:, 1:]], axis=1)
         return lengths
 
     def bound_solution(
-        self, unbounded_paths: np.ndarray, distmx: np.ndarray
+        self, unbounded_paths: np.ndarray, distmx: np.ndarray, rvalues: np.ndarray
     ) -> np.ndarray:
-        return [self.bound_path(path, distmx) for path in unbounded_paths]
+        return [self.bound_path(path, distmx, rvalues) for path in unbounded_paths]
 
     def bound_path(
         self, path: np.ndarray, distmx: np.ndarray, rvalues: np.ndarray
@@ -76,7 +78,9 @@ class Solution:
         probabilities /= probabilities.sum()
 
         while total_length > Solution._BUDGET:
-            removed_node_index = np.random.choice(positive_indices, p=probabilities[positive_indices])
+            removed_node_index = np.random.choice(
+                positive_indices, p=probabilities[positive_indices]
+            )
             path[removed_node_index] = -path[removed_node_index]
 
             positive_indices = positive_indices[positive_indices != removed_node_index]
@@ -89,8 +93,10 @@ class Solution:
             total_length = self.__update_path_length(path, positive_indices, distmx)
 
         return path
-    
-    def __update_path_length(self, path: np.ndarray, positive_indices: list, distmx: np.ndarray) -> float:
+
+    def __update_path_length(
+        self, path: np.ndarray, positive_indices: list, distmx: np.ndarray
+    ) -> float:
         trajectory = path[positive_indices]
         trajectory.sort()
         total_length = (
@@ -100,9 +106,5 @@ class Solution:
         )
         return total_length
 
-    # Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
-    # Space complexity: O(n * m), as it stores the copied paths.
     def copy(self) -> "Solution":
-        return Solution(
-            [val.copy() for val in self.unbounded_paths], copy.deepcopy(self.score)
-        )
+        return Solution([val.copy() for val in self.paths], copy.deepcopy(self.score))
