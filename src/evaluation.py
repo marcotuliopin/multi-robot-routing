@@ -9,7 +9,7 @@ def evaluate(
     rvalues: np.ndarray,
     rpositions: np.ndarray,
     distmx: np.ndarray,
-) -> float:
+) -> tuple[float, float]:
     bounded_paths: list[np.ndarray] = solution.get_solution_paths(distmx)
     max_reward = maximize_reward(bounded_paths, rvalues)
     max_communication = calculate_rssi(bounded_paths, rpositions)
