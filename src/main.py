@@ -84,7 +84,7 @@ def movns(
         neighbors2 = []
         if len(front) > 1:
             solution1, solution2 = random.sample(front, 2)
-            neighbors2 = solution_relinking(solution1.copy(), solution2.copy(), rvalues, rpositions, distmx)
+            neighbors2 = solution_relinking(solution1, solution2, rvalues, rpositions, distmx)
 
         archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
 
