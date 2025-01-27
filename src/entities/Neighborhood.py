@@ -28,7 +28,7 @@ class Neighborhood:
     def get_local_search_operator(self, neighborhood: int):
         return self.local_search_operators[neighborhood % len(self.local_search_operators)]
 
-    def two_opt(solution: Solution) -> list:
+    def two_opt(self, solution: Solution) -> list:
         new_solution = solution.copy()
         new_paths = new_solution.paths
 
@@ -43,7 +43,7 @@ class Neighborhood:
 
         return new_solution
 
-    def swap_all_subpaths(solution: Solution) -> np.ndarray:
+    def swap_all_subpaths(self, solution: Solution) -> np.ndarray:
         new_solution = solution.copy()
         new_paths = new_solution.paths
 
@@ -59,7 +59,7 @@ class Neighborhood:
 
         return new_solution
 
-    def move_point(solution: Solution, agent: int) -> list[Solution]:
+    def move_point(self, solution: Solution, agent: int) -> list[Solution]:
         path = solution.paths[agent]
         neighbors = []
 
@@ -92,7 +92,7 @@ class Neighborhood:
 
         return neighbors
 
-    def swap_points(solution: Solution, agent: int) -> list[Solution]:
+    def swap_points(self, solution: Solution, agent: int) -> list[Solution]:
         path = solution.paths[agent]
         neighbors = []
 
@@ -111,7 +111,7 @@ class Neighborhood:
 
         return neighbors
 
-    def swap_local_subpaths(solution: Solution, agent: int) -> list[Solution]:
+    def swap_local_subpaths(self, solution: Solution, agent: int) -> list[Solution]:
         path = solution.paths[agent]
         neighbors = []
 
@@ -131,7 +131,7 @@ class Neighborhood:
 
         return neighbors
 
-    def invert_single_point(solution: Solution, agent: int) -> list[Solution]:
+    def invert_single_point(self, solution: Solution, agent: int) -> list[Solution]:
         path = solution.paths[agent]
         neighbors = []
 
@@ -145,7 +145,7 @@ class Neighborhood:
 
         return neighbors
 
-    def invert_multiple_points(solution: Solution, agent: int) -> list[Solution]:
+    def invert_multiple_points(self, solution: Solution, agent: int) -> list[Solution]:
         path = solution.paths[agent]
         neighbors = []
 

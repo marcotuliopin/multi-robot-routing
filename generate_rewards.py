@@ -1,5 +1,4 @@
 import numpy as np
-import argparse
 
 
 def generate_dispersed_rewards(num_rewards, dispersion, output_file):

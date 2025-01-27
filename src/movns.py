@@ -2,15 +2,15 @@ import random
 import time
 import plot
 import numpy as np
+import pickle
 from tqdm import tqdm
 from scipy.spatial.distance import cdist
+
 from .evaluation import evaluate, update_archive
 from .operators import *
-from .entities import Solution
-import pickle
+from .entities import Solution, Neighborhood
 
 archive_max_size = 25
-kmax = 9  # Number of neighborhoods
 
 
 def save_stats(front, dominated, log):
@@ -53,43 +53,52 @@ def movns(
     start = time.time()
 
     random.seed(seed)
-    log = []
 
-    # Each solution is composed of num_agents paths
+    neighborhood = Neighborhood()
+
     solution = Solution(distmx=distmx, rvalues=rvalues)
     solution.score = evaluate(solution, rvalues, rpositions)
 
-    # The archive is composed of the non-dominated solutions
     archive = [solution]
     front = []
+    log = []
 
-    for neighborhood in tqdm(range(kmax), desc="Progress", unit="neighborhood"):
-        neighbors = local_search(solution, neighborhood, rvalues, rpositions, distmx)
+    for neighborhood_id in tqdm(range(neighborhood.num_neighborhoods), desc="Progress", unit="neighborhood"):
+        neighbors = local_search(
+            solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx
+        )
         archive, front, dominated = update_archive(archive, neighbors, archive_max_size)
     save_stats(front, dominated, log)
 
-    for it in tqdm(range(max_it), desc="Progress", unit="iteration"):
+    for neighborhood_id in tqdm(range(max_it), desc="Progress", unit="iteration"):
         start_it = time.perf_counter()
-
-        # Select neighborhood
-        neighborhood = it % kmax
 
         solution = select_solution(front, dominated)
 
         # First phase
-        shaken_solution = perturb_solution(solution, neighborhood, rvalues, rpositions, distmx)
-        neighbors1 = local_search(shaken_solution, neighborhood, rvalues, rpositions, distmx)
+        shaken_solution = perturb_solution(
+            solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx
+        )
+        neighbors1 = local_search(
+            shaken_solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx
+        )
 
         # Second phase
         neighbors2 = []
         if len(front) > 1:
             solution1, solution2 = random.sample(front, 2)
-            neighbors2 = solution_relinking(solution1, solution2, rvalues, rpositions, distmx)
+            neighbors2 = solution_relinking(
+                solution1, solution2, rvalues, rpositions, distmx
+            )
 
-        archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
+        archive, front, dominated = update_archive(
+            archive, neighbors1 + neighbors2, archive_max_size
+        )
 
         end_it = time.perf_counter()
-        with open(f"tests/it_time_{Solution._NUM_AGENTS}_bdg_{Solution._BUDGET}.txt", "a") as f:
+        with open(
+            f"tests/it_time_{Solution._NUM_AGENTS}_bdg_{Solution._BUDGET}.txt", "a"
+        ) as f:
             f.write(f"{str(end_it - start_it)}\n")
 
         save_stats(front, dominated, log)
@@ -132,11 +141,19 @@ def main(
             pickle.dump(path, f)
             pickle.dump(scores[i], f)
 
-    directory = 'imgs/movns/new_representation'
+    directory = "imgs/movns/new_representation"
 
     plot.plot_pareto_front_evolution(log)
 
     for i, path in enumerate(paths):
-        plot.plot_paths_with_rewards(rpositions, rvalues, path, scores[i], 4, directory=directory, fname=f'paths_{num_agents}_agents_{budget}_bgt_{i}')
+        plot.plot_paths_with_rewards(
+            rpositions,
+            rvalues,
+            path,
+            scores[i],
+            4,
+            directory=directory,
+            fname=f"paths_{num_agents}_agents_{budget}_bgt_{i}",
+        )
 
     return paths
