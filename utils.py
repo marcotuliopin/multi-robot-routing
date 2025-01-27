@@ -39,8 +39,7 @@ def interpolate_path(path: list, positions: np.ndarray, step: float) -> np.ndarr
     return np.array(sampled_points)
 
 def translate_path_to_coordinates(path: list, positions: np.ndarray) -> list:
-    coordinates = [positions[reward] for reward in path]
-    return [np.vstack(([0, 0], c, [0, 0])) for c in coordinates]
+    return [positions[reward] for reward in path]
 
 def calculate_rssi(
     paths: list,

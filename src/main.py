@@ -104,8 +104,8 @@ def main(
     rpositions: np.ndarray,
     rvalues: np.ndarray,
     budget: int,
-    begin: int = 0,
-    end: int = 0,
+    begin: int = -1,
+    end: int = -1,
     max_it: int = 100,
     num_agents: int = 4,
     seed: int = 42,
@@ -127,7 +127,7 @@ def main(
 
     for i, path in enumerate(paths):
         with open(
-            f"out/bounded_path_{i}_{num_agents}_agents_{budget}_bgt.pkl", "wb"
+            f"out/bounded_path_{num_agents}_agents_{budget}_bgt_{i}.pkl", "wb"
         ) as f:
             pickle.dump(path, f)
             pickle.dump(scores[i], f)
@@ -137,6 +137,6 @@ def main(
     plot.plot_pareto_front_evolution(log)
 
     for i, path in enumerate(paths):
-        plot.plot_paths_with_rewards(rpositions, rvalues, path, scores[i], 4, directory=directory, fname=f'{num_agents}_agents_{budget}_bgt_paths{i}')
+        plot.plot_paths_with_rewards(rpositions, rvalues, path, scores[i], 4, directory=directory, fname=f'paths_{num_agents}_agents_{budget}_bgt_{i}')
 
     return paths

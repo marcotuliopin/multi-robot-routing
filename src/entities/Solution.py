@@ -3,8 +3,8 @@ import numpy as np
 
 
 class Solution:
-    _BEGIN: int = 0
-    _END: int = 0
+    _BEGIN: int = -1
+    _END: int = -1
     _BUDGET: float = 0
     _NUM_AGENTS: int = 0
 
@@ -16,7 +16,7 @@ class Solution:
         score: tuple = None,
     ) -> None:
         if val is None:
-            self.paths = self.init_paths(distmx.shape[0])
+            self.paths = self.init_paths(len(rvalues) - 1)
             self.paths = self.bound_all_paths(self.paths, distmx, rvalues)
         else:
             self.paths = val
