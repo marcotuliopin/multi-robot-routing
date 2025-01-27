@@ -34,3 +34,7 @@ movns:
 .PHONY: movns-large
 movns-large:
 	python main.py --map maps/dispersed_large.txt --plot-path --plot-interpolation --plot-distances --save-plot movnslarge
+
+.PHONY: clean-output
+clean-output:
+	rm - rf out/*
