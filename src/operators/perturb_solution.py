@@ -15,6 +15,7 @@ def perturb_solution(
     else:
         new_solution = swap_subpaths(solution)
 
+    new_solution.paths = new_solution.bound_all_paths(new_solution.paths, distmx, rvalues)
     new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 
     return new_solution

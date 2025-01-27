@@ -23,9 +23,9 @@ def solution_relinking(
             if path1[j] == path2[j]:
                 continue
 
-            swap_idx = np.where(path1 == path2[j])[0][0]
-            path1[j], path1[swap_idx] = path1[swap_idx], path1[j]
+            path1[j] = path2[j]
 
+            solution1.paths = solution1.bound_all_paths(solution1.paths, distmx, rvalues)
             new_solution = solution1.copy()
             new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 

@@ -334,7 +334,7 @@ def plot_pareto_front_evolution(log):
     ax.set_xlabel('Maximum RSSI')
     ax.set_ylabel('Percentage of Total Reward Obtained')
     ax.set_title('Pareto Frontier Evolution')
-    ax.set_xlim(-60, 0)
+    ax.set_xlim(-100, 0)
     ax.set_ylim(0, 100)
 
     initial_data = log[0]
@@ -370,7 +370,7 @@ def plot_pareto_front_evolution(log):
             x_dominated, y_dominated = zip(*[(s[1], s[0]) for s in current_data['dominated']])
             ax.scatter(x_dominated, y_dominated, s=30, alpha=0.6, color='gray', label='Dominated')
 
-        ax.set_xlim(-60, 0)
+        ax.set_xlim(-100, 0)
         ax.set_ylim(0, 100)
         ax.set_xlabel('Maximum RSSI')
         ax.set_ylabel('Percentage of Total Reward Obtained')

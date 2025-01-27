@@ -122,6 +122,7 @@ def main(
     archive.sort(key=lambda solution: solution.score[0])
 
     paths = [s.get_solution_paths() for s in front]
+
     scores = [s.score for s in front]
 
     for i, path in enumerate(paths):
@@ -131,12 +132,11 @@ def main(
             pickle.dump(path, f)
             pickle.dump(scores[i], f)
 
-    # directory = 'imgs/movns/movns'
+    directory = 'imgs/movns/new_representation'
 
-    # plot.plot_pareto_front_evolution(log)
+    plot.plot_pareto_front_evolution(log)
 
-    # for i, bounded_path in enumerate(paths):
-    #     print('Path', i)
-    #     plot.plot_paths_with_rewards(rpositions, rvalues, path, scores[i], 4, directory=directory, fname=f'{num_agents}_agents_{budget}_bgt_paths{i}')
+    for i, path in enumerate(paths):
+        plot.plot_paths_with_rewards(rpositions, rvalues, path, scores[i], 4, directory=directory, fname=f'{num_agents}_agents_{budget}_bgt_paths{i}')
 
     return paths

@@ -10,9 +10,9 @@ def evaluate(
     rpositions: np.ndarray,
     distmx: np.ndarray,
 ) -> tuple[float, float]:
-    bounded_paths: list[np.ndarray] = solution.get_solution_paths(distmx)
-    max_reward = maximize_reward(bounded_paths, rvalues)
-    max_communication = calculate_rssi(bounded_paths, rpositions)
+    paths: list[np.ndarray] = solution.get_solution_paths()
+    max_reward = maximize_reward(paths, rvalues)
+    max_communication = calculate_rssi(paths, rpositions)
     return max_reward, max_communication
 
 # Time complexity: O(n), where n is the number of points in the paths.

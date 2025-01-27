@@ -16,6 +16,7 @@ def local_search(
         neighbors.extend(step(solution, i, neighborhood))
 
     for neighbor in neighbors:
+        neighbor.paths = neighbor.bound_all_paths(neighbor.paths, distmx, rvalues)
         neighbor.score = evaluate(neighbor, rvalues, rpositions, distmx)
             
     return neighbors
@@ -52,14 +53,14 @@ def move_point(solution: Solution, agent: int) -> list[Solution]:
             idx1 = positive_indices[i]
             idx2 = positive_indices[j]
 
-            if idx2 == len(positive_indices) - 1:
+            if j == len(positive_indices) - 1:
                 # The new position is the last point
                 new_path[idx1] = new_path[idx2]
                 # The last point is the middle point between the two points
-                new_path[idx2] = new_path[idx1] + (new_path[idx2 - 1] - new_path[idx1]) / 2
+                new_path[idx2] = new_path[idx1] + (new_path[positive_indices[j - 1]] - new_path[idx1]) / 2
             else:
                 # The new position is the middle point between the two points
-                new_path[idx1] = new_path[idx2] + (new_path[idx2 + 1] - new_path[idx2]) / 2
+                new_path[idx1] = new_path[idx2] + (new_path[positive_indices[j + 1]] - new_path[idx2]) / 2
 
             neighbors.append(new_solution)
 
@@ -102,7 +103,7 @@ def swap_subpaths(solution: Solution, agent: int) -> list[Solution]:
                 new_path[i : i + l].copy(),
             )
 
-            neighbors.append(new_path)
+            neighbors.append(new_solution)
             
     return neighbors
 

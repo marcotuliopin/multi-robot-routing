@@ -15,9 +15,13 @@ class Solution:
         val: np.ndarray = None,
         score: tuple = None,
     ) -> None:
-        self.paths = val if val else self.init_paths(distmx.shape[0])
-        self.paths = self.bound_solution(self.paths, distmx, rvalues)
-        self.score = score if score else (-1, -1)
+        if val is None:
+            self.paths = self.init_paths(distmx.shape[0])
+            self.paths = self.bound_all_paths(self.paths, distmx, rvalues)
+        else:
+            self.paths = val
+
+        self.score = score if not score is None else (-1, -1)
         self.crowding_distance = -1
         self.visited = False
 
@@ -44,14 +48,12 @@ class Solution:
                 return False
         return is_better
 
-    def get_solution_paths(self) -> np.ndarray:
-        positive_paths = np.where(self.paths > 0, self.paths, 0)  # Zera valores negativos
-        trajectories = positive_paths[positive_paths > 0].reshape(-1, self.paths.shape[1])
-        solution = np.hstack([
-            np.full((trajectories.shape[0], 1), Solution._BEGIN), 
-            trajectories, 
-            np.full((trajectories.shape[0], 1), Solution._END)
-        ])
+    def get_solution_paths(self) -> list[np.ndarray]:
+        trajectories = [self.__get_sorted_indices(path) for path in self.paths]
+        solution = [
+            np.concatenate(([Solution._BEGIN], trajectory, [Solution._END]))
+            for trajectory in trajectories
+        ]
         return solution
 
     def get_solution_length(self, distmx: np.ndarray) -> float:
@@ -59,23 +61,28 @@ class Solution:
         lengths = np.sum(distmx[paths[:, :-1], paths[:, 1:]], axis=1)
         return lengths
 
-    def bound_solution(
+    def bound_all_paths(
         self, unbounded_paths: np.ndarray, distmx: np.ndarray, rvalues: np.ndarray
     ) -> np.ndarray:
-        return [self.bound_path(path, distmx, rvalues) for path in unbounded_paths]
+        return np.apply_along_axis(self.bound_path, 1, unbounded_paths, distmx, rvalues)
 
     def bound_path(
         self, path: np.ndarray, distmx: np.ndarray, rvalues: np.ndarray
     ) -> np.ndarray:
         positive_indices = np.where(path > 0)[0]
+
         if len(positive_indices) == 0:
             return path
 
         total_length = self.__update_path_length(path, positive_indices, distmx)
 
+        if total_length <= Solution._BUDGET:
+            return path
+
         probabilities = np.zeros_like(path, dtype=float)
         probabilities[positive_indices] = 1 / rvalues[positive_indices]
-        probabilities /= probabilities.sum()
+
+        probabilities = probabilities / probabilities.sum()
 
         while total_length > Solution._BUDGET:
             removed_node_index = np.random.choice(
@@ -88,23 +95,31 @@ class Solution:
                 break
 
             probabilities[removed_node_index] = 0
-            probabilities /= probabilities.sum()
+            probabilities = probabilities / probabilities.sum()
 
             total_length = self.__update_path_length(path, positive_indices, distmx)
 
         return path
 
+    def get_path_length(self, path: np.ndarray, distmx: np.ndarray) -> float:
+        positive_indices = np.where(path > 0)[0]
+        return self.__update_path_length(path, positive_indices, distmx)
+
     def __update_path_length(
         self, path: np.ndarray, positive_indices: list, distmx: np.ndarray
     ) -> float:
-        trajectory = path[positive_indices]
-        trajectory.sort()
+        trajectory = positive_indices[np.argsort(path[positive_indices])]
+
         total_length = (
             np.sum(distmx[trajectory[:-1], trajectory[1:]])
             + distmx[Solution._BEGIN, trajectory[0]]
             + distmx[trajectory[-1], Solution._END]
         )
         return total_length
+    
+    def __get_sorted_indices(self, path: np.ndarray) -> np.ndarray:
+        positive_indices = np.where(path > 0)[0]
+        return positive_indices[np.argsort(path[positive_indices])]
 
     def copy(self) -> "Solution":
         return Solution(
@@ -113,3 +128,6 @@ class Solution:
             val=np.copy(self.paths),
             score=copy.deepcopy(self.score),
         )
+    
+    def __str__(self) -> str:
+        return f"Solution: {self.score}\n {self.paths}"
