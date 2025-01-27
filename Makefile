@@ -37,4 +37,4 @@ movns-large:
 
 .PHONY: clean-output
 clean-output:
-	rm - rf out/*
+	del /Q .\out\*
