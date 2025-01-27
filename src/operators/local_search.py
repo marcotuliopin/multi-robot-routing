@@ -21,11 +21,7 @@ def local_search(
     return neighbors
 
 
-def step(
-    solution: Solution,
-    agent: int,
-    neighborhood: int,
-) -> Solution:
+def step(solution: Solution, agent: int, neighborhood: int) -> Solution:
     operators = {
         0: move_point(solution, agent),
         1: invert_single_point(solution, agent), 
