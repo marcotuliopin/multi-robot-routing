@@ -29,12 +29,20 @@ vns:
 
 .PHONY: movns
 movns:
-	python main.py --map maps/grid_asymetric.txt --plot-path --plot-interpolation --plot-distances --save-plot movns1
-	
-.PHONY: movns-large
-movns-large:
-	python main.py --map maps/dispersed_large.txt --plot-path --plot-interpolation --plot-distances --save-plot movnslarge
+	python -m cProfile main.py --map maps/dispersed_large.txt --num-agents 4 --budget 150 --num-iter 300
 
 .PHONY: clean-output
 clean-output:
 	del /Q .\out\*
+
+.PHONY: clean-tests
+clean-tests:
+	del /Q .\tests\*
+
+.PHONY: clean-images
+clean-images:
+	rmdir /S /Q .\imgs\movns\paths
+	mkdir .\imgs\movns\paths
+
+.PHONY: clean
+clean: clean-output clean-tests clean-images
