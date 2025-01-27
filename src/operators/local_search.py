@@ -48,16 +48,96 @@ def step(
 
     return neighbors
 
-# Time complexity: O(m), where m is the number of points in the path.
-# Space complexity: O(m), as it stores the modified path.
-def move_point(path: np.ndarray, i: int, j: int) -> np.ndarray:
-    element = path[i]
-    path = np.delete(path, i)
-    path = np.insert(path, j, element)
-    return path
+def move_point(solution: Solution, agent: int) -> np.ndarray:
+    path = solution.paths[agent]
+    neighbors = []
 
-# Time complexity: O(1), as it swaps two points in the path.
-# Space complexity: O(1), as it uses a constant amount of additional space.
-def swap_points(path: np.ndarray, i: int, j: int) -> np.ndarray:
-    path[i], path[j] = path[j], path[i]
-    return path
+    positive_indices = np.where(path > 0)[0]
+
+    for i in range(len(positive_indices)):
+        for j in range(i + 1, len(positive_indices)):
+            new_solution = solution.copy()
+            new_path = new_solution.paths[agent]
+
+            idx1 = positive_indices[i]
+            idx2 = positive_indices[j]
+
+            if idx2 == len(positive_indices) - 1:
+                # The new position is the last point
+                new_path[idx1] = new_path[idx2]
+                # The last point is the middle point between the two points
+                new_path[idx2] = new_path[idx1] + (new_path[idx2 - 1] - new_path[idx1]) / 2
+            else:
+                # The new position is the middle point between the two points
+                new_path[idx1] = new_path[idx2] + (new_path[idx2 + 1] - new_path[idx2]) / 2
+
+            neighbors.append(new_solution)
+
+    return neighbors
+
+def swap_points(solution: Solution, agent: int) -> np.ndarray:
+    path = solution.paths[agent]
+    neighbors = []
+
+    positive_indices = np.where(path > 0)[0]
+
+    for i in range(len(positive_indices)):
+        for j in range(i + 1, len(positive_indices)):
+            new_solution = solution.copy()
+            new_path = new_solution.paths[agent]
+
+            idx1 = positive_indices[i]
+            idx2 = positive_indices[j]
+            new_path[idx1], new_path[idx2] = new_path[idx2], new_path[idx1]
+
+            neighbors.append(new_solution)
+
+    return neighbors
+
+def swap_subpaths(path: np.ndarray) -> np.ndarray:
+    neighbors = []
+
+    positive_indices = np.where(path > 0)[0]
+
+    if len(positive_indices) < 2:
+        return neighbors
+
+    l = np.random.randint(1, len(positive_indices) // 2)
+
+    for i in range(len(positive_indices) - 2 * l):
+        for j in range(i + l, len(positive_indices) - l):
+            new_path = path.copy()
+
+            idx1 = positive_indices[i: i + l]
+            idx2 = positive_indices[j: j + l]
+
+            new_path[idx1], new_path[idx2] = new_path[idx2].copy(), new_path[idx1].copy()
+            neighbors.append(new_path)
+            
+    return neighbors
+
+def invert_single_point(path: np.ndarray) -> np.ndarray:
+    neighbors = []
+
+    for i in range(len(path)):
+        new_solution = path.copy()
+        new_solution[i] = -new_solution[i]
+        neighbors.append(new_solution)
+    
+    return neighbors
+
+def invert_multiple_points(path: np.ndarray) -> np.ndarray:
+    neighbors = []
+    
+    for i in range(1, len(path) + 1):
+        new_solution = path.copy()
+        
+        idxs = np.random.choice(len(path), i, replace=False)
+        new_solution[idxs] = -new_solution[idxs]
+        neighbors.append(new_solution)
+    
+    return neighbors
+
+# def get_sorted_indices(path: np.ndarray) -> np.ndarray:
+#     positive_indices = np.where(path > 0)[0]
+#     return positive_indices[np.argsort(path[positive_indices])]
