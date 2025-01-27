@@ -12,6 +12,7 @@ if __name__ == "__main__":
     parser.add_argument("--run-animation", action="store_true", help="Run the animation of the best path.")
     parser.add_argument("--map", type=str, default="maps/grid_asymetric.txt", help="Path to the map image.")
     parser.add_argument("--num-agents", type=int, default=4, help="Number of agents.")
+    parser.add_argument("--num-iter", type=int, default=100, help="Number of iterations.")
     parser.add_argument("--budget", type=int, default=150, help="Budget.")
     args = parser.parse_args()
     
@@ -31,4 +32,5 @@ if __name__ == "__main__":
         args.budget,
         seed=42,
         num_agents=args.num_agents,
+        max_it=args.num_iter,
     )
