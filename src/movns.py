@@ -23,7 +23,7 @@ def save_stats(front, dominated, log):
 
 def select_solution(front, dominated):
     choosen_set = random.random()
-    if choosen_set < 0.9 or not dominated:
+    if choosen_set < 0.7 or not dominated:
         candidates = get_candidates(front)
     else:
         candidates = get_candidates(dominated)
