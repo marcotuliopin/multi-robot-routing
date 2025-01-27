@@ -106,7 +106,7 @@ def main(
     budget: int,
     begin: int = -1,
     end: int = -1,
-    max_it: int = 100,
+    max_it: int = 300,
     num_agents: int = 4,
     seed: int = 42,
 ):

@@ -1,3 +1,3 @@
-from .main import main as movns
+from .movns import main as movns
 
 __all__ = ["movns"]
