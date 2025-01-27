@@ -1,20 +1,24 @@
 import numpy as np
+from src.evaluation import evaluate
 from ..entities import Solution
 
-# Time complexity: O(n * m), where n is the number of paths and m is the number of points in each path.
-# Space complexity: O(n * m), as it stores the new solution.
-def perturb_solution(solution: Solution, k: int) -> Solution:
-    new_solution = solution.copy()
-    new_solution.score = -1
 
-    paths = new_solution.unbounded_paths
-    for idx in range(len(paths)):
-        if k <= 2:
-            paths[idx] = two_opt(paths[idx])
-        else:
-            paths[idx] = swap_subpaths(paths[idx])
+def perturb_solution(
+    solution: Solution,
+    neighborhood: int,
+    rvalues: np.ndarray,
+    rpositions: np.ndarray,
+    distmx: np.ndarray,
+) -> Solution:
+    if neighborhood % 2 == 0:
+        new_solution = two_opt(solution)
+    else:
+        new_solution = swap_subpaths(solution)
+
+    new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 
     return new_solution
+
 
 def two_opt(solution: Solution) -> list:
     new_solution = solution.copy()
@@ -28,6 +32,7 @@ def two_opt(solution: Solution) -> list:
         new_path = np.concatenate([new_path[:i], new_path[i : j + 1][::-1], new_path[j + 1 :]])
 
     return new_solution
+
 
 def swap_subpaths(solution: Solution) -> np.ndarray:
     new_solution = solution.copy()
