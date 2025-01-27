@@ -10,7 +10,7 @@ from .entities import Solution
 import pickle
 
 archive_max_size = 25
-kmax = 4  # Number of neighborhoods
+kmax = 9  # Number of neighborhoods
 
 
 def save_stats(front, dominated, log):

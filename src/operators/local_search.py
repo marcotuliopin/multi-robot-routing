@@ -24,10 +24,15 @@ def local_search(
 def step(solution: Solution, agent: int, neighborhood: int) -> Solution:
     operators = {
         0: move_point(solution, agent),
-        1: invert_single_point(solution, agent), 
+        1: invert_single_point(solution, agent),
         2: swap_points(solution, agent),
         3: invert_multiple_points(solution, agent),
         4: swap_subpaths(solution, agent),
+        5: move_point(solution, agent),
+        6: invert_single_point(solution, agent),
+        7: swap_points(solution, agent),
+        8: invert_multiple_points(solution, agent),
+        9: swap_subpaths(solution, agent),
     }
 
     return operators[neighborhood]
