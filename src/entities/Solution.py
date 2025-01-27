@@ -7,6 +7,7 @@ class Solution:
     _END: int = -1
     _BUDGET: float = 0
     _NUM_AGENTS: int = 0
+    _SPEED: float = 1
 
     def __init__(
         self,

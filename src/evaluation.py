@@ -7,11 +7,52 @@ def evaluate(
     solution: Solution,
     rvalues: np.ndarray,
     rpositions: np.ndarray,
+    distmx: np.ndarray,
 ) -> tuple[float, float]:
     paths: list[np.ndarray] = solution.get_solution_paths()
+
     max_reward = maximize_reward(paths, rvalues)
-    max_communication = calculate_rssi(paths, rpositions)
-    return max_reward, max_communication
+
+    interesting_times = get_time_to_rewards(paths, distmx)
+    interpolated_positions = interpolate_positions(paths, interesting_times, rpositions, distmx)
+
+    max_distance = calculate_max_distance(interpolated_positions)
+    min_communication = calculate_rssi(max_distance)
+    return max_reward, min_communication
+
+
+def interpolate_positions(paths: list[np.ndarray], times: np.ndarray, rpositions: np.ndarray, distmx: np.ndarray) -> np.ndarray:
+    interpolated_positions = []
+
+    for path in paths:
+        distances = np.cumsum(distmx[path[:-1], path[1:]]) / Solution._SPEED
+        x_positions = np.interp(times, distances, rpositions[path[1:], 0])
+        y_positions = np.interp(times, distances, rpositions[path[1:], 1])
+        interpolated_positions.append(np.vstack((x_positions, y_positions)).T)
+
+    return np.array(interpolated_positions)
+
+
+def get_time_to_rewards(paths: list[np.ndarray], distmx: np.ndarray) -> np.ndarray:
+    def calculate_times(path):
+        return np.cumsum(distmx[path[:-1], path[1:]]) / Solution._SPEED
+
+    times_to_rewards = [calculate_times(path) for path in paths]
+    times_to_rewards = np.concatenate(times_to_rewards) 
+
+    return np.unique(times_to_rewards)
+
+
+def calculate_max_distance(interpolated_positions: np.ndarray) -> float:
+    max_distance = 0.0
+    num_paths = len(interpolated_positions)
+
+    for i in range(num_paths):
+        for j in range(i + 1, num_paths):
+            distances = np.linalg.norm(interpolated_positions[i] - interpolated_positions[j], axis=1)
+            max_distance = max(max_distance, np.max(distances))
+
+    return max_distance
 
 
 def maximize_reward(paths: list[np.ndarray], rvalues: np.ndarray) -> float:

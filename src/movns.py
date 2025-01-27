@@ -57,7 +57,7 @@ def movns(
     neighborhood = Neighborhood()
 
     solution = Solution(distmx=distmx, rvalues=rvalues)
-    solution.score = evaluate(solution, rvalues, rpositions)
+    solution.score = evaluate(solution, rvalues, rpositions, distmx)
 
     archive = [solution]
     front = []
@@ -71,7 +71,7 @@ def movns(
     save_stats(front, dominated, log)
 
     for neighborhood_id in tqdm(range(max_it), desc="Progress", unit="iteration"):
-        start_it = time.perf_counter()
+        # start_it = time.perf_counter()
 
         solution = select_solution(front, dominated)
 
@@ -95,11 +95,11 @@ def movns(
             archive, neighbors1 + neighbors2, archive_max_size
         )
 
-        end_it = time.perf_counter()
-        with open(
-            f"tests/it_time_{Solution._NUM_AGENTS}_bdg_{Solution._BUDGET}.txt", "a"
-        ) as f:
-            f.write(f"{str(end_it - start_it)}\n")
+        # end_it = time.perf_counter()
+        # with open(
+        #     f"tests/it_time_{Solution._NUM_AGENTS}_bdg_{Solution._BUDGET}.txt", "a"
+        # ) as f:
+        #     f.write(f"{str(end_it - start_it)}\n")
 
         save_stats(front, dominated, log)
 
@@ -141,9 +141,9 @@ def main(
             pickle.dump(path, f)
             pickle.dump(scores[i], f)
 
-    directory = "imgs/movns/new_representation"
+    directory = "imgs/movns/"
 
-    plot.plot_pareto_front_evolution(log)
+    plot.plot_pareto_front_evolution(log, directory+f"/animations/{num_agents}_agents/{budget}_bgt")
 
     for i, path in enumerate(paths):
         plot.plot_paths_with_rewards(
@@ -152,8 +152,8 @@ def main(
             path,
             scores[i],
             4,
-            directory=directory,
-            fname=f"paths_{num_agents}_agents_{budget}_bgt_{i}",
+            directory=directory+f"/paths/{num_agents}_agents/{budget}_bgt",
+            fname=f"{i}",
         )
 
     return paths
