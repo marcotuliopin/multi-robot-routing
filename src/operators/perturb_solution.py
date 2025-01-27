@@ -16,24 +16,31 @@ def perturb_solution(solution: Solution, k: int) -> Solution:
 
     return new_solution
 
-# Time complexity: O(n), where n is the number of points in the path.
-# Space complexity: O(n), as it stores the new path.
-def two_opt(path: list) -> list:
-    i, j = np.random.choice(len(path) - 1, 2, replace=False)
+def two_opt(solution: Solution) -> list:
+    new_solution = solution.copy()
+    new_paths = new_solution.paths
+
+    i, j = np.random.choice(len(new_paths[0]) - 1, 2, replace=False)
     if i > j:
         i, j = j, i
-    new_path = np.concatenate([path[:i], path[i : j + 1][::-1], path[j + 1 :]])
-    return new_path
 
-# Time complexity: O(n), where n is the number of points in the path.
-# Space complexity: O(n), as it stores the new path.
-def swap_subpaths(path: np.ndarray) -> np.ndarray:
-    new_path = path.copy()
-    l = np.random.randint(1, len(path) / 2 - 1)
-    i = np.random.randint(0, len(path) - 2 * l)
-    j = np.random.randint(i + l, len(path) - l)
-    new_path[i : i + l], new_path[j : j + l] = (
-        new_path[j : j + l].copy(),
-        new_path[i : i + l].copy(),
-    )
-    return new_path
+    for new_path in new_paths:
+        new_path = np.concatenate([new_path[:i], new_path[i : j + 1][::-1], new_path[j + 1 :]])
+
+    return new_solution
+
+def swap_subpaths(solution: Solution) -> np.ndarray:
+    new_solution = solution.copy()
+    new_paths = new_solution.paths
+
+    l = np.random.randint(1, len(new_paths[0]) // 2)
+    i = np.random.randint(0, len(new_paths[0]) - 2 * l)
+    j = np.random.randint(i + l, len(new_paths[0]) - l)
+
+    for new_path in new_paths:
+        new_path[i : i + l], new_path[j : j + l] = (
+            new_path[j : j + l].copy(),
+            new_path[i : i + l].copy(),
+        )
+
+    return new_solution
