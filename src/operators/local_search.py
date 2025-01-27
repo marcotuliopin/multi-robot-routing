@@ -2,6 +2,7 @@ import numpy as np
 from ..entities import Solution
 from ..evaluation import evaluate
 
+
 def local_search(
     solution: Solution,
     k: int,
@@ -16,6 +17,7 @@ def local_search(
         neighbors.extend(step(solution, i, k, rvalues, rpositions, distmx))
             
     return neighbors
+
 
 def step(
     solution: Solution,
@@ -48,6 +50,7 @@ def step(
 
     return neighbors
 
+
 def move_point(solution: Solution, agent: int) -> np.ndarray:
     path = solution.paths[agent]
     neighbors = []
@@ -75,6 +78,7 @@ def move_point(solution: Solution, agent: int) -> np.ndarray:
 
     return neighbors
 
+
 def swap_points(solution: Solution, agent: int) -> np.ndarray:
     path = solution.paths[agent]
     neighbors = []
@@ -94,27 +98,24 @@ def swap_points(solution: Solution, agent: int) -> np.ndarray:
 
     return neighbors
 
+
 def swap_subpaths(path: np.ndarray) -> np.ndarray:
     neighbors = []
 
-    positive_indices = np.where(path > 0)[0]
+    l = np.random.randint(1, len(path) // 2)
 
-    if len(positive_indices) < 2:
-        return neighbors
-
-    l = np.random.randint(1, len(positive_indices) // 2)
-
-    for i in range(len(positive_indices) - 2 * l):
-        for j in range(i + l, len(positive_indices) - l):
+    for i in range(len(path) - 2 * l):
+        for j in range(i + l, len(path) - l):
             new_path = path.copy()
 
-            idx1 = positive_indices[i: i + l]
-            idx2 = positive_indices[j: j + l]
-
-            new_path[idx1], new_path[idx2] = new_path[idx2].copy(), new_path[idx1].copy()
+            new_path[i : i + l], new_path[j : j + l] = (
+                new_path[j : j + l].copy(),
+                new_path[i : i + l].copy(),
+            )
             neighbors.append(new_path)
             
     return neighbors
+
 
 def invert_single_point(path: np.ndarray) -> np.ndarray:
     neighbors = []
@@ -125,6 +126,7 @@ def invert_single_point(path: np.ndarray) -> np.ndarray:
         neighbors.append(new_solution)
     
     return neighbors
+
 
 def invert_multiple_points(path: np.ndarray) -> np.ndarray:
     neighbors = []
@@ -137,6 +139,25 @@ def invert_multiple_points(path: np.ndarray) -> np.ndarray:
         neighbors.append(new_solution)
     
     return neighbors
+
+
+def swap_subpaths_all_paths(solution: Solution, l: int) -> Solution:
+    new_solution = solution.copy()
+    num_paths = len(solution.paths)
+    
+    for i in range(num_paths):
+        path = new_solution.paths[i]
+        positive_indices = np.where(path > 0)[0]
+
+        if len(positive_indices) < 2 * l:
+            continue
+
+        idx1 = positive_indices[:l]
+        idx2 = positive_indices[-l:]
+
+        new_solution.paths[i][idx1], new_solution.paths[i][idx2] = new_solution.paths[i][idx2].copy(), new_solution.paths[i][idx1].copy()
+
+    return new_solution
 
 # def get_sorted_indices(path: np.ndarray) -> np.ndarray:
 #     positive_indices = np.where(path > 0)[0]
