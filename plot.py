@@ -319,7 +319,7 @@ def plot_pareto_front(archive, directory=None):
 
     plt.show()
 
-def plot_pareto_front_evolution(log):
+def plot_pareto_front_evolution(log, directory=None):
     """
     Plots the evolution of the Pareto front.
 
@@ -385,9 +385,9 @@ def plot_pareto_front_evolution(log):
 
     # Mostra a animação ou salva em um arquivo
     plt.show()
-    os.makedirs("imgs/movns/movns/", exist_ok=True)
+    os.makedirs(directory, exist_ok=True)
 
-    ani.save("imgs/movns/movns/animacao.gif", writer="pillow")
+    ani.save(f"{directory}/pareto_front_evolution.gif", writer="pillow")
 
 def plot_interpolated_individual(individual: list, maxdist: float, directory=None):
     """
