@@ -5,16 +5,18 @@ from ..evaluation import evaluate
 
 def local_search(
     solution: Solution,
-    k: int,
+    neighborhood: int,
     rvalues: np.ndarray,
     rpositions: np.ndarray,
     distmx: np.ndarray,
 ) -> Solution:
     neighbors = []
 
-    num_paths = len(solution.paths)
-    for i in range(num_paths):
-        neighbors.extend(step(solution, i, k, rvalues, rpositions, distmx))
+    for i in range(len(solution.paths)):
+        neighbors.extend(step(solution, i, neighborhood))
+
+    for neighbor in neighbors:
+        neighbor.score = evaluate(neighbor, rvalues, rpositions, distmx)
             
     return neighbors
 
@@ -22,35 +24,20 @@ def local_search(
 def step(
     solution: Solution,
     agent: int,
-    k: int,
-    rvalues: np.ndarray,
-    rpositions: np.ndarray,
-    distmx: np.ndarray,
+    neighborhood: int,
 ) -> Solution:
-    neighbors = []
+    operators = {
+        0: move_point(solution, agent),
+        1: invert_single_point(solution, agent), 
+        2: swap_points(solution, agent),
+        3: invert_multiple_points(solution, agent),
+        4: swap_subpaths(solution, agent),
+    }
 
-    # Select the operator according to the neighborhood
-    if k == 0 or k == 3:
-        op = move_point
-    else:
-        op = swap_points
-
-    positive_indices = np.where(solution.paths[agent] > 0)[0]
-    
-    for i in range(len(positive_indices)):
-        for j in range(i + 1, len(positive_indices)):
-            new_solution = solution.copy()
-            new_path = new_solution.paths[agent]
-
-            new_path[:] = op(new_path, positive_indices[i], positive_indices[j])
-            new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
-
-            neighbors.append(new_solution)
-
-    return neighbors
+    return operators[neighborhood]
 
 
-def move_point(solution: Solution, agent: int) -> np.ndarray:
+def move_point(solution: Solution, agent: int) -> list[Solution]:
     path = solution.paths[agent]
     neighbors = []
 
@@ -78,7 +65,7 @@ def move_point(solution: Solution, agent: int) -> np.ndarray:
     return neighbors
 
 
-def swap_points(solution: Solution, agent: int) -> np.ndarray:
+def swap_points(solution: Solution, agent: int) -> list[Solution]:
     path = solution.paths[agent]
     neighbors = []
 
@@ -98,7 +85,7 @@ def swap_points(solution: Solution, agent: int) -> np.ndarray:
     return neighbors
 
 
-def swap_subpaths(solution: Solution, agent: int) -> np.ndarray:
+def swap_subpaths(solution: Solution, agent: int) -> list[Solution]:
     path = solution.paths[agent]
     neighbors = []
 
@@ -119,7 +106,7 @@ def swap_subpaths(solution: Solution, agent: int) -> np.ndarray:
     return neighbors
 
 
-def invert_single_point(solution: Solution, agent: int) -> np.ndarray:
+def invert_single_point(solution: Solution, agent: int) -> list[Solution]:
     path = solution.paths[agent]
     neighbors = []
 
@@ -134,7 +121,7 @@ def invert_single_point(solution: Solution, agent: int) -> np.ndarray:
     return neighbors
 
 
-def invert_multiple_points(solution: Solution, agent: int) -> np.ndarray:
+def invert_multiple_points(solution: Solution, agent: int) -> list[Solution]:
     path = solution.paths[agent]
     neighbors = []
     
