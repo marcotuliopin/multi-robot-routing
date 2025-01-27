@@ -17,7 +17,7 @@ def local_search(
 
     for neighbor in neighbors:
         neighbor.paths = neighbor.bound_all_paths(neighbor.paths, distmx, rvalues)
-        neighbor.score = evaluate(neighbor, rvalues, rpositions, distmx)
+        neighbor.score = evaluate(neighbor, rvalues, rpositions)
             
     return neighbors
 

@@ -7,7 +7,6 @@ def evaluate(
     solution: Solution,
     rvalues: np.ndarray,
     rpositions: np.ndarray,
-    distmx: np.ndarray,
 ) -> tuple[float, float]:
     paths: list[np.ndarray] = solution.get_solution_paths()
     max_reward = maximize_reward(paths, rvalues)

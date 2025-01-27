@@ -27,7 +27,7 @@ def solution_relinking(
 
             solution1.paths = solution1.bound_all_paths(solution1.paths, distmx, rvalues)
             new_solution = solution1.copy()
-            new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
+            new_solution.score = evaluate(new_solution, rvalues, rpositions)
 
             if not any(other.dominates(new_solution) for other in neighbors):
                 neighbors.append(new_solution)

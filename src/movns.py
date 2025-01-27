@@ -57,7 +57,7 @@ def movns(
 
     # Each solution is composed of num_agents paths
     solution = Solution(distmx=distmx, rvalues=rvalues)
-    solution.score = evaluate(solution, rvalues, rpositions, distmx)
+    solution.score = evaluate(solution, rvalues, rpositions)
 
     # The archive is composed of the non-dominated solutions
     archive = [solution]
