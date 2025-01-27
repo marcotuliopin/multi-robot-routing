@@ -63,23 +63,22 @@ def movns(
     archive = [solution]
     front = []
 
-    for k in tqdm(range(kmax), desc="Progress", unit="neighborhood"):
-        neighbors = local_search(solution, k, rvalues, rpositions, distmx)
+    for neighborhood in tqdm(range(kmax), desc="Progress", unit="neighborhood"):
+        neighbors = local_search(solution, neighborhood, rvalues, rpositions, distmx)
         archive, front, dominated = update_archive(archive, neighbors, archive_max_size)
     save_stats(front, dominated, log)
 
-    for _ in tqdm(range(max_it), desc="Progress", unit="iteration"):
+    for it in tqdm(range(max_it), desc="Progress", unit="iteration"):
         start_it = time.perf_counter()
 
         # Select neighborhood
-        k = np.random.randint(0, kmax)
+        neighborhood = it % kmax
 
         solution = select_solution(front, dominated)
 
         # First phase
-        shaken_solution = perturb_solution(solution, k)
-        shaken_solution.score = evaluate(shaken_solution, rvalues, rpositions, distmx)
-        neighbors1 = local_search(shaken_solution, k, rvalues, rpositions, distmx)
+        shaken_solution = perturb_solution(solution, neighborhood, rvalues, rpositions, distmx)
+        neighbors1 = local_search(shaken_solution, neighborhood, rvalues, rpositions, distmx)
 
         # Second phase
         neighbors2 = []
