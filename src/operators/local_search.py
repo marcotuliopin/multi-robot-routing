@@ -137,8 +137,3 @@ def invert_multiple_points(solution: Solution, agent: int) -> list[Solution]:
         neighbors.append(new_solution)
     
     return neighbors
-
-
-# def get_sorted_indices(path: np.ndarray) -> np.ndarray:
-#     positive_indices = np.where(path > 0)[0]
-#     return positive_indices[np.argsort(path[positive_indices])]
