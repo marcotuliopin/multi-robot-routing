@@ -1,9 +1,17 @@
 import os
 from matplotlib import animation, pyplot as plt
-from utils import calculate_rssi_history, interpolate_paths, translate_path_to_coordinates, calculate_rssi
+from utils import (
+    calculate_rssi_history,
+    interpolate_paths,
+    translate_path_to_coordinates,
+    calculate_rssi,
+)
 import numpy as np
 
-def plot_rewards(ax, reward_p: np.ndarray, reward_value: np.ndarray, not_plot: set = set()):
+
+def plot_rewards(
+    ax, reward_p: np.ndarray, reward_value: np.ndarray, not_plot: set = set()
+):
     """
     Plots the rewards on the given axis.
 
@@ -14,16 +22,37 @@ def plot_rewards(ax, reward_p: np.ndarray, reward_value: np.ndarray, not_plot: s
     not_plot (set): The set of rewards to not plot.
     """
     rewards_to_plot = [i for i in range(len(reward_p)) if i not in not_plot]
-    ax.scatter(reward_p[rewards_to_plot, 0], reward_p[rewards_to_plot, 1], c="b", s=20, label="Rewards")
+    ax.scatter(
+        reward_p[rewards_to_plot, 0],
+        reward_p[rewards_to_plot, 1],
+        c="b",
+        s=20,
+        label="Rewards",
+    )
     for i, (x, y) in enumerate(reward_p):
         if i in not_plot:
             continue
-        ax.annotate(reward_value[i], (x, y), textcoords="offset points", xytext=(0, 10), ha="center")
+        ax.annotate(
+            reward_value[i],
+            (x, y),
+            textcoords="offset points",
+            xytext=(0, 10),
+            ha="center",
+        )
 
     ax.set_xlabel("X Coordinates")
     ax.set_ylabel("Y Coordinates")
 
-def plot_path(ax, path: list, maxdist: float, show_radius=False, show_path=True, color="orange", show_arrow=True):
+
+def plot_path(
+    ax,
+    path: list,
+    maxdist: float,
+    show_radius=False,
+    show_path=True,
+    color="orange",
+    show_arrow=True,
+):
     """
     Plots a path on the given axis.
 
@@ -41,13 +70,18 @@ def plot_path(ax, path: list, maxdist: float, show_radius=False, show_path=True,
     for curr in path[1:]:
         if show_path:
             ax.plot([prev[0], curr[0]], [prev[1], curr[1]], linewidth=2, color=color)
-            
+
             dx, dy = curr[0] - prev[0], curr[1] - prev[1]
             if show_arrow:
                 ax.quiver(
-                    prev[0], prev[1], dx, dy,
-                    angles='xy', scale_units='xy', scale=1,
-                    color=color
+                    prev[0],
+                    prev[1],
+                    dx,
+                    dy,
+                    angles="xy",
+                    scale_units="xy",
+                    scale=1,
+                    color=color,
                 )
 
         if show_radius:
@@ -55,6 +89,7 @@ def plot_path(ax, path: list, maxdist: float, show_radius=False, show_path=True,
             ax.add_patch(circle)
 
         prev = curr
+
 
 def get_path_length(path):
     """
@@ -68,7 +103,10 @@ def get_path_length(path):
     """
     return np.sum(np.linalg.norm(np.diff(path, axis=0), axis=1))
 
-def plot_paths_with_rewards(rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None):
+
+def plot_paths_with_rewards(
+    rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None
+):
     """
     Plots the paths with rewards.
 
@@ -82,29 +120,35 @@ def plot_paths_with_rewards(rpositions, rvalues, individual, scores, MAXD, direc
     fname (str): The filename to save the plot.
     """
     n_agents = len(individual)
-    colormap = plt.cm.get_cmap('viridis', n_agents)
+    colormap = plt.cm.get_cmap("viridis", n_agents)
     colors = [colormap(i) for i in range(n_agents)]
 
     fig, ax = plt.subplots(figsize=(10, 8))
-    fig.patch.set_facecolor('grey')
-    ax.set_facecolor('grey')
+    fig.patch.set_facecolor("grey")
+    ax.set_facecolor("grey")
     plot_rewards(ax, rpositions, rvalues)
-    
+
     individual = translate_path_to_coordinates(individual, rpositions)
     length = [get_path_length(ind) for ind in individual]
     for i in range(n_agents):
         plot_path(ax, individual[i], MAXD, color=colors[i])
 
-    ax.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + "- length: " + str([int(l) for l in length]))
+    ax.set_title(
+        "Individual Paths - score: "
+        + str([int(score) for score in scores])
+        + "- length: "
+        + str([int(l) for l in length])
+    )
     plt.grid(True)
-    plt.axis('equal')
+    plt.axis("equal")
     plt.ylim(0, None)
     plt.xlim(0, None)
 
     if directory:
         os.makedirs(directory, exist_ok=True)
-        plt.savefig(f'{directory}/{fname if fname else 'paths'}.png')
+        plt.savefig(f"{directory}/{fname if fname else 'paths'}.png")
     plt.close()
+
 
 def get_collection_history(interpolation, individual, coordinates, rvalues):
     """
@@ -128,15 +172,32 @@ def get_collection_history(interpolation, individual, coordinates, rvalues):
         for j, idx in enumerate(path_idx):
             if idx >= len(individual[j]):
                 continue
-            if all(abs(coordinates[j][idx][z] - interpolation[j][i][z]) < 1 for z in range(2)):
-                collected_rewards.append(collected_rewards[-1].union({individual[j][idx]}))
-                collected_values.append(collected_values[-1] + rvalues[individual[j][idx]])
+            if all(
+                abs(coordinates[j][idx][z] - interpolation[j][i][z]) < 1
+                for z in range(2)
+            ):
+                collected_rewards.append(
+                    collected_rewards[-1].union({individual[j][idx]})
+                )
+                collected_values.append(
+                    collected_values[-1] + rvalues[individual[j][idx]]
+                )
                 collection_idx.append(i)
                 path_idx[j] += 1
 
     return collected_rewards, collected_values, collection_idx
 
-def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None, side_by_side=False):
+
+def plot_animated_paths(
+    rpositions,
+    rvalues,
+    individual,
+    scores,
+    MAXD,
+    directory=None,
+    fname=None,
+    side_by_side=False,
+):
     """
     Plots the animated paths.
 
@@ -151,35 +212,45 @@ def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory
     side_by_side (bool): Whether to display the plots side by side.
     """
     n_agents = len(individual)
-    colormap = plt.cm.get_cmap('viridis', n_agents)
+    colormap = plt.cm.get_cmap("viridis", n_agents)
     colors = [colormap(i) for i in range(n_agents)]
-    background_color = '#ddd9dc';
+    background_color = "#ddd9dc"
 
-    step = .5
+    step = 0.5
     n_agents = len(individual)
     interpolation = interpolate_paths(individual, rpositions, step)
     interpolation = np.hstack((interpolation, np.zeros((len(interpolation), 1, 2))))
 
     coordinates = translate_path_to_coordinates(individual, rpositions)
-    collected_rewards, collected_values, collection_idx = get_collection_history(interpolation, individual, coordinates, rvalues)
+    collected_rewards, collected_values, collection_idx = get_collection_history(
+        interpolation, individual, coordinates, rvalues
+    )
 
-    rssi_history = calculate_rssi_history(individual[0], individual[1], rpositions, step=step)
+    rssi_history = calculate_rssi_history(
+        individual[0], individual[1], rpositions, step=step
+    )
 
     if side_by_side:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 16))
-    
+
     fig.patch.set_facecolor(background_color)
     ax1.set_facecolor(background_color)
     ax2.set_facecolor(background_color)
-    plt.subplots_adjust(hspace=0.5 if not side_by_side else 0.3, wspace=0.3 if side_by_side else 0.5)
-    
+    plt.subplots_adjust(
+        hspace=0.5 if not side_by_side else 0.3, wspace=0.3 if side_by_side else 0.5
+    )
+
     # Plot rewards on the first axis
     plot_rewards(ax1, rpositions, rvalues)
-    ax1.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + f" - {collected_values[0]} collected")
+    ax1.set_title(
+        "Individual Paths - score: "
+        + str([int(score) for score in scores])
+        + f" - {collected_values[0]} collected"
+    )
     ax1.grid(True)
-    ax1.axis('equal')
+    ax1.axis("equal")
     ax1.set_ylim(0, None)
     ax1.set_xlim(0, None)
 
@@ -207,26 +278,37 @@ def plot_animated_paths(rpositions, rvalues, individual, scores, MAXD, directory
         ax1.clear()
         plot_rewards(ax1, rpositions, rvalues, collected_rewards[idx])
         for k in range(n_agents):
-            plot_path(ax1, interpolation[k][i:i+2], MAXD, color=colors[k])
-            plot_path(ax1, interpolation[k][:i+1], MAXD, color=colors[k], show_arrow=False)
-        ax1.set_title("Individual Paths - score: " + str([int(score) for score in scores]) + f" - {collected_values[idx]} collected")
+            plot_path(ax1, interpolation[k][i : i + 2], MAXD, color=colors[k])
+            plot_path(
+                ax1, interpolation[k][: i + 1], MAXD, color=colors[k], show_arrow=False
+            )
+        ax1.set_title(
+            "Individual Paths - score: "
+            + str([int(score) for score in scores])
+            + f" - {collected_values[idx]} collected"
+        )
         ax1.grid(True)
-        ax1.axis('equal')
+        ax1.axis("equal")
         ax1.set_ylim(0, None)
         ax1.set_xlim(0, None)
 
         ax2.clear()
-        ax2.plot(rssi_history[:i+1])
+        ax2.plot(rssi_history[: i + 1])
         ax2.set_title("RSSI History")
         ax2.grid(True)
         ax2.set_ylim(min(rssi_history) - 1, 0)
         ax2.set_xlim(0, len(rssi_history))
 
-    ani = animation.FuncAnimation(fig, update, frames=len(interpolation[0]), repeat=False)
+    ani = animation.FuncAnimation(
+        fig, update, frames=len(interpolation[0]), repeat=False
+    )
     # plt.show()
-    ani.save(f"{directory}/{fname}.gif", writer='pillow', fps=22)
+    ani.save(f"{directory}/{fname}.gif", writer="pillow", fps=22)
 
-def plot_distances(path1, path2, positions, max_distance, num_samples=100, directory=None):
+
+def plot_distances(
+    path1, path2, positions, max_distance, num_samples=100, directory=None
+):
     """
     Plots the distances between two paths.
 
@@ -239,15 +321,20 @@ def plot_distances(path1, path2, positions, max_distance, num_samples=100, direc
     directory (str): The directory to save the plot.
     """
     interpolated_paths = interpolate_paths(path1, path2, positions, num_samples)
-    
+
     distances = np.linalg.norm(interpolated_paths[0] - interpolated_paths[1], axis=1)
-    
+
     fig, ax = plt.subplots(figsize=(10, 5))
-    fig.patch.set_facecolor('grey')
-    ax.set_facecolor('grey')
-    ax.plot(distances, color='red')
-    ax.fill_between(range(len(distances)), distances, color='red', alpha=0.3)
-    ax.axhline(max_distance, color="blue", linestyle="--", label=f"Max distance: {max_distance}")
+    fig.patch.set_facecolor("grey")
+    ax.set_facecolor("grey")
+    ax.plot(distances, color="red")
+    ax.fill_between(range(len(distances)), distances, color="red", alpha=0.3)
+    ax.axhline(
+        max_distance,
+        color="blue",
+        linestyle="--",
+        label=f"Max distance: {max_distance}",
+    )
     ax.set_ylabel("Distance between agents")
     ax.set_xlabel("Interpolated steps along paths")
     ax.set_title("Interpolated Distances Between Agents")
@@ -256,7 +343,8 @@ def plot_distances(path1, path2, positions, max_distance, num_samples=100, direc
 
     if directory:
         os.makedirs(directory, exist_ok=True)
-        plt.savefig(f'{directory}/distances.png')
+        plt.savefig(f"{directory}/distances.png")
+
 
 def plot_objectives(logbook):
     """
@@ -272,26 +360,39 @@ def plot_objectives(logbook):
     avg_distances = logbook.select("avg_distance")
 
     fig, ax1 = plt.subplots(figsize=(10, 6))
-    fig.patch.set_facecolor('grey')
-    ax1.set_facecolor('grey')
+    fig.patch.set_facecolor("grey")
+    ax1.set_facecolor("grey")
 
     ax1.set_xlabel("Geração")
     ax1.set_ylabel("Recompensa", color="tab:blue")
-    ax1.plot(generations, max_rewards, label="Máxima Recompensa", color="tab:blue", linestyle="--")
+    ax1.plot(
+        generations,
+        max_rewards,
+        label="Máxima Recompensa",
+        color="tab:blue",
+        linestyle="--",
+    )
     ax1.plot(generations, avg_rewards, label="Recompensa Média", color="tab:blue")
     ax1.tick_params(axis="y", labelcolor="tab:blue")
     ax1.legend(loc="upper left")
 
     ax2 = ax1.twinx()
-    ax2.set_facecolor('grey')
+    ax2.set_facecolor("grey")
     ax2.set_ylabel("Distância", color="tab:red")
-    ax2.plot(generations, min_distances, label="Mínima Distância", color="tab:red", linestyle="--")
+    ax2.plot(
+        generations,
+        min_distances,
+        label="Mínima Distância",
+        color="tab:red",
+        linestyle="--",
+    )
     ax2.plot(generations, avg_distances, label="Distância Média", color="tab:red")
     ax2.tick_params(axis="y", labelcolor="tab:red")
     ax2.legend(loc="upper right")
 
     plt.title("Evolução dos Objetivos")
     plt.show()
+
 
 def plot_pareto_front(archive, directory=None):
     """
@@ -306,7 +407,7 @@ def plot_pareto_front(archive, directory=None):
     rssi = [score[1] for score in scores]
 
     plt.figure(figsize=(8, 6))
-    plt.gca().set_facecolor('grey')
+    plt.gca().set_facecolor("grey")
     plt.scatter(rssi, rewards, c="blue", label="Soluções")
     plt.xlabel("RSSI")
     plt.ylabel("Reward")
@@ -315,9 +416,10 @@ def plot_pareto_front(archive, directory=None):
     plt.grid(True)
 
     os.makedirs(directory, exist_ok=True)
-    plt.savefig(f'{directory}/front.png')
+    plt.savefig(f"{directory}/front.png")
 
     plt.show()
+
 
 def plot_pareto_front_evolution(log, directory=None):
     """
@@ -331,15 +433,24 @@ def plot_pareto_front_evolution(log, directory=None):
 
     # Configuração inicial do gráfico
     scatter = ax.scatter([], [], s=30, alpha=0.6)
-    ax.set_xlabel('Maximum RSSI')
-    ax.set_ylabel('Percentage of Total Reward Obtained')
-    ax.set_title('Pareto Frontier Evolution')
+    ax.set_xlabel("Maximum RSSI")
+    ax.set_ylabel("Percentage of Total Reward Obtained")
+    ax.set_title("Pareto Frontier Evolution")
     ax.set_xlim(-100, 0)
     ax.set_ylim(0, 100)
 
     initial_data = log[0]
-    scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data['front']])
-    ax.plot(scores_x, scores_y, linewidth=2, color='green', marker='o', markersize=6, alpha=0.6, label='Pareto Front')
+    scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data["front"]])
+    ax.plot(
+        scores_x,
+        scores_y,
+        linewidth=2,
+        color="green",
+        marker="o",
+        markersize=6,
+        alpha=0.6,
+        label="Pareto Front",
+    )
 
     def update(iteration):
         """
@@ -351,31 +462,62 @@ def plot_pareto_front_evolution(log, directory=None):
         ax.clear()
 
         initial_data = log[0]
-        scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data['front']])
-        ax.plot(scores_x, scores_y, linewidth=2, color='green', marker='o', markersize=6, alpha=0.6, label='Initial pareto front')
+        scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data["front"]])
+        ax.plot(
+            scores_x,
+            scores_y,
+            linewidth=2,
+            color="green",
+            marker="o",
+            markersize=6,
+            alpha=0.6,
+            label="Initial pareto front",
+        )
 
         o = 0
         v = []
         current_data = log[iteration]
-        for i in range(len(current_data['front'])):
-            for j in range(i + 1, len(current_data['front'])):
-                if current_data['front'][i][0] == current_data['front'][j][0] and current_data['front'][i][1] == current_data['front'][j][1] and i not in v and j not in v:
+        for i in range(len(current_data["front"])):
+            for j in range(i + 1, len(current_data["front"])):
+                if (
+                    current_data["front"][i][0] == current_data["front"][j][0]
+                    and current_data["front"][i][1] == current_data["front"][j][1]
+                    and i not in v
+                    and j not in v
+                ):
                     o += 1
                     v.append(j)
-                
-        scores_x, scores_y = zip(*[(s[1], s[0]) for s in current_data['front']])
-        ax.plot(scores_x, scores_y, linewidth=2, color='purple', marker='o', markersize=6, label='Pareto front')
 
-        if current_data['dominated']:
-            x_dominated, y_dominated = zip(*[(s[1], s[0]) for s in current_data['dominated']])
-            ax.scatter(x_dominated, y_dominated, s=30, alpha=0.6, color='gray', label='Dominated')
+        scores_x, scores_y = zip(*[(s[1], s[0]) for s in current_data["front"]])
+        ax.plot(
+            scores_x,
+            scores_y,
+            linewidth=2,
+            color="purple",
+            marker="o",
+            markersize=6,
+            label="Pareto front",
+        )
+
+        if current_data["dominated"]:
+            x_dominated, y_dominated = zip(
+                *[(s[1], s[0]) for s in current_data["dominated"]]
+            )
+            ax.scatter(
+                x_dominated,
+                y_dominated,
+                s=30,
+                alpha=0.6,
+                color="gray",
+                label="Dominated",
+            )
 
         ax.set_xlim(-100, 0)
         ax.set_ylim(0, 100)
-        ax.set_xlabel('Maximum RSSI')
-        ax.set_ylabel('Percentage of Total Reward Obtained')
-        ax.set_title('Archive Evolution')
-        ax.set_title(f'Pareto Frontier Evolution - Iteration {iteration}')
+        ax.set_xlabel("Maximum RSSI")
+        ax.set_ylabel("Percentage of Total Reward Obtained")
+        ax.set_title("Archive Evolution")
+        ax.set_title(f"Pareto Frontier Evolution - Iteration {iteration}")
         ax.legend()
 
     # Cria a animação
@@ -389,6 +531,7 @@ def plot_pareto_front_evolution(log, directory=None):
 
     ani.save(f"{directory}/pareto_front_evolution.gif", writer="pillow")
 
+
 def plot_interpolated_individual(individual: list, maxdist: float, directory=None):
     """
     Plots the interpolated individual paths.
@@ -399,18 +542,19 @@ def plot_interpolated_individual(individual: list, maxdist: float, directory=Non
     directory (str): The directory to save the plot.
     """
     fig, ax = plt.subplots(figsize=(7, 5))
-    plot_path(ax, individual[0], maxdist, color='orange')
-    plot_path(ax, individual[1], maxdist, color='green')
+    plot_path(ax, individual[0], maxdist, color="orange")
+    plot_path(ax, individual[1], maxdist, color="green")
 
     ax.set_title("Interpolated Individual Paths")
     plt.grid(True)
-    plt.axis('equal')
+    plt.axis("equal")
     plt.ylim(0, None)
     plt.xlim(0, None)
 
     if directory:
         os.makedirs(directory, exist_ok=True)
-        plt.savefig(f'{directory}/interpolation.png')
+        plt.savefig(f"{directory}/interpolation.png")
+
 
 def plot_rssi(path1, path2, positions, num_samples=100, directory=None):
     """
@@ -424,12 +568,12 @@ def plot_rssi(path1, path2, positions, num_samples=100, directory=None):
     directory (str): The directory to save the plot.
     """
     interpolated_paths = interpolate_paths(path1, path2, positions, num_samples)
-    
+
     distances = calculate_rssi(interpolated_paths[0], interpolated_paths[1], positions)
-    
+
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(distances, color='red')
-    ax.fill_between(range(len(distances)), distances, color='red', alpha=0.3)
+    ax.plot(distances, color="red")
+    ax.fill_between(range(len(distances)), distances, color="red", alpha=0.3)
     ax.set_ylabel("Distance between agents")
     ax.set_xlabel("Interpolated steps along paths")
     ax.set_title("Interpolated RSSI Between Agents")
@@ -438,4 +582,4 @@ def plot_rssi(path1, path2, positions, num_samples=100, directory=None):
 
     if directory:
         os.makedirs(directory, exist_ok=True)
-        plt.savefig(f'{directory}/rssi.png')
+        plt.savefig(f"{directory}/rssi.png")
