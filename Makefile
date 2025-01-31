@@ -29,7 +29,7 @@ vns:
 
 .PHONY: movns
 movns:
-	python -m cProfile main.py --map maps/dispersed_large.txt --num-agents 4 --budget 150 --num-iter 300
+	python -m cProfile main.py --map maps/dispersed_large.txt --num-agents 8 --budget 150 --num-iter 300
 
 .PHONY: clean-output
 clean-output:
