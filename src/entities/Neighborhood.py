@@ -13,14 +13,14 @@ class Neighborhood:
             1: self.invert_single_point,
             2: self.swap_points,
             3: self.invert_multiple_points,
-            4: self.swap_local_subpaths,
+            4: self.all_paths_swap_points,
             5: self.move_point,
             6: self.invert_single_point,
             7: self.swap_points,
             8: self.invert_multiple_points,
-            9: self.swap_local_subpaths,
+            9: self.all_paths_swap_points,
         }
-        self.num_neighborhoods = len(self.local_search_operators)
+        self.num_neighborhoods = len(self.local_search_operators) * len(self.perturbation_operators)
     
     def get_perturbation_operator(self, neighborhood: int):
         return self.perturbation_operators[neighborhood % len(self.perturbation_operators)]
@@ -108,6 +108,27 @@ class Neighborhood:
                 new_path[idx1], new_path[idx2] = new_path[idx2], new_path[idx1]
 
                 neighbors.append(new_solution)
+
+        return neighbors
+    
+    def all_paths_swap_points(self, solution: Solution, agent: int) -> list[Solution]:
+        neighbors = []
+
+        positive_indices = [np.where(path > 0)[0] for path in solution.paths]
+        for _ in range(len(solution.paths[agent])):
+            new_solution = solution.copy()
+            new_paths = new_solution.paths
+
+            for a in range(len(solution.paths)):
+                path = new_paths[a]
+
+                if len(positive_indices[a]) < 2:
+                    continue
+
+                i, j = np.random.choice(positive_indices[a], 2, replace=False)
+                path[i], path[j] = path[j], path[i]
+
+            neighbors.append(new_solution)
 
         return neighbors
 
