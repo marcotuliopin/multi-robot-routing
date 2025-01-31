@@ -1,3 +1,4 @@
+import os
 import random
 import time
 import plot
@@ -63,37 +64,32 @@ def movns(
     front = []
     log = []
 
+    # Initialize the archive by exploring the neighborhood of the initial solution.
     for neighborhood_id in tqdm(range(neighborhood.num_neighborhoods), desc="Progress", unit="neighborhood"):
         neighbors = local_search(
             solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx
         )
         archive, front, dominated = update_archive(archive, neighbors, archive_max_size)
+
     save_stats(front, dominated, log)
 
+    # Main loop.
     for neighborhood_id in tqdm(range(max_it), desc="Progress", unit="iteration"):
         # start_it = time.perf_counter()
 
         solution = select_solution(front, dominated)
 
         # First phase
-        shaken_solution = perturb_solution(
-            solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx
-        )
-        neighbors1 = local_search(
-            shaken_solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx
-        )
+        shaken_solution = perturb_solution(solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx)
+        neighbors1 = local_search(shaken_solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx)
 
         # Second phase
         neighbors2 = []
         if len(front) > 1:
             solution1, solution2 = random.sample(front, 2)
-            neighbors2 = solution_relinking(
-                solution1, solution2, rvalues, rpositions, distmx
-            )
+            neighbors2 = solution_relinking(solution1, solution2, rvalues, rpositions, distmx)
 
-        archive, front, dominated = update_archive(
-            archive, neighbors1 + neighbors2, archive_max_size
-        )
+        archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
 
         # end_it = time.perf_counter()
         # with open(
@@ -127,24 +123,28 @@ def main(
     # Matrix of distances between rewards
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
+    # Run the algorithm
     archive, front, log = movns(percentual_values, rpositions, distmx, max_it, seed)
     archive.sort(key=lambda solution: solution.score[0])
 
     paths = [s.get_solution_paths() for s in front]
-
     scores = [s.score for s in front]
 
+    # Store the results of the front for further analysis.
     for i, path in enumerate(paths):
-        with open(
-            f"out/bounded_path_{num_agents}_agents_{budget}_bgt_{i}.pkl", "wb"
-        ) as f:
-            pickle.dump(path, f)
+        out_dir = f"out/front_{num_agents}_agents_{budget}_bgt"
+        os.makedirs(out_dir, exist_ok=True)
+        with open(f"{out_dir}/scores.pkl", "ab") as f:
             pickle.dump(scores[i], f)
+        with open(f"{out_dir}/paths.pkl", "ab") as f:
+            pickle.dump(path, f)
 
     directory = "imgs/movns/"
 
+    # Create an animation of the Pareto front evolution.
     plot.plot_pareto_front_evolution(log, directory+f"/animations/{num_agents}_agents/{budget}_bgt")
 
+    # Plot each path of the Pareto front.
     for i, path in enumerate(paths):
         plot.plot_paths_with_rewards(
             rpositions,
