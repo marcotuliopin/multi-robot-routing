@@ -132,7 +132,7 @@ def main(
 
     # Store the results of the front for further analysis.
     for i, path in enumerate(paths):
-        out_dir = f"out/front_{num_agents}_agents_{budget}_bgt"
+        out_dir = f"out/front/{num_agents}_agents/{budget}_bgt"
         os.makedirs(out_dir, exist_ok=True)
         with open(f"{out_dir}/scores.pkl", "ab") as f:
             pickle.dump(scores[i], f)
@@ -142,7 +142,7 @@ def main(
     directory = "imgs/movns/"
 
     # Create an animation of the Pareto front evolution.
-    plot.plot_pareto_front_evolution(log, directory+f"/animations/{num_agents}_agents/{budget}_bgt")
+    # plot.plot_pareto_front_evolution(log, directory+f"/animations/{num_agents}_agents/{budget}_bgt")
 
     # Plot each path of the Pareto front.
     for i, path in enumerate(paths):

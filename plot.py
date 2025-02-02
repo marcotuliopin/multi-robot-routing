@@ -82,8 +82,6 @@ def plot_path(
                     scale=1,
                     color=color,
                 )
-            
-            
 
         prev = curr
 
@@ -127,6 +125,8 @@ def plot_paths_with_rewards(
 
     individual = translate_path_to_coordinates(individual, rpositions)
     length = [get_path_length(ind) for ind in individual]
+
+    # Plot the paths of the agents.
     for i in range(n_agents):
         plot_path(ax, individual[i], color=colors[i])
 
@@ -145,6 +145,35 @@ def plot_paths_with_rewards(
         os.makedirs(directory, exist_ok=True)
         plt.savefig(f"{directory}/{fname if fname else 'paths'}.png")
     plt.close()
+
+
+def plot_max_distance(ax, individual):
+    # Pad the paths to the same size.
+    max_size = max(len(ind) for ind in individual)
+    individual = [
+        np.vstack([ind, np.tile(ind[-1], (max_size - len(ind), 1))])
+        for ind in individual
+    ]
+
+    # Find the maximum distance between the paths.
+    max_distance = 0
+    point1 = point2 = None
+    for i in range(len(individual)):
+        for j in range(i + 1, len(individual)):
+            distances = np.linalg.norm(individual[i] - individual[j], axis=1)
+            max_dist_index = np.argmax(distances)
+            if distances[max_dist_index] > max_distance:
+                max_distance = distances[max_dist_index]
+                point1 = individual[i][max_dist_index]
+                point2 = individual[j][max_dist_index]
+
+    # Plot the maximum distance between the paths.
+    if point1 is not None and point2 is not None:
+        ax.plot(
+            [point1[0], point2[0]], [point1[1], point2[1]], "r--", label="Max Distance"
+        )
+        ax.scatter(point1[0], point1[1], c="r", marker="o")
+        ax.scatter(point2[0], point2[1], c="r", marker="o")
 
 
 def get_collection_history(interpolation, individual, coordinates, rvalues):
@@ -212,20 +241,24 @@ def plot_animated_paths(
     colors = [colormap(i) for i in range(n_agents)]
     background_color = "#ddd9dc"
 
+    # Interpolate the paths.
     step = 0.5
     n_agents = len(individual)
     interpolation = interpolate_paths(individual, rpositions, step)
     interpolation = np.hstack((interpolation, np.zeros((len(interpolation), 1, 2))))
 
+    # Translate the paths to coordinates.
     coordinates = translate_path_to_coordinates(individual, rpositions)
     collected_rewards, collected_values, collection_idx = get_collection_history(
         interpolation, individual, coordinates, rvalues
     )
 
+    # Calculate the RSSI history.
     rssi_history = calculate_rssi_history(
         individual[0], individual[1], rpositions, step=step
     )
 
+    # Create the figure and axes.
     if side_by_side:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
     else:
@@ -265,24 +298,29 @@ def plot_animated_paths(
         i (int): The current frame index.
         """
         print(i)
+        # Find the index of the collection.
         idx = len(collection_idx) - 1
         for j in range(len(collection_idx)):
             if i <= collection_idx[j]:
                 idx = j
                 break
 
+        # Clear the axes.
         ax1.clear()
+        # Plot the rewards.
         plot_rewards(ax1, rpositions, rvalues, collected_rewards[idx])
+        # Plot the paths of the agents.
         for k in range(n_agents):
             plot_path(ax1, interpolation[k][i : i + 2], color=colors[k])
-            plot_path(
-                ax1, interpolation[k][: i + 1], color=colors[k], show_arrow=False
-            )
+            plot_path(ax1, interpolation[k][: i + 1], color=colors[k], show_arrow=False)
         ax1.set_title(
             "Individual Paths - score: "
             + str([int(score) for score in scores])
             + f" - {collected_values[idx]} collected"
         )
+        # Plot the maximum distance between the paths.
+        plot_max_distance(ax1, interpolation[:, :i + 1])
+
         ax1.grid(True)
         ax1.axis("equal")
         ax1.set_ylim(0, None)
