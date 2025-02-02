@@ -5,20 +5,20 @@ from . import Solution
 class Neighborhood:
     def __init__(self):
         self.perturbation_operators = {
-            0: self.two_opt,
-            1: self.swap_all_subpaths,
+            0: self.two_opt_all_paths,
+            1: self.invert_points_all_agents,
         }
         self.local_search_operators = {
             0: self.move_point,
             1: self.invert_single_point,
             2: self.swap_points,
             3: self.invert_multiple_points,
-            4: self.all_paths_swap_points,
+            4: self.swap_points_all_paths,
             5: self.move_point,
             6: self.invert_single_point,
             7: self.swap_points,
             8: self.invert_multiple_points,
-            9: self.all_paths_swap_points,
+            9: self.swap_points_all_paths,
         }
         self.num_neighborhoods = len(self.local_search_operators) * len(self.perturbation_operators)
     
@@ -28,7 +28,7 @@ class Neighborhood:
     def get_local_search_operator(self, neighborhood: int):
         return self.local_search_operators[neighborhood % len(self.local_search_operators)]
 
-    def two_opt(self, solution: Solution) -> list:
+    def two_opt_all_paths(self, solution: Solution) -> list:
         new_solution = solution.copy()
         new_paths = new_solution.paths
 
@@ -43,7 +43,7 @@ class Neighborhood:
 
         return new_solution
 
-    def swap_all_subpaths(self, solution: Solution) -> np.ndarray:
+    def swap_subpaths_all_agents(self, solution: Solution) -> np.ndarray:
         new_solution = solution.copy()
         new_paths = new_solution.paths
 
@@ -56,6 +56,17 @@ class Neighborhood:
                 new_path[j : j + l].copy(),
                 new_path[i : i + l].copy(),
             )
+
+        return new_solution
+
+    def invert_points_all_agents(self, solution: Solution) -> Solution:
+        new_solution = solution.copy()
+        new_paths = new_solution.paths
+
+        for i in range(len(new_paths)):
+            for j in range(len(new_paths[i])):
+                if np.random.rand() < 0.5:
+                    new_paths[i][j] = -new_paths[i][j]
 
         return new_solution
 
@@ -111,7 +122,22 @@ class Neighborhood:
 
         return neighbors
     
-    def all_paths_swap_points(self, solution: Solution, agent: int) -> list[Solution]:
+    def two_opt(self, solution: Solution, agent: int) -> list[Solution]:
+        path = solution.paths[agent]
+        neighbors = []
+        
+        for i in range(len(path) - 1):
+            for j in range(i + 1, len(path)):
+                new_solution = solution.copy()
+                new_path = new_solution.paths[agent]
+                new_path = np.concatenate(
+                    [new_path[:i], new_path[i : j + 1][::-1], new_path[j + 1 :]]
+                )
+                neighbors.append(new_solution)
+
+        return neighbors
+    
+    def swap_points_all_paths(self, solution: Solution, agent: int) -> list[Solution]:
         neighbors = []
 
         positive_indices = [np.where(path > 0)[0] for path in solution.paths]
