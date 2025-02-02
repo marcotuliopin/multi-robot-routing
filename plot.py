@@ -47,8 +47,6 @@ def plot_rewards(
 def plot_path(
     ax,
     path: list,
-    maxdist: float,
-    show_radius=False,
     show_path=True,
     color="orange",
     show_arrow=True,
@@ -72,6 +70,7 @@ def plot_path(
             ax.plot([prev[0], curr[0]], [prev[1], curr[1]], linewidth=2, color=color)
 
             dx, dy = curr[0] - prev[0], curr[1] - prev[1]
+
             if show_arrow:
                 ax.quiver(
                     prev[0],
@@ -83,10 +82,8 @@ def plot_path(
                     scale=1,
                     color=color,
                 )
-
-        if show_radius:
-            circle = plt.Circle((curr[0], curr[1]), maxdist, color=color, alpha=0.04)
-            ax.add_patch(circle)
+            
+            
 
         prev = curr
 
@@ -105,7 +102,7 @@ def get_path_length(path):
 
 
 def plot_paths_with_rewards(
-    rpositions, rvalues, individual, scores, MAXD, directory=None, fname=None
+    rpositions, rvalues, individual, scores, directory=None, fname=None
 ):
     """
     Plots the paths with rewards.
@@ -131,7 +128,7 @@ def plot_paths_with_rewards(
     individual = translate_path_to_coordinates(individual, rpositions)
     length = [get_path_length(ind) for ind in individual]
     for i in range(n_agents):
-        plot_path(ax, individual[i], MAXD, color=colors[i])
+        plot_path(ax, individual[i], color=colors[i])
 
     ax.set_title(
         "Individual Paths - score: "
@@ -193,7 +190,6 @@ def plot_animated_paths(
     rvalues,
     individual,
     scores,
-    MAXD,
     directory=None,
     fname=None,
     side_by_side=False,
@@ -278,9 +274,9 @@ def plot_animated_paths(
         ax1.clear()
         plot_rewards(ax1, rpositions, rvalues, collected_rewards[idx])
         for k in range(n_agents):
-            plot_path(ax1, interpolation[k][i : i + 2], MAXD, color=colors[k])
+            plot_path(ax1, interpolation[k][i : i + 2], color=colors[k])
             plot_path(
-                ax1, interpolation[k][: i + 1], MAXD, color=colors[k], show_arrow=False
+                ax1, interpolation[k][: i + 1], color=colors[k], show_arrow=False
             )
         ax1.set_title(
             "Individual Paths - score: "
@@ -542,8 +538,8 @@ def plot_interpolated_individual(individual: list, maxdist: float, directory=Non
     directory (str): The directory to save the plot.
     """
     fig, ax = plt.subplots(figsize=(7, 5))
-    plot_path(ax, individual[0], maxdist, color="orange")
-    plot_path(ax, individual[1], maxdist, color="green")
+    plot_path(ax, individual[0], color="orange")
+    plot_path(ax, individual[1], color="green")
 
     ax.set_title("Interpolated Individual Paths")
     plt.grid(True)

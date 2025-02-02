@@ -24,7 +24,7 @@ def save_stats(front, dominated, log):
 
 def select_solution(front, dominated):
     choosen_set = random.random()
-    if choosen_set < 0.7 or not dominated:
+    if choosen_set < 0.85 or not dominated:
         candidates = get_candidates(front)
     else:
         candidates = get_candidates(dominated)
@@ -151,7 +151,6 @@ def main(
             rvalues,
             path,
             scores[i],
-            4,
             directory=directory+f"/paths/{num_agents}_agents/{budget}_bgt",
             fname=f"{i}",
         )
