@@ -6,23 +6,28 @@ class Solution:
     _BEGIN: int = -1
     _END: int = -1
     _BUDGET: float = 0
-    _NUM_AGENTS: int = 0
-    _SPEED: float = 1
+    _NUM_AGENTS: int = 1
 
     def __init__(
         self,
         distmx: np.ndarray = None,
         rvalues: np.ndarray = None,
-        val: np.ndarray = None,
-        score: tuple = None,
+        paths: np.ndarray = None,
+        score: tuple = (-1, -1),
+        speeds: list = [1] * _NUM_AGENTS,
     ) -> None:
-        if val is None:
+        if paths is None:
             self.paths = self.init_paths(len(rvalues) - 1)
             self.paths = self.bound_all_paths(self.paths, distmx, rvalues)
         else:
-            self.paths = val
+            self.paths = paths
+        
+        if len(speeds) != Solution._NUM_AGENTS:
+            print("Speeds length is different from the number of agents.")
+            speeds = [1] * Solution._NUM_AGENTS
 
-        self.score = score if not score is None else (-1, -1)
+        self.score = score
+        self.speeds = speeds
         self.crowding_distance = -1
         self.visited = False
 
@@ -126,7 +131,8 @@ class Solution:
         return Solution(
             distmx=None,
             rvalues=None,
-            val=np.copy(self.paths),
+            paths=np.copy(self.paths),
+            speeds=copy.deepcopy(self.speeds),
             score=copy.deepcopy(self.score),
         )
     

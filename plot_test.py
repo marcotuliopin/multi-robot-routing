@@ -1,21 +1,20 @@
 import os
 import pickle
-
 import numpy as np
-
 import plot
 
 num_agents = 4
+speeds = [1, 1, 1, 1.5]
 budget = 150
 num = 14
 
 
 with open(f"out/front/{num_agents}_agents/{budget}_bgt/paths.pkl", "rb") as f:
-    bounded_path = pickle.load(f)
-print(bounded_path)
+    paths = pickle.load(f)
+print(paths)
 
 with open(f"out/front/{num_agents}_agents/{budget}_bgt/scores.pkl", "rb") as f:
-    score = pickle.load(f)
+    scores = pickle.load(f)
 
 with open("maps/dispersed_large.txt", "r") as f:
     lines = f.readlines()
@@ -31,8 +30,9 @@ os.makedirs(directory, exist_ok=True)
 plot.plot_animated_paths(
     rpositions,
     rvalues,
-    bounded_path,
-    score,
+    paths,
+    scores,
+    speeds,
     directory=directory,
     fname="animated_path",
     side_by_side=True,
