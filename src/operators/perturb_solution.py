@@ -6,13 +6,12 @@ from ..entities import Solution, Neighborhood
 def perturb_solution(
     solution: Solution,
     neighborhood: Neighborhood,
-    neighborhood_id: int,
     rvalues: np.ndarray,
     rpositions: np.ndarray,
     distmx: np.ndarray,
 ) -> Solution:
-    perturb_operator = neighborhood.get_perturbation_operator(neighborhood_id)
-    new_solution = perturb_operator(solution)
+    perturb_operator = neighborhood.get_perturbation_operator()
+    new_solution = perturb_operator(solution, rpositions, 5)
     new_solution.paths = new_solution.bound_all_paths(new_solution.paths, distmx, rvalues)
     new_solution.score = evaluate(new_solution, rvalues, rpositions, distmx)
 

@@ -38,7 +38,7 @@ class Solution:
 
     def init_paths(self, num_rewards: int) -> list[np.ndarray]:
         return np.random.uniform(
-            low=0, high=1, size=(Solution.num_agents, num_rewards)
+            low=0, high=10, size=(Solution.num_agents, num_rewards)
         )
 
     def dominates(self, other: "Solution") -> bool:

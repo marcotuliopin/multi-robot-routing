@@ -4,26 +4,30 @@ from . import Solution
 
 class Neighborhood:
     def __init__(self):
-        self.perturbation_operators = {
-            0: self.two_opt_all_paths,
-            1: self.invert_points_all_agents,
-        }
-        self.local_search_operators = {
-            0: self.move_point,
-            1: self.invert_single_point,
-            2: self.swap_points,
-            3: self.invert_multiple_points,
-            4: self.swap_points_all_paths,
-            5: self.move_point,
-            6: self.invert_single_point,
-            7: self.swap_points,
-            8: self.invert_multiple_points,
-            9: self.swap_points_all_paths,
-        }
+        self.perturbation_operators = [
+            self.two_opt_all_paths,
+            self.invert_points_all_agents,
+            self.swap_subpaths_all_agents,
+        ]
+        self.local_search_operators = [
+            self.move_point,
+            self.invert_single_point,
+            self.swap_points,
+            self.invert_multiple_points,
+            self.swap_points_all_paths,
+            self.path_relinking
+        ]
+
         self.num_neighborhoods = len(self.local_search_operators) * len(self.perturbation_operators)
     
-    def get_perturbation_operator(self, neighborhood: int):
-        return self.perturbation_operators[neighborhood % len(self.perturbation_operators)]
+    def get_perturbation_operator(self):
+        def wrapper(solution: Solution, rpositions: np.ndarray, max_distance: np.ndarray) -> Solution:
+            operator = np.random.randint(0, len(self.perturbation_operators))
+            if operator == len(self.perturbation_operators) - 1:
+                return self.insert_nearby_rewards(solution, rpositions, max_distance)
+            return self.perturbation_operators[operator](solution)
+            
+        return wrapper
 
     def get_local_search_operator(self, neighborhood: int):
         return self.local_search_operators[neighborhood % len(self.local_search_operators)]
@@ -68,6 +72,39 @@ class Neighborhood:
                 if np.random.rand() < 0.5:
                     new_paths[i][j] = -new_paths[i][j]
 
+        return new_solution
+
+    def move_towards_order_centroid(self, solution: Solution) -> Solution:
+        new_solution = solution.copy()
+        num_agents = len(new_solution.paths)
+        
+        path_matrix = np.array([path for path in new_solution.paths])  
+        visited_mask = path_matrix > 0  
+        visitation_count = np.sum(visited_mask, axis=0)
+        centroid_order = np.where(visitation_count > 0, np.sum(path_matrix * visited_mask, axis=0) / visitation_count, -1)
+
+        for agent in range(num_agents):
+            path = new_solution.paths[agent]
+            for reward in np.where(path > 0)[0]:
+                path[reward] = (path[reward] + centroid_order[reward]) / 2
+        
+        return new_solution
+    
+    def insert_nearby_rewards(self, solution: Solution, rpositions: np.ndarray, max_distance: float = 5.0) -> Solution:
+        new_solution = solution.copy()
+        
+        for agent in range(len(new_solution.paths)):
+            path = new_solution.paths[agent]
+            visited_rewards = np.where(path > 0)[0]
+            
+            for reward in visited_rewards:
+                for candidate in range(len(path)):
+                    if path[candidate] < 0:  # Not visited
+                        distance = np.linalg.norm(rpositions[reward] - rpositions[candidate])
+                        if distance < max_distance:
+                            insertion_point = path[reward] + 0.5
+                            path[candidate] = insertion_point  # Add nearby reward
+        
         return new_solution
 
     def move_point(self, solution: Solution, agent: int) -> list[Solution]:
@@ -189,6 +226,66 @@ class Neighborhood:
             new_path[i] = -new_path[i]
 
             neighbors.append(new_solution)
+
+        return neighbors
+    
+    def add_point(self, solution: Solution, agent: int) -> list[Solution]:
+        path = solution.paths[agent]
+        neighbors = []
+        
+        negative_indices = np.where(path < 0)[0]
+
+        for i in range(len(negative_indices)):
+            idx = negative_indices[i]
+            new_solution = solution.copy()
+            new_path = new_solution.paths[agent]
+            new_path[idx] = -new_path[idx]
+
+            neighbors.append(new_solution)
+
+        return neighbors
+    
+    def remove_point(self, solution: Solution, agent: int) -> list[Solution]:
+        path = solution.paths[agent]
+        neighbors = []
+        
+        positive_indices = np.where(path > 0)[0]
+
+        for i in range(len(positive_indices)):
+            idx = positive_indices[i]
+            new_solution = solution.copy()
+            new_path = new_solution.paths[agent]
+            new_path[idx] = -new_path[idx]
+
+            neighbors.append(new_solution)
+
+        return neighbors
+    
+    def path_relinking(self, solution: Solution, agent: int) -> list[Solution]:
+        path = solution.paths[agent]
+        neighbors = []
+
+        new_solution = solution.copy()
+
+
+        for i in range(len(solution.paths)):
+            if i == agent:
+                continue
+
+            indices_to_change = np.random.choice(
+                range(len(path)), 
+                size=np.random.randint(3, len(path)),
+                replace=False
+            )
+
+            new_path = new_solution.paths[i]
+
+            for idx in indices_to_change:
+                if new_path[idx] == path[idx]:
+                    continue
+                new_path[idx] = path[idx]
+                
+                neighbors.append(new_solution.copy())
 
         return neighbors
 
