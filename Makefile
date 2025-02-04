@@ -29,15 +29,17 @@ vns:
 
 .PHONY: movns
 movns:
-	python -m cProfile main.py --map maps/dispersed_large.txt --num-agents 8 --budget 150 --num-iter 300
+	python main.py --map maps/dispersed_large.txt --num-agents 4 --budget 150 --num-iter 300 --agents-speeds 1 1 1 1.5
 
 .PHONY: clean-output
 clean-output:
-	del /Q .\out\*
+	rmdir /S /Q .\out
+	mkdir .\out
 
 .PHONY: clean-tests
 clean-tests:
-	del /Q .\tests\*
+	rmdir /S /Q .\tests
+	mkdir .\tests
 
 .PHONY: clean-images
 clean-images:
