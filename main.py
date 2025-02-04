@@ -14,7 +14,7 @@ if __name__ == "__main__":
     parser.add_argument("--num-agents", type=int, default=4, help="Number of agents.")
     parser.add_argument("--agents-speeds", type=float, nargs="+", default=[1, 1, 1, 1], help="Speed of the agents.")
     parser.add_argument("--num-iter", type=int, default=100, help="Number of iterations.")
-    parser.add_argument("--budget", type=int, default=150, help="Budget.")
+    parser.add_argument("--budget", type=int, nargs="+", default=[150, 150, 150, 150], help="Budget of the agents.")
     args = parser.parse_args()
     
     # Read the rewards from the map file

@@ -5,8 +5,8 @@ import numpy as np
 class Solution:
     _BEGIN: int = -1
     _END: int = -1
-    _BUDGET: float = 0
     _NUM_AGENTS: int = 1
+    
 
     def __init__(
         self,
@@ -14,8 +14,15 @@ class Solution:
         rvalues: np.ndarray = None,
         paths: np.ndarray = None,
         score: tuple = (-1, -1),
-        speeds: list = [1] * _NUM_AGENTS,
+        speeds: list[float] = [1] * _NUM_AGENTS,
+        budget: list[int] = [150] * _NUM_AGENTS,
     ) -> None:
+        self.budget = budget
+        self.score = score
+        self.speeds = speeds
+        self.crowding_distance = -1
+        self.visited = False
+
         if paths is None:
             self.paths = self.init_paths(len(rvalues) - 1)
             self.paths = self.bound_all_paths(self.paths, distmx, rvalues)
@@ -26,18 +33,12 @@ class Solution:
             print("Speeds length is different from the number of agents.")
             speeds = [1] * Solution._NUM_AGENTS
 
-        self.score = score
-        self.speeds = speeds
-        self.crowding_distance = -1
-        self.visited = False
-
     @classmethod
     def set_parameters(
-        cls, begin: int, end: int, budget: float, num_agents: int
+        cls, begin: int, end: int, num_agents: int
     ) -> None:
         cls._BEGIN = begin
         cls._END = end
-        cls._BUDGET = budget
         cls._NUM_AGENTS = num_agents
 
     def init_paths(self, num_rewards: int) -> list[np.ndarray]:
@@ -68,12 +69,14 @@ class Solution:
         return lengths
 
     def bound_all_paths(
-        self, unbounded_paths: np.ndarray, distmx: np.ndarray, rvalues: np.ndarray
+        self, paths: np.ndarray, distmx: np.ndarray, rvalues: np.ndarray
     ) -> np.ndarray:
-        return np.apply_along_axis(self.bound_path, 1, unbounded_paths, distmx, rvalues)
+        for i in range(len(paths)):
+            paths[i] = self.bound_path(paths[i], self.budget[i], distmx, rvalues)
+        return paths
 
     def bound_path(
-        self, path: np.ndarray, distmx: np.ndarray, rvalues: np.ndarray
+        self, path: np.ndarray, budget: int, distmx: np.ndarray, rvalues: np.ndarray
     ) -> np.ndarray:
         positive_indices = np.where(path > 0)[0]
 
@@ -82,7 +85,7 @@ class Solution:
 
         total_length = self.__update_path_length(path, positive_indices, distmx)
 
-        if total_length <= Solution._BUDGET:
+        if total_length <= budget:
             return path
 
         probabilities = np.zeros_like(path, dtype=float)
@@ -90,7 +93,7 @@ class Solution:
 
         probabilities = probabilities / probabilities.sum()
 
-        while total_length > Solution._BUDGET:
+        while total_length > budget:
             removed_node_index = np.random.choice(
                 positive_indices, p=probabilities[positive_indices]
             )
@@ -133,6 +136,7 @@ class Solution:
             rvalues=None,
             paths=np.copy(self.paths),
             speeds=copy.deepcopy(self.speeds),
+            budget=copy.deepcopy(self.budget),
             score=copy.deepcopy(self.score),
         )
     

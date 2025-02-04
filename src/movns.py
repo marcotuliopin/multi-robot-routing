@@ -45,7 +45,8 @@ def get_candidates(solutions):
 
 
 def movns(
-    speeds: list,
+    speeds: list[float],
+    budget: list[int],
     rvalues: np.ndarray,
     rpositions: np.ndarray,
     distmx: np.ndarray,
@@ -58,7 +59,7 @@ def movns(
 
     neighborhood = Neighborhood()
 
-    solution = Solution(speeds=speeds, distmx=distmx, rvalues=rvalues)
+    solution = Solution(speeds=speeds, budget=budget, distmx=distmx, rvalues=rvalues)
     solution.score = evaluate(solution, rvalues, rpositions, distmx)
 
     archive = [solution]
@@ -109,7 +110,7 @@ def movns(
 def main(
     rpositions: np.ndarray,
     rvalues: np.ndarray,
-    budget: int,
+    budget: list[int],
     begin: int = -1,
     end: int = -1,
     max_it: int = 300,
@@ -117,7 +118,7 @@ def main(
     agents_speeds: list = [1, 1, 1, 1],
     seed: int = 42,
 ):
-    Solution.set_parameters(begin, end, budget, num_agents)
+    Solution.set_parameters(begin, end, num_agents)
 
     total_rewards = rvalues.sum()
     percentual_values = (rvalues / total_rewards) * 100
@@ -126,7 +127,7 @@ def main(
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
     # Run the algorithm
-    archive, front, log = movns(agents_speeds, percentual_values, rpositions, distmx, max_it, seed)
+    archive, front, log = movns(agents_speeds, budget, percentual_values, rpositions, distmx, max_it, seed)
     archive.sort(key=lambda solution: solution.score[0])
 
     paths = [s.get_solution_paths() for s in front]
@@ -134,7 +135,7 @@ def main(
 
     # Store the results of the front for further analysis.
     for i, path in enumerate(paths):
-        out_dir = f"out/front/{num_agents}_agents/{budget}_bgt"
+        out_dir = f"out/front/{num_agents}_agents/{max(budget)}_bgt"
         os.makedirs(out_dir, exist_ok=True)
         with open(f"{out_dir}/scores.pkl", "ab") as f:
             pickle.dump(scores[i], f)
@@ -144,7 +145,7 @@ def main(
     directory = "imgs/movns/"
 
     # Create an animation of the Pareto front evolution.
-    plot.plot_pareto_front_evolution(log, directory+f"/animations/{num_agents}_agents/{budget}_bgt")
+    plot.plot_pareto_front_evolution(log, directory+f"/animations/{num_agents}_agents/{max(budget)}_bgt")
 
     # Plot each path of the Pareto front.
     for i, path in enumerate(paths):
@@ -153,7 +154,7 @@ def main(
             rvalues,
             path,
             scores[i],
-            directory=directory+f"/paths/{num_agents}_agents/{budget}_bgt",
+            directory=directory+f"/paths/{num_agents}_agents/{max(budget)}_bgt",
             fname=f"{i}",
         )
 
