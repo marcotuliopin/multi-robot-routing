@@ -45,8 +45,6 @@ def get_candidates(solutions):
 
 
 def movns(
-    speeds: list[float],
-    budget: list[int],
     rvalues: np.ndarray,
     rpositions: np.ndarray,
     distmx: np.ndarray,
@@ -59,7 +57,7 @@ def movns(
 
     neighborhood = Neighborhood()
 
-    solution = Solution(speeds=speeds, budget=budget, distmx=distmx, rvalues=rvalues)
+    solution = Solution(distmx=distmx, rvalues=rvalues)
     solution.score = evaluate(solution, rvalues, rpositions, distmx)
 
     archive = [solution]
@@ -95,7 +93,7 @@ def movns(
 
         # end_it = time.perf_counter()
         # with open(
-        #     f"tests/it_time_{Solution._NUM_AGENTS}_bdg_{Solution._BUDGET}.txt", "a"
+        #     f"tests/it_time_{Solution.num_agents}_bdg_{Solution._BUDGET}.txt", "a"
         # ) as f:
         #     f.write(f"{str(end_it - start_it)}\n")
 
@@ -114,11 +112,11 @@ def main(
     begin: int = -1,
     end: int = -1,
     max_it: int = 300,
-    num_agents: int = 4,
-    agents_speeds: list = [1, 1, 1, 1],
+    num_agents: int = 1,
+    speeds: list = [1],
     seed: int = 42,
 ):
-    Solution.set_parameters(begin, end, num_agents)
+    Solution.set_parameters(begin, end, num_agents, budget, speeds)
 
     total_rewards = rvalues.sum()
     percentual_values = (rvalues / total_rewards) * 100
@@ -127,7 +125,7 @@ def main(
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
     # Run the algorithm
-    archive, front, log = movns(agents_speeds, budget, percentual_values, rpositions, distmx, max_it, seed)
+    archive, front, log = movns(percentual_values, rpositions, distmx, max_it, seed)
     archive.sort(key=lambda solution: solution.score[0])
 
     paths = [s.get_solution_paths() for s in front]

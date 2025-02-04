@@ -5,15 +5,15 @@ import plot
 
 num_agents = 4
 speeds = [1, 1, 1, 1.5]
-budget = 150
+budget = [150, 150, 150, 200]
 num = 14
 
 
-with open(f"out/front/{num_agents}_agents/{budget}_bgt/paths.pkl", "rb") as f:
+with open(f"out/front/{num_agents}_agents/{max(budget)}_bgt/paths.pkl", "rb") as f:
     paths = pickle.load(f)
 print(paths)
 
-with open(f"out/front/{num_agents}_agents/{budget}_bgt/scores.pkl", "rb") as f:
+with open(f"out/front/{num_agents}_agents/{max(budget)}_bgt/scores.pkl", "rb") as f:
     scores = pickle.load(f)
 
 with open("maps/dispersed_large.txt", "r") as f:
@@ -25,7 +25,7 @@ with open("maps/dispersed_large.txt", "r") as f:
     )
     rvalues = np.array([float(line) for line in lines[num_rewards + 1 :]])
 
-directory = f"imgs/movns/animations/{num_agents}_agents/{budget}_bgt/"
+directory = f"imgs/movns/animations/{num_agents}_agents/{max(budget)}_bgt/"
 os.makedirs(directory, exist_ok=True)
 plot.plot_animated_paths(
     rpositions,

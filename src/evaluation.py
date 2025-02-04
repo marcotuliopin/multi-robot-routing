@@ -13,8 +13,8 @@ def evaluate(
 
     max_reward = maximize_reward(paths, rvalues)
 
-    interesting_times = get_time_to_rewards(paths, solution.speeds, distmx)
-    interpolated_positions = interpolate_positions(paths, solution.speeds, interesting_times, rpositions, distmx)
+    interesting_times = get_time_to_rewards(paths, Solution.speeds, distmx)
+    interpolated_positions = interpolate_positions(paths, Solution.speeds, interesting_times, rpositions, distmx)
 
     max_distance = calculate_max_distance(interpolated_positions)
     min_communication = calculate_rssi(max_distance)
