@@ -1,3 +1,4 @@
+from itertools import combinations
 import numpy as np
 from . import Solution
 
@@ -7,14 +8,14 @@ class Neighborhood:
         self.perturbation_operators = [
             self.two_opt_all_paths,
             self.invert_points_all_agents,
-            self.swap_subpaths_all_agents,
+            self.swap_subpaths_all_agents
         ]
         self.local_search_operators = [
             self.move_point,
             self.invert_single_point,
             self.swap_points,
             self.invert_multiple_points,
-            self.swap_points_all_paths,
+            self.two_opt,
             self.path_relinking
         ]
 
@@ -45,6 +46,30 @@ class Neighborhood:
                 [new_path[:i], new_path[i : j + 1][::-1], new_path[j + 1 :]]
             )
 
+        return new_solution
+    
+    def untangle_path(self, solution: Solution) -> Solution:
+        def intersect(a, b, c, d):
+            def ccw(p1, p2, p3):
+                return (p3[1] - p1[1]) * (p2[0] - p1[0]) > (p2[1] - p1[1]) * (p3[0] - p1[0])
+            return ccw(a, c, d) != ccw(b, c, d) and ccw(a, b, c) != ccw(a, b, d)
+
+        new_solution = solution.copy()
+        new_paths = new_solution.paths
+        
+        for path in new_paths:
+            positive_indices = np.where(path > 0)[0]
+            sorted_indices = positive_indices[np.argsort(path[positive_indices])]
+            positions = solution.rpositions[sorted_indices]
+
+            for i, j in combinations(range(len(sorted_indices) - 1), 2):
+                a, b = positions[i], positions[i + 1]
+                c, d = positions[j], positions[j + 1]
+                
+                if intersect(a, b, c, d):
+                    new_path_values = path[sorted_indices[i+1:j+1]][::-1]
+                    path[sorted_indices[i+1:j+1]] = new_path_values
+                
         return new_solution
 
     def swap_subpaths_all_agents(self, solution: Solution) -> np.ndarray:
@@ -266,7 +291,6 @@ class Neighborhood:
         neighbors = []
 
         new_solution = solution.copy()
-
 
         for i in range(len(solution.paths)):
             if i == agent:
