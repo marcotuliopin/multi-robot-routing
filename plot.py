@@ -295,6 +295,7 @@ def plot_animated_paths(
         ax1.axis("equal")
         ax1.set_ylim(0, None)
         ax1.set_xlim(0, None)
+        ax1.legend()
 
         ax2.clear()
         ax2.plot(rssi_history[: i + 1])
@@ -308,6 +309,11 @@ def plot_animated_paths(
     )
     # plt.show()
     ani.save(f"{directory}/{fname}.gif", writer="pillow", fps=22)
+
+    # Save the last frame as a static image
+    update(len(interpolation[0]) - 1)
+    plt.savefig(f"{directory}/{fname}_last_frame.png")
+    plt.close()
 
 
 def plot_max_distance(ax, individual):
@@ -545,7 +551,7 @@ def plot_pareto_front_evolution(log, directory=None):
                 label="Dominated",
             )
 
-        ax.set_xlim(-100, 0)
+        ax.set_xlim(0, 100)
         ax.set_ylim(0, 100)
         ax.set_xlabel("Maximum RSSI")
         ax.set_ylabel("Percentage of Total Reward Obtained")
@@ -559,10 +565,14 @@ def plot_pareto_front_evolution(log, directory=None):
     )
 
     # Mostra a animação ou salva em um arquivo
-    plt.show()
     os.makedirs(directory, exist_ok=True)
 
     ani.save(f"{directory}/pareto_front_evolution.gif", writer="pillow")
+
+    # Save the last frame as a static image
+    update(iterations - 1)
+    plt.savefig(f"{directory}/pareto_front_evolution_last_frame.png")
+    plt.close()
 
 
 def plot_interpolated_individual(individual: list, maxdist: float, directory=None):
