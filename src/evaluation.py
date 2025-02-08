@@ -1,6 +1,5 @@
 import numpy as np
 from .entities import Solution
-from utils import calculate_rssi
 
 
 def evaluate(
@@ -17,7 +16,6 @@ def evaluate(
     interpolated_positions = interpolate_positions(paths, Solution.speeds, interesting_times, rpositions, distmx)
 
     max_distance = calculate_max_distance(interpolated_positions)
-    min_communication = calculate_rssi(max_distance)
 
     max_len = get_paths_max_length(paths, distmx)
 
