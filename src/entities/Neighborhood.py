@@ -1,5 +1,6 @@
 from itertools import combinations
-from . import Solution, SanityAssertions
+from . import Solution
+from .SanityAssertions import SanityAssertions
 import numpy as np
 
 
@@ -9,14 +10,15 @@ class Neighborhood:
             self.two_opt_all_paths,
             self.invert_points_all_agents,
             self.swap_subpaths_all_agents,
-            # self.untangle_path,
+            self.untangle_path,
         ]
         self.local_search_operators = [
-            # self.move_point,
             self.swap_points,
+            self.add_point,
             self.invert_single_point,
-            # self.invert_multiple_points,
             self.two_opt,
+            self.invert_multiple_points,
+            self.swap_local_subpaths,
             self.path_relinking,
         ]
 
@@ -26,8 +28,8 @@ class Neighborhood:
     def get_perturbation_operator(self):
         def wrapper(solution: Solution, rpositions: np.ndarray) -> Solution:
             operator = np.random.randint(0, len(self.perturbation_operators))
-            # if operator == len(self.perturbation_operators) - 1:
-            #     return self.untangle_path(solution, rpositions)
+            if operator == len(self.perturbation_operators) - 1:
+                return self.untangle_path(solution, rpositions)
             return self.perturbation_operators[operator](solution)
             
         return wrapper
@@ -167,9 +169,6 @@ class Neighborhood:
                 SanityAssertions.assert_no_repeated_values(new_path)
 
                 neighbors.append(new_solution)
-
-        if self.is_there_repeated_values(path):
-            raise ValueError("Repeated values")
 
         return neighbors
     
@@ -332,6 +331,3 @@ class Neighborhood:
             neighbors.append(new_solution)
 
         return neighbors
-
-    def is_there_repeated_values(self, path: np.ndarray) -> bool:
-        return len(set(path)) != len(path)
