@@ -1,6 +1,5 @@
 import os
 import random
-import time
 import plot
 import numpy as np
 import pickle
@@ -11,7 +10,6 @@ from .operators import *
 from .entities import Solution, Neighborhood
 
 archive_max_size = 40
-
 
 def save_stats(front, dominated, log):
     front.sort(key=lambda s: s.score[0])
@@ -50,9 +48,8 @@ def movns(
     max_it: int,
     seed: int,
 ):
-    start = time.time()
-
     random.seed(seed)
+    np.random.seed(seed)
 
     neighborhood = Neighborhood()
 
@@ -90,9 +87,6 @@ def movns(
         archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
 
         save_stats(front, dominated, log)
-
-    end = time.time() - start
-    print(f"Execution time: {end / 60:.2f} minutes")
 
     return archive, front, log
 
