@@ -12,8 +12,8 @@ from .entities import Solution, Neighborhood
 archive_max_size = 40
 
 def save_stats(front, dominated, log):
-    front.sort(key=lambda s: {s.score[0], -s.score[1]})
-    dominated.sort(key=lambda s: (s.score[0], -s.score[1]))
+    front.sort(key=lambda s: (s.score[0], -s.score[1], -s.score[2]))
+    dominated.sort(key=lambda s: (s.score[0], -s.score[1], -s.score[2]))
     log.append(
         {"front": [s.score for s in front], "dominated": [s.score for s in dominated]}
     )
@@ -60,6 +60,7 @@ def movns(
     log = []
 
     # Initialize the archive by exploring the neighborhood of the initial solution.
+    print("Initializing archive...")
     for neighborhood_id in tqdm(range(neighborhood.num_neighborhoods), desc="Progress", unit="neighborhood"):
         neighbors = local_search(
             solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx
@@ -69,6 +70,7 @@ def movns(
     save_stats(front, dominated, log)
 
     # Main loop.
+    print("Running main loop...")
     for neighborhood_id in tqdm(range(max_it), desc="Progress", unit="iteration"):
         solution = select_solution(front, dominated)
 
