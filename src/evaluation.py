@@ -21,7 +21,7 @@ def evaluate(
 
     max_len = get_paths_max_length(paths, distmx)
 
-    return max_reward, min_communication, -max_len
+    return max_reward, -max_distance, -max_len
 
 
 def get_paths_max_length(paths: list[np.ndarray], distmx: np.ndarray) -> float:
