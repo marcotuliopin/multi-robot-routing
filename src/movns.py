@@ -12,15 +12,15 @@ from .entities import Solution, Neighborhood
 archive_max_size = 40
 
 def save_stats(front, dominated, log):
-    front.sort(key=lambda s: s.score[0])
-    dominated.sort(key=lambda s: s.score[0])
+    front.sort(key=lambda s: {s.score[0], -s.score[1]})
+    dominated.sort(key=lambda s: (s.score[0], -s.score[1]))
     log.append(
         {"front": [s.score for s in front], "dominated": [s.score for s in dominated]}
     )
 
 
 def select_solution(front, dominated):
-    choosen_set = random.random()
+    choosen_set = np.random.random()
     if choosen_set < 0.9 or not dominated:
         candidates = get_candidates(front)
     else:
@@ -48,7 +48,6 @@ def movns(
     max_it: int,
     seed: int,
 ):
-    random.seed(seed)
     np.random.seed(seed)
 
     neighborhood = Neighborhood()
@@ -129,9 +128,12 @@ def main(
     directory = "imgs/movns/"
 
     # Create an animation of the Pareto front evolution.
-    plot.plot_pareto_front_evolution(log, directory+f"/animations/{num_agents}_agents/{max(budget)}_bgt")
+    print("Plotting Front Evolution Animation...")
+    plot.plot_pareto_front_evolution_3d(log, directory+f"/animations/{num_agents}_agents/{max(budget)}_bgt")
+    plot.plot_pareto_front_evolution_2d(log, directory+f"/animations/{num_agents}_agents/{max(budget)}_bgt")
 
     # Plot each path of the Pareto front.
+    print("Plotting Paths...")
     for i, path in enumerate(paths):
         plot.plot_paths_with_rewards(
             rpositions,
