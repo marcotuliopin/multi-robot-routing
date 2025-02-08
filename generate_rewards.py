@@ -20,11 +20,13 @@ def generate_dispersed_rewards(num_rewards, dispersion, output_file):
 
     # Salvar as recompensas em um arquivo
     with open(output_file, "w") as f:
-        f.write(f"{num_rewards} {dispersion}\n")
+        f.write(f"{num_rewards + 1} {dispersion}\n")
         for pos in rpositions:
             f.write(f"{pos[0]} {pos[1]}\n")
+        f.write(f"0 0\n")
         for value in rvalues:
             f.write(f"{value}\n")
+        f.write("0\n")
 
 
 if __name__ == "__main__":
@@ -69,4 +71,4 @@ if __name__ == "__main__":
     #     generate_dispersed_rewards(
     #         arg["num_rewards"], arg["dispersion"], arg["output_file"]
     #     )
-    generate_dispersed_rewards(100, 6, "maps/dispersed_near.txt")
+    generate_dispersed_rewards(20, 10, "maps/dispersed_near.txt")
