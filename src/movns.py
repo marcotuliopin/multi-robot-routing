@@ -10,7 +10,7 @@ from .evaluation import evaluate, update_archive
 from .operators import *
 from .entities import Solution, Neighborhood
 
-archive_max_size = 30
+archive_max_size = 40
 
 
 def save_stats(front, dominated, log):
@@ -23,7 +23,7 @@ def save_stats(front, dominated, log):
 
 def select_solution(front, dominated):
     choosen_set = random.random()
-    if choosen_set < 0.85 or not dominated:
+    if choosen_set < 0.9 or not dominated:
         candidates = get_candidates(front)
     else:
         candidates = get_candidates(dominated)
@@ -83,9 +83,9 @@ def movns(
 
         # Second phase
         neighbors2 = []
-        if len(front) > 1:
-            solution1, solution2 = random.sample(front, 2)
-            neighbors2 = solution_relinking(solution1, solution2, rvalues, rpositions, distmx)
+        # if len(front) > 1:
+        #     solution1, solution2 = random.sample(front, 2)
+        #     neighbors2 = solution_relinking(solution1, solution2, rvalues, rpositions, distmx)
 
         archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
 

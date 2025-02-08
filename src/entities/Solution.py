@@ -14,7 +14,7 @@ class Solution:
         distmx: np.ndarray = None,
         rvalues: np.ndarray = None,
         paths: np.ndarray = None,
-        score: tuple = (-1, -1),
+        score: tuple = (-1, -1, -1),
     ) -> None:
         self.score = score
         self.crowding_distance = -1
@@ -37,16 +37,19 @@ class Solution:
         cls.speeds = speeds
 
     def init_paths(self, num_rewards: int) -> list[np.ndarray]:
-        return np.random.uniform(
-            low=0, high=10, size=(Solution.num_agents, num_rewards)
+        paths = np.random.uniform(
+            low=0, high=100, size=(Solution.num_agents, num_rewards)
         )
+        
+        if any(len(np.unique(path)) != len(path) for path in paths):
+            raise ValueError("Paths must have unique values.")
+
+        return paths
 
     def dominates(self, other: "Solution") -> bool:
-        is_better = False
+        is_better = True
         for i in range(len(self.score)):
-            if self.score[i] > other.score[i]:
-                is_better = True
-            elif self.score[i] < other.score[i]:
+            if self.score[i] < other.score[i]:
                 return False
         return is_better
 
@@ -71,7 +74,7 @@ class Solution:
         return paths
 
     def bound_path(
-        self, path: np.ndarray, budget: int, distmx: np.ndarray, rvalues: np.ndarray
+    self, path: np.ndarray, budget: int, distmx: np.ndarray, rvalues: np.ndarray
     ) -> np.ndarray:
         positive_indices = np.where(path > 0)[0]
 
@@ -83,23 +86,20 @@ class Solution:
         if total_length <= budget:
             return path
 
-        probabilities = np.zeros_like(path, dtype=float)
-        probabilities[positive_indices] = 1 / rvalues[positive_indices]
-
-        probabilities = probabilities / probabilities.sum()
-
         while total_length > budget:
-            removed_node_index = np.random.choice(
-                positive_indices, p=probabilities[positive_indices]
-            )
+            impacts = self.__get_impact_in_length(path, positive_indices, distmx)
+
+            # The chance of removing a node is proportional to the impact of removing it, but inversely proportional to the reward of the node.
+            # Since the reward is always positive, the ratio is always a real number greater than zero.
+            reward_impact_ratio = impacts / rvalues[positive_indices]
+            probabilities = reward_impact_ratio / reward_impact_ratio.sum()
+
+            removed_node_index = np.random.choice(positive_indices, p=probabilities)
             path[removed_node_index] = -path[removed_node_index]
 
             positive_indices = positive_indices[positive_indices != removed_node_index]
             if len(positive_indices) == 0:
                 break
-
-            probabilities[removed_node_index] = 0
-            probabilities = probabilities / probabilities.sum()
 
             total_length = self.__update_path_length(path, positive_indices, distmx)
 
@@ -108,10 +108,36 @@ class Solution:
     def get_path_length(self, path: np.ndarray, distmx: np.ndarray) -> float:
         positive_indices = np.where(path > 0)[0]
         return self.__update_path_length(path, positive_indices, distmx)
+    
+    def __get_impact_in_length(self, path: np.ndarray, positive_indices: np.ndarray, distmx: np.ndarray) -> np.ndarray:
+        """
+        Calculate the impact in length of removing each node in the path.
+        """
+        impacts = np.zeros(len(positive_indices))
+        for i, index in enumerate(positive_indices):
+            # If the node is the first node in the path.
+            if i == 0:
+                # If the path has only one node, the impact is zeroing the length.
+                if len(positive_indices) == 1:
+                    impacts[i] = distmx[Solution.begin, index]
+                # If the path has more than one node, the impact is the difference between the length of the path and the length of the path without the first node.
+                elif len(positive_indices) > 1:
+                    original_length = distmx[Solution.begin, index] + distmx[index, positive_indices[1]]
+                    impacts[i] = original_length - distmx[Solution.begin, positive_indices[1]]
+            # If the node is the last node and at the same time not the first, which means the path is of at least two nodes.
+            elif i == len(positive_indices) - 1:
+                # The impact is the difference between the length of the path and the length of the path without the last node.
+                original_length = distmx[positive_indices[i - 1], index] + distmx[index, Solution.end]
+                impacts[i] = original_length - distmx[positive_indices[i - 1], Solution.end]
+            # If the node is in the middle of the path and is neither the first nor the last node, then the path is of at least three nodes.
+            else:
+                # The impact is the difference between the length of the path and the length of the path without the node.
+                original_length = distmx[positive_indices[i - 1], index] + distmx[index, positive_indices[i + 1]]
+                impacts[i] = original_length - distmx[positive_indices[i - 1], positive_indices[i + 1]]
 
-    def __update_path_length(
-        self, path: np.ndarray, positive_indices: list, distmx: np.ndarray
-    ) -> float:
+        return impacts
+
+    def __update_path_length(self, path: np.ndarray, positive_indices: list, distmx: np.ndarray) -> float:
         trajectory = positive_indices[np.argsort(path[positive_indices])]
 
         total_length = (

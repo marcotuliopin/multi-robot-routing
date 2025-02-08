@@ -462,27 +462,31 @@ def plot_pareto_front(archive, directory=None):
 
 def plot_pareto_front_evolution(log, directory=None):
     """
-    Plots the evolution of the Pareto front.
+    Plots the evolution of the Pareto front with three different scores.
 
     Parameters:
     log (list): The log of the Pareto front evolution.
     """
     iterations = len(log)
-    fig, ax = plt.subplots()
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
     # Configuração inicial do gráfico
-    scatter = ax.scatter([], [], s=30, alpha=0.6)
-    ax.set_xlabel("Maximum RSSI")
-    ax.set_ylabel("Percentage of Total Reward Obtained")
+    scatter = ax.scatter([], [], [], s=30, alpha=0.6)
+    ax.set_xlabel("Percentage of Collected Rewards")
+    ax.set_ylabel("Distance between agents")
+    ax.set_zlabel("Path Length")
     ax.set_title("Pareto Frontier Evolution")
-    ax.set_xlim(-100, 0)
-    ax.set_ylim(0, 100)
+    ax.set_xlim(0, 100)
+    ax.set_ylim(-100, 0)
+    ax.set_zlim(-200, 0)
 
     initial_data = log[0]
-    scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data["front"]])
+    scores_x, scores_y, scores_z = zip(*[(s[0], s[1], s[2]) for s in initial_data["front"]])
     ax.plot(
         scores_x,
         scores_y,
+        scores_z,
         linewidth=2,
         color="green",
         marker="o",
@@ -501,10 +505,11 @@ def plot_pareto_front_evolution(log, directory=None):
         ax.clear()
 
         initial_data = log[0]
-        scores_x, scores_y = zip(*[(s[1], s[0]) for s in initial_data["front"]])
+        scores_x, scores_y, scores_z = zip(*[(s[0], s[1], s[2]) for s in initial_data["front"]])
         ax.plot(
             scores_x,
             scores_y,
+            scores_z,
             linewidth=2,
             color="green",
             marker="o",
@@ -513,24 +518,12 @@ def plot_pareto_front_evolution(log, directory=None):
             label="Initial pareto front",
         )
 
-        o = 0
-        v = []
         current_data = log[iteration]
-        for i in range(len(current_data["front"])):
-            for j in range(i + 1, len(current_data["front"])):
-                if (
-                    current_data["front"][i][0] == current_data["front"][j][0]
-                    and current_data["front"][i][1] == current_data["front"][j][1]
-                    and i not in v
-                    and j not in v
-                ):
-                    o += 1
-                    v.append(j)
-
-        scores_x, scores_y = zip(*[(s[1], s[0]) for s in current_data["front"]])
+        scores_x, scores_y, scores_z = zip(*[(s[0], s[1], s[2]) for s in current_data["front"]])
         ax.plot(
             scores_x,
             scores_y,
+            scores_z,
             linewidth=2,
             color="purple",
             marker="o",
@@ -539,12 +532,13 @@ def plot_pareto_front_evolution(log, directory=None):
         )
 
         if current_data["dominated"]:
-            x_dominated, y_dominated = zip(
-                *[(s[1], s[0]) for s in current_data["dominated"]]
+            x_dominated, y_dominated, z_dominated = zip(
+                *[(s[0], s[1], s[2]) for s in current_data["dominated"]]
             )
             ax.scatter(
                 x_dominated,
                 y_dominated,
+                z_dominated,
                 s=30,
                 alpha=0.6,
                 color="gray",
@@ -552,10 +546,11 @@ def plot_pareto_front_evolution(log, directory=None):
             )
 
         ax.set_xlim(0, 100)
-        ax.set_ylim(0, 100)
-        ax.set_xlabel("Maximum RSSI")
-        ax.set_ylabel("Percentage of Total Reward Obtained")
-        ax.set_title("Archive Evolution")
+        ax.set_ylim(-100, 0)
+        ax.set_zlim(-200, 0)
+        ax.set_xlabel("Percentage of Collected Rewards")
+        ax.set_ylabel("Distance between agents")
+        ax.set_zlabel("Path Length")
         ax.set_title(f"Pareto Frontier Evolution - Iteration {iteration}")
         ax.legend()
 

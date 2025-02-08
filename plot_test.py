@@ -4,9 +4,9 @@ import numpy as np
 import plot
 
 num_agents = 3
-speeds = [1, 1, 2]
-budget = [250]
-num = 5
+speeds = [1, 1, 1]
+budget = [150]
+num = 29
 
 
 with open(f"out/front/{num_agents}_agents/{max(budget)}_bgt/paths.pkl", "rb") as f:
@@ -18,7 +18,7 @@ with open(f"out/front/{num_agents}_agents/{max(budget)}_bgt/scores.pkl", "rb") a
     for i in range(num):
         scores = pickle.load(f)
 
-with open("maps/dispersed_large.txt", "r") as f:
+with open("maps/dispersed_near.txt", "r") as f:
     lines = f.readlines()
     num_rewards, _ = lines[0].split()
     num_rewards = int(num_rewards)

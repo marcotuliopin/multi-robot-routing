@@ -18,7 +18,18 @@ def evaluate(
 
     max_distance = calculate_max_distance(interpolated_positions)
     min_communication = calculate_rssi(max_distance)
-    return max_reward, min_communication
+
+    max_len = get_paths_max_length(paths, distmx)
+
+    return max_reward, min_communication, -max_len
+
+
+def get_paths_max_length(paths: list[np.ndarray], distmx: np.ndarray) -> float:
+    mean_distance = []
+    for path in paths:
+        distances = np.sum(distmx[path[:-1], path[1:]])
+        mean_distance.append(distances)
+    return np.max(mean_distance)
 
 
 def interpolate_positions(
