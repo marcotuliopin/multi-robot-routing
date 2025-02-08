@@ -12,8 +12,8 @@ from .entities import Solution, Neighborhood
 archive_max_size = 40
 
 def save_stats(front, dominated, log):
-    front.sort(key=lambda s: (s.score[0], -s.score[1], -s.score[2]))
-    dominated.sort(key=lambda s: (s.score[0], -s.score[1], -s.score[2]))
+    front.sort(key=lambda s: (s.score[0], s.score[1], s.score[2]))
+    dominated.sort(key=lambda s: (s.score[0], s.score[1], s.score[2]))
     log.append(
         {"front": [s.score for s in front], "dominated": [s.score for s in dominated]}
     )

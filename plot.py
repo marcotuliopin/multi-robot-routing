@@ -478,11 +478,11 @@ def plot_pareto_front_evolution_3d(log, directory=None):
     ax.set_zlabel("Path Length")
     ax.set_title("Pareto Frontier Evolution")
     ax.set_xlim(0, 100)
-    ax.set_ylim(0, 100)
-    ax.set_zlim(0, 200)
+    ax.set_ylim(-100, 0)
+    ax.set_zlim(-200, 0)
 
     initial_data = log[0]
-    scores_x, scores_y, scores_z = zip(*[(s[0], -s[1], -s[2]) for s in initial_data["front"]])
+    scores_x, scores_y, scores_z = zip(*[(s[0], s[1], s[2]) for s in initial_data["front"]])
     ax.plot(
         scores_x,
         scores_y,
@@ -505,7 +505,7 @@ def plot_pareto_front_evolution_3d(log, directory=None):
         ax.clear()
 
         initial_data = log[0]
-        scores_x, scores_y, scores_z = zip(*[(s[0], -s[1], -s[2]) for s in initial_data["front"]])
+        scores_x, scores_y, scores_z = zip(*[(s[0], s[1], s[2]) for s in initial_data["front"]])
         ax.plot(
             scores_x,
             scores_y,
@@ -519,7 +519,7 @@ def plot_pareto_front_evolution_3d(log, directory=None):
         )
 
         current_data = log[iteration]
-        scores_x, scores_y, scores_z = zip(*[(s[0], -s[1], -s[2]) for s in current_data["front"]])
+        scores_x, scores_y, scores_z = zip(*[(s[0], s[1], s[2]) for s in current_data["front"]])
         ax.plot(
             scores_x,
             scores_y,
@@ -533,7 +533,7 @@ def plot_pareto_front_evolution_3d(log, directory=None):
 
         if current_data["dominated"]:
             x_dominated, y_dominated, z_dominated = zip(
-                *[(s[0], -s[1], -s[2]) for s in current_data["dominated"]]
+                *[(s[0], s[1], s[2]) for s in current_data["dominated"]]
             )
             ax.scatter(
                 x_dominated,
@@ -546,8 +546,8 @@ def plot_pareto_front_evolution_3d(log, directory=None):
             )
 
         ax.set_xlim(0, 100)
-        ax.set_ylim(0, 100)
-        ax.set_zlim(0, 200)
+        ax.set_ylim(-100, 0)
+        ax.set_zlim(-200, 0)
         ax.set_xlabel("Percentage of Collected Rewards")
         ax.set_ylabel("Distance between agents")
         ax.set_zlabel("Path Length")
@@ -582,14 +582,14 @@ def plot_pareto_front_evolution_2d(log, directory=None):
 
     # Configuração inicial do gráfico
     scatter = ax.scatter([], [], s=30, alpha=0.6)
-    ax.set_xlabel("Percentage of Collected Rewards")
-    ax.set_ylabel("Distance between agents")
+    ax.set_xlabel("Distance between agents")
+    ax.set_ylabel("Percentage of Collected Rewards")
     ax.set_title("Pareto Frontier Evolution")
-    ax.set_xlim(0, 100)
+    ax.set_xlim(-100, 0)
     ax.set_ylim(0, 100)
 
     initial_data = log[0]
-    scores_x, scores_y = zip(*[(s[0], -s[1]) for s in initial_data["front"]])
+    scores_y, scores_x = zip(*[(s[0], s[1]) for s in initial_data["front"]])
     ax.plot(
         scores_x,
         scores_y,
@@ -611,7 +611,7 @@ def plot_pareto_front_evolution_2d(log, directory=None):
         ax.clear()
 
         initial_data = log[0]
-        scores_x, scores_y = zip(*[(s[0], -s[1]) for s in initial_data["front"]])
+        scores_y, scores_x = zip(*[(s[0], s[1]) for s in initial_data["front"]])
         ax.plot(
             scores_x,
             scores_y,
@@ -624,7 +624,7 @@ def plot_pareto_front_evolution_2d(log, directory=None):
         )
 
         current_data = log[iteration]
-        scores_x, scores_y = zip(*[(s[0], -s[1]) for s in current_data["front"]])
+        scores_y, scores_x = zip(*[(s[0], s[1]) for s in current_data["front"]])
         ax.plot(
             scores_x,
             scores_y,
@@ -636,8 +636,8 @@ def plot_pareto_front_evolution_2d(log, directory=None):
         )
 
         if current_data["dominated"]:
-            x_dominated, y_dominated = zip(
-                *[(s[0], -s[1]) for s in current_data["dominated"]]
+            y_dominated, x_dominated = zip(
+                *[(s[0], s[1]) for s in current_data["dominated"]]
             )
             ax.scatter(
                 x_dominated,
@@ -648,10 +648,10 @@ def plot_pareto_front_evolution_2d(log, directory=None):
                 label="Dominated",
             )
 
-        ax.set_xlim(0, 100)
+        ax.set_xlim(-100, 0)
         ax.set_ylim(0, 100)
-        ax.set_xlabel("Percentage of Collected Rewards")
-        ax.set_ylabel("Distance between agents")
+        ax.set_ylabel("Percentage of Collected Rewards")
+        ax.set_xlabel("Distance between agents")
         ax.set_title(f"Pareto Frontier Evolution - Iteration {iteration}")
         ax.legend()
 
