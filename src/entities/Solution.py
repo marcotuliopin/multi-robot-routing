@@ -47,8 +47,10 @@ class Solution:
         return paths
 
     def dominates(self, other: "Solution") -> bool:
-        is_better = True
+        is_better = False
         for i in range(len(self.score)):
+            if self.score[i] > other.score[i]:
+                is_better = True
             if self.score[i] < other.score[i]:
                 return False
         return is_better
@@ -82,7 +84,7 @@ class Solution:
         if len(positive_indices) == 0:
             return path
 
-        total_length = self.__update_path_length(path, trajectory, distmx)
+        total_length = self.__update_path_length(trajectory, distmx)
 
         while total_length > budget:
             impacts = self.__get_impact_in_length(trajectory, distmx)
@@ -99,7 +101,7 @@ class Solution:
             if len(positive_indices) == 0:
                 break
 
-            total_length = self.__update_path_length(path, trajectory, distmx)
+            total_length = self.__update_path_length(trajectory, distmx)
 
         return path
 
@@ -135,7 +137,10 @@ class Solution:
 
         return impacts
 
-    def __update_path_length(self, path: np.ndarray, trajectory: np.ndarray, distmx: np.ndarray) -> float:
+    def __update_path_length(self, trajectory: np.ndarray, distmx: np.ndarray) -> float:
+        if len(trajectory) == 0:
+            return 0.0
+
         total_length = (
             np.sum(distmx[trajectory[:-1], trajectory[1:]])
             + distmx[Solution.begin, trajectory[0]]
