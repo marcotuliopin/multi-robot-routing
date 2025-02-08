@@ -93,8 +93,8 @@ def movns(
 
 
 def main(
-    rpositions: np.ndarray,
-    rvalues: np.ndarray,
+    rpositions: np.ndarray, # Rewards coordinates
+    rvalues: np.ndarray, # Rewards values
     budget: list[int],
     begin: int = -1,
     end: int = -1,
@@ -105,14 +105,11 @@ def main(
 ):
     Solution.set_parameters(begin, end, num_agents, budget, speeds)
 
-    total_rewards = rvalues.sum()
-    percentual_values = (rvalues / total_rewards) * 100
-
     # Matrix of distances between rewards
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
     # Run the algorithm
-    archive, front, log = movns(percentual_values, rpositions, distmx, max_it, seed)
+    archive, front, log = movns(rvalues, rpositions, distmx, max_it, seed)
     archive.sort(key=lambda solution: solution.score[0])
 
     paths = [s.get_solution_paths() for s in front]

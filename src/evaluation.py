@@ -10,7 +10,7 @@ def evaluate(
 ) -> tuple[float, float]:
     paths = solution.get_solution_paths()
 
-    max_reward = maximize_reward(paths, rvalues)
+    max_reward = maximize_reward(paths, rvalues) / rvalues.sum() * 100
 
     interesting_times = get_time_to_rewards(paths, Solution.speeds, distmx)
     interpolated_positions = interpolate_positions(paths, Solution.speeds, interesting_times, rpositions, distmx)
