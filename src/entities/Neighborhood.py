@@ -15,7 +15,7 @@ class Neighborhood:
         self.local_search_operators = [
             self.swap_points,
             self.add_point,
-            self.invert_single_point,
+            self.remove_point,
             self.two_opt,
             self.invert_multiple_points,
             self.swap_local_subpaths,
