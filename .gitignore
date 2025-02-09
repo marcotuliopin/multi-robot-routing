@@ -1,0 +1,14 @@
+*\__pycache__
+\__pycache__
+*\*.png
+\imgs
+\imgs\*
+.venv
+\maps
+\maps\*
+\out
+\out\*
+\tests
+\tests\*
+test.py
+calc_dist_opt.py

@@ -29,7 +29,7 @@ vns:
 
 .PHONY: movns
 movns:
-	python main.py --map maps/dispersed_large.txt --num-agents 4 --budget 150 --num-iter 300 --speeds 1 1 1 1 --budget 150 150 150 150
+	python main.py --map maps/dispersed_large.txt --num-agents 3 --num-iter 1000 --speeds 2 1 1 --budget 300 300 300
 
 .PHONY: clean-output
 clean-output:
@@ -43,8 +43,9 @@ clean-tests:
 
 .PHONY: clean-images
 clean-images:
-	rmdir /S /Q .\imgs\movns\paths
+	rmdir /S /Q .\imgs\movns
 	mkdir .\imgs\movns\paths
+	mkdir .\imgs\movns\animations
 
 .PHONY: clean
 clean: clean-output clean-tests clean-images
