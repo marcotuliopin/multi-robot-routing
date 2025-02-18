@@ -13,11 +13,10 @@ class Neighborhood:
             self.untangle_path,
         ]
         self.local_search_operators = [
+            self.invert_single_point,
             self.swap_points,
-            self.add_point,
-            self.remove_point,
-            self.two_opt,
             self.invert_multiple_points,
+            self.two_opt,
             self.swap_local_subpaths,
             self.path_relinking,
         ]

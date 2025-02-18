@@ -74,18 +74,11 @@ def movns(
     for neighborhood_id in tqdm(range(max_it), desc="Progress", unit="iteration"):
         solution = select_solution(front, dominated)
 
-        # First phase
         shaken_solution = perturb_solution(solution, neighborhood, rvalues, rpositions, distmx)
         neighbors1 = [shaken_solution]
         neighbors1 = neighbors1 + local_search(shaken_solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx)
 
-        # Second phase
-        neighbors2 = []
-        # if len(front) > 1:
-        #     solution1, solution2 = random.sample(front, 2)
-        #     neighbors2 = solution_relinking(solution1, solution2, rvalues, rpositions, distmx)
-
-        archive, front, dominated = update_archive(archive, neighbors1 + neighbors2, archive_max_size)
+        archive, front, dominated = update_archive(archive, neighbors1, archive_max_size)
 
         save_stats(front, dominated, log)
 
