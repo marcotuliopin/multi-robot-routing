@@ -13,7 +13,7 @@ if __name__ == "__main__":
     parser.add_argument("--map", type=str, default="maps/grid_asymetric.txt", help="Path to the map image.")
     parser.add_argument("--num-agents", type=int, default=4, help="Number of agents.")
     parser.add_argument("--speeds", type=float, nargs="+", default=[1, 1, 1, 1], help="Speed of the agents.")
-    parser.add_argument("--num-iter", type=int, default=100, help="Number of iterations.")
+    parser.add_argument("--total_time", type=int, default=9*60, help="Execution time in seconds.")
     parser.add_argument("--budget", type=int, nargs="+", default=[150, 150, 150, 150], help="Budget of the agents.")
     args = parser.parse_args()
     
@@ -34,5 +34,5 @@ if __name__ == "__main__":
         seed=42,
         num_agents=args.num_agents,
         speeds=args.speeds,
-        max_it=args.num_iter,
+        total_time=args.total_time,
     )

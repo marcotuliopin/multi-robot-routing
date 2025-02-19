@@ -1,5 +1,6 @@
 import os
 import random
+import time
 import plot
 import numpy as np
 import pickle
@@ -45,7 +46,7 @@ def movns(
     rvalues: np.ndarray,
     rpositions: np.ndarray,
     distmx: np.ndarray,
-    max_it: int,
+    total_time: int,
     seed: int,
 ):
     np.random.seed(seed)
@@ -61,7 +62,7 @@ def movns(
 
     # Initialize the archive by exploring the neighborhood of the initial solution.
     print("Initializing archive...")
-    for neighborhood_id in tqdm(range(neighborhood.num_neighborhoods), desc="Progress", unit="neighborhood"):
+    for neighborhood_id in range(neighborhood.num_neighborhoods):
         neighbors = local_search(
             solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx
         )
@@ -71,16 +72,25 @@ def movns(
 
     # Main loop.
     print("Running main loop...")
-    for neighborhood_id in tqdm(range(max_it), desc="Progress", unit="iteration"):
+    progress_bar = tqdm(total=total_time, desc="Progress", unit="sec", dynamic_ncols=True)
+
+    init_time = time.perf_counter()
+    while time.perf_counter() - init_time < total_time:
         solution = select_solution(front, dominated)
 
-        shaken_solution = perturb_solution(solution, neighborhood, rvalues, rpositions, distmx)
-        neighbors1 = [shaken_solution]
-        neighbors1 = neighbors1 + local_search(shaken_solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx)
+        for neighborhood_id in range(neighborhood.num_neighborhoods):
+            elapsed_time = time.perf_counter() - init_time
+            progress_bar.n = int(elapsed_time)
+            progress_bar.refresh()
+            if elapsed_time > total_time:
+                break
 
-        archive, front, dominated = update_archive(archive, neighbors1, archive_max_size)
+            shaken_solution = perturb_solution(solution, neighborhood, rvalues, rpositions, distmx)
+            neighbors = local_search(shaken_solution, neighborhood, neighborhood_id, rvalues, rpositions, distmx)
 
-        save_stats(front, dominated, log)
+            archive, front, dominated = update_archive(archive, [shaken_solution] + neighbors, archive_max_size)
+
+            save_stats(front, dominated, log)
 
     return archive, front, log
 
@@ -91,7 +101,7 @@ def main(
     budget: list[int],
     begin: int = -1,
     end: int = -1,
-    max_it: int = 300,
+    total_time: int = 300,
     num_agents: int = 1,
     speeds: list = [1],
     seed: int = 42,
@@ -102,7 +112,7 @@ def main(
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
     # Run the algorithm
-    archive, front, log = movns(rvalues, rpositions, distmx, max_it, seed)
+    archive, front, log = movns(rvalues, rpositions, distmx, total_time, seed)
     archive.sort(key=lambda solution: solution.score[0])
 
     paths = [s.get_solution_paths() for s in front]

@@ -33,7 +33,7 @@ install: requirements.txt
 
 .PHONY: run
 run:
-	python main.py --map maps/dispersed_large.txt --num-agents 3 --num-iter 1000 --speeds 2 1 1 --budget 300 300 300
+	python main.py --map maps/dispersed_large.txt --num-agents 3 --total_time 540 --speeds 2 1 1 --budget 300 300 300
 
 .PHONY: remove_out_dir
 remove_out_dir:
