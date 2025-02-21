@@ -1,4 +1,5 @@
 import numpy as np
+from utils import calculate_rssi
 from .entities import Solution
 
 
@@ -10,16 +11,17 @@ def evaluate(
 ) -> tuple[float, float]:
     paths = solution.get_solution_paths()
 
-    max_reward = maximize_reward(paths, rvalues) / rvalues.sum() * 100
+    max_reward = maximize_reward(paths, rvalues)
 
     interesting_times = get_time_to_rewards(paths, Solution.speeds, distmx)
     interpolated_positions = interpolate_positions(paths, Solution.speeds, interesting_times, rpositions, distmx)
 
     max_distance = calculate_max_distance(interpolated_positions)
+    min_rssi = calculate_rssi(max_distance, noise=False)
 
     max_len = get_paths_max_length(paths, distmx)
 
-    return max_reward, -max_distance, -max_len
+    return max_reward, min_rssi, -max_len
 
 
 def get_paths_max_length(paths: list[np.ndarray], distmx: np.ndarray) -> float:
