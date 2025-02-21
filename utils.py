@@ -82,13 +82,15 @@ def calculate_rssi(
     distance: float,
     tx_power: float = -30,
     path_loss_exponent: float = 2.0,
+    noise: bool = True,
     noise_std: float = 1.0,
 ) -> float:
     if distance < 1e-3:
         distance = 0.1
 
     rssi = tx_power - 10 * path_loss_exponent * np.log10(distance)
-    rssi += np.random.normal(0, noise_std)
+    if noise:
+        rssi += np.random.normal(0, noise_std)
 
     return rssi
 
