@@ -1,35 +1,6 @@
 .ONESHELL:
-# To begin the project, run the following command: make setup
-# To activate the virtual environment, run the following command: make activate
-# To run the project, run the following command: make run
 
-VENV := .venv
 REQUIREMENTS := requirements.txt
-
-.PHONY: all
-all: venv
-
-.PHONY: venv
-venv: # TODO: Needs fixing. Not activating the virtual environment.
-	if not exist $(VENV) ( \
-		python -m venv $(VENV) && \
-		call .\$(VENV)\Scripts\activate && \
-		python -m pip install --upgrade pip \
-	) else ( \
-		echo Virtual environment already exists. \
-	)
-
-.PHONY: activate
-activate: # TODO: Needs fixing. Not activating the virtual environment.
-	call .\$(VENV)\Scripts\activate
-
-.PHONY: requirements
-requirements:
-	pip freeze > $(REQUIREMENTS)
-
-.PHONY: install
-install: requirements.txt
-	pip install -r $(REQUIREMENTS)
 
 .PHONY: run
 run:
