@@ -20,12 +20,12 @@ if __name__ == "__main__":
     # Read the rewards from the map file
     with open(args.map, "r") as f:
         lines = f.readlines()
-        num_rewards, _ = lines[0].split()
+        num_rewards = lines[0]
         num_rewards = int(num_rewards)
         rpositions = np.array(
-            [list(map(float, line.split())) for line in lines[1 : num_rewards + 1]]
+            [list(map(float, line.split()[:-1])) for line in lines[1:]]
         )
-        rvalues = np.array([float(line) for line in lines[num_rewards + 1 :]])
+        rvalues = np.array([float(line.split()[2]) for line in lines[1:]])
 
     paths = movns(
         rpositions,
