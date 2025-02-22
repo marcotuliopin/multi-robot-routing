@@ -8,5 +8,7 @@
 \out\*
 \tests
 \tests\*
+\paper_example
+\paper_example\*
 test.py
 calc_dist_opt.py
