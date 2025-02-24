@@ -1,6 +1,8 @@
 import copy
 import numpy as np
 
+from .SanityAssertions import SanityAssertions
+
 
 class Solution:
     begin: int = 1
@@ -21,7 +23,7 @@ class Solution:
         self.visited = False
 
         if paths is None:
-            self.paths = self.init_paths(len(rvalues) - 2)
+            self.paths = self.init_paths_unique(len(rvalues) - 2)
             self.paths = self.bound_all_paths(self.paths, distmx, rvalues)
         else:
             self.paths = paths
@@ -38,11 +40,27 @@ class Solution:
 
     def init_paths(self, num_rewards: int) -> list[np.ndarray]:
         paths = np.random.uniform(
-            low=0, high=100, size=(Solution.num_agents, num_rewards)
+            low=0, high=1, size=(Solution.num_agents, num_rewards)
         )
         
         if any(len(np.unique(path)) != len(path) for path in paths):
             raise ValueError("Paths must have unique values.")
+
+        return paths
+    
+    def init_paths_unique(self, num_rewards: int) -> list[np.ndarray]:
+        paths = np.random.uniform(
+            low=-1, high=0, size=(Solution.num_agents, num_rewards)
+        )
+
+        positive_indices = np.random.randint(0, Solution.num_agents, size=(num_rewards))
+
+        for reward_idx, agent_idx in enumerate(positive_indices):
+            paths[agent_idx, reward_idx] = -paths[agent_idx, reward_idx]
+
+        SanityAssertions.assert_one_agent_per_reward(paths)
+        for path in paths:
+            SanityAssertions.assert_no_repeated_values(path)
 
         return paths
 
