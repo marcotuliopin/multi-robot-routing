@@ -12,17 +12,13 @@ from .entities import Solution, Neighborhood
 
 archive_max_size = 40
 
-def save_stats(front, dominated, log):
-    front.sort(key=lambda s: (s.score[0], s.score[1], s.score[2]))
-    dominated.sort(key=lambda s: (s.score[0], s.score[1], s.score[2]))
-    log.append(
-        {"front": [s.score for s in front], "dominated": [s.score for s in dominated]}
-    )
+def save_stats(log, front):
+    log.append([max(s.score[0] for s in front), max(s.score[1] for s in front), min(-s.score[2] for s in front)])
 
 
 def select_solution(front, dominated):
     choosen_set = np.random.random()
-    if choosen_set < 0.9 or not dominated:
+    if choosen_set < 0.8 or not dominated:
         candidates = get_candidates(front)
     else:
         candidates = get_candidates(dominated)
@@ -48,6 +44,7 @@ def movns(
     distmx: np.ndarray,
     total_time: int,
     seed: int,
+    max_it: int = 100,
 ):
     np.random.seed(seed)
 
@@ -68,20 +65,23 @@ def movns(
         )
         archive, front, dominated = update_archive(archive, neighbors, archive_max_size)
 
-    save_stats(front, dominated, log)
+    save_stats(log, front)
 
     # Main loop.
     print("Running main loop...")
-    progress_bar = tqdm(total=total_time, desc="Progress", unit="sec", dynamic_ncols=True)
-
+    progress_bar_time = tqdm(total=total_time, desc="Progress", unit="sec", dynamic_ncols=True)
     init_time = time.perf_counter()
-    while time.perf_counter() - init_time < total_time:
-        solution = select_solution(front, dominated)
 
+    progress_bar_it = tqdm(total=max_it, desc="Progress", unit="it", dynamic_ncols=True)
+    it = 0
+
+    while it < max_it and time.perf_counter() - init_time < total_time:
+        solution = select_solution(front, dominated)
+        
         for neighborhood_id in range(neighborhood.num_neighborhoods):
             elapsed_time = time.perf_counter() - init_time
-            progress_bar.n = int(elapsed_time)
-            progress_bar.refresh()
+            progress_bar_time.n = int(elapsed_time)
+            progress_bar_time.refresh()
             if elapsed_time > total_time:
                 break
 
@@ -90,7 +90,9 @@ def movns(
 
             archive, front, dominated = update_archive(archive, [shaken_solution] + neighbors, archive_max_size)
 
-            save_stats(front, dominated, log)
+            save_stats(log, front)
+        it += 1
+        progress_bar_it.update(1)
 
     return archive, front, log
 
@@ -100,50 +102,61 @@ def main(
     rvalues: np.ndarray, # Rewards values
     budget: list[int],
     begin: int = -1,
-    end: int = -1,
-    total_time: int = 300,
+    end: int = -2,
+    total_time: int = 600,
     num_agents: int = 1,
     speeds: list = [1],
     seed: int = 42,
+    max_it: int = 100,
 ):
+    print(speeds)
     Solution.set_parameters(begin, end, num_agents, budget, speeds)
 
     # Matrix of distances between rewards
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
     # Run the algorithm
-    archive, front, log = movns(rvalues, rpositions, distmx, total_time, seed)
+    archive, front, log = movns(rvalues, rpositions, distmx, total_time, seed, max_it)
     archive.sort(key=lambda solution: solution.score[0])
 
     paths = [s.get_solution_paths() for s in front]
-    scores = [s.score for s in front]
+    scores = np.array([s.score for s in front])
+    # scores[:, 0] = scores[:, 1] / np.sum(rvalues) * 100
 
     # Store the results of the front for further analysis.
     for i, path in enumerate(paths):
-        out_dir = f"out/front/{num_agents}_agents/{max(budget)}_bgt"
+        out_dir = f"out/front/{num_agents}_agents/{max(budget)}_bgt/{max(speeds)}_spd"
         os.makedirs(out_dir, exist_ok=True)
         with open(f"{out_dir}/scores.pkl", "ab") as f:
             pickle.dump(scores[i], f)
         with open(f"{out_dir}/paths.pkl", "ab") as f:
             pickle.dump(path, f)
+    with open(f"{out_dir}/log.pkl", "ab") as f:
+        pickle.dump(log, f)
+    
+    print(max(scores[:, 0]))
+    
+    directory = "imgs/"
 
-    directory = "imgs/movns/"
+    # # Create an animation of the Pareto front evolution.
+    # print("Plotting Front Evolution Animation...")
+    # plot.plot_pareto_front_evolution_3d(log, directory+f"/animations/{num_agents}_agents/{max(budget)}_bgt")
+    # plot.plot_pareto_front_evolution_2d(log, directory+f"/animations/{num_agents}_agents/{max(budget)}_bgt")
 
-    # Create an animation of the Pareto front evolution.
-    print("Plotting Front Evolution Animation...")
-    plot.plot_pareto_front_evolution_3d(log, directory+f"/animations/{num_agents}_agents/{max(budget)}_bgt")
-    plot.plot_pareto_front_evolution_2d(log, directory+f"/animations/{num_agents}_agents/{max(budget)}_bgt")
-
-    # Plot each path of the Pareto front.
+    # # Plot each path of the Pareto front.
     print("Plotting Paths...")
+    paths_dir = f"/paths/{num_agents}_agents/{max(budget)}_bgt/"
     for i, path in enumerate(paths):
+        path_dir = directory + paths_dir
+        os.makedirs(path_dir, exist_ok=True)
+        num_files = len([name for name in os.listdir(path_dir) if os.path.isfile(os.path.join(path_dir, name))])
         plot.plot_paths_with_rewards(
             rpositions,
             rvalues,
             path,
             scores[i],
-            directory=directory+f"/paths/{num_agents}_agents/{max(budget)}_bgt",
-            fname=f"{i}",
+            directory=directory+paths_dir,
+            fname=f"{num_files + 1}",
         )
 
     return paths

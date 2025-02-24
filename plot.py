@@ -250,8 +250,8 @@ def plot_animated_paths(
     )
     ax1.grid(True)
     ax1.axis("equal")
-    ax1.set_ylim(0, None)
-    ax1.set_xlim(0, None)
+    ax1.set_ylim(0, max(rpositions[:, 1]) + 5)
+    ax1.set_xlim(0, max(rpositions[:, 0]) + 5)
 
     # Plot RSSI history on the second axis
     ax2.plot(rssi_history)
@@ -277,6 +277,12 @@ def plot_animated_paths(
 
         # Clear the axes.
         ax1.clear()
+        ax1.grid(True)
+        ax1.axis("equal")
+        ax1.set_ylim(0, max(rpositions[:, 1]) + 5)
+        ax1.set_xlim(0, max(rpositions[:, 0]) + 5)
+        ax1.legend()
+
         # Plot the rewards.
         plot_rewards(ax1, rpositions, rvalues, collected_rewards[idx])
         # Plot the paths of the agents.
@@ -291,12 +297,6 @@ def plot_animated_paths(
         # Plot the maximum distance between the paths.
         plot_max_distance(ax1, interpolation[:, :i + 1])
 
-        ax1.grid(True)
-        ax1.axis("equal")
-        ax1.set_ylim(0, None)
-        ax1.set_xlim(0, None)
-        ax1.legend()
-
         ax2.clear()
         ax2.plot(rssi_history[: i + 1])
         ax2.set_title("RSSI History")
@@ -308,7 +308,7 @@ def plot_animated_paths(
         fig, update, frames=len(interpolation[0]), repeat=False
     )
     # plt.show()
-    ani.save(f"{directory}/{fname}.gif", writer="pillow", fps=22)
+    ani.save(f"{directory}/{fname}.mp4", writer="ffmpeg", fps=22)
 
     # Save the last frame as a static image
     update(len(interpolation[0]) - 1)

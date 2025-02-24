@@ -5,34 +5,40 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the multi-objective GA.")
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
-    parser.add_argument("--plot-path", action="store_true", help="Plot the resulting best path.")
-    parser.add_argument("--plot-distances", action="store_true", help="Plot the resulting best path.")
-    parser.add_argument("--plot-interpolation", action="store_true", help="Plot the interpolated path.")
-    parser.add_argument("--save-plot", type=str, default=None, help="Save the plot to the specified directory.")
-    parser.add_argument("--run-animation", action="store_true", help="Run the animation of the best path.")
     parser.add_argument("--map", type=str, default="maps/grid_asymetric.txt", help="Path to the map image.")
-    parser.add_argument("--num-agents", type=int, default=4, help="Number of agents.")
-    parser.add_argument("--speeds", type=float, nargs="+", default=[1, 1, 1, 1], help="Speed of the agents.")
-    parser.add_argument("--total_time", type=int, default=9*60, help="Execution time in seconds.")
-    parser.add_argument("--budget", type=int, nargs="+", default=[150, 150, 150, 150], help="Budget of the agents.")
+    parser.add_argument("--total_time", type=int, default=540, help="Execution time in seconds.")
+    parser.add_argument("--num_iterations", type=int, default=100, help="Number of iterations.")
+    parser.add_argument("--speeds", type=float, nargs="+", help="Speed of the agents.")
+    parser.add_argument("--budget", type=int, nargs="+", help="Budget of the agents.")
     args = parser.parse_args()
     
     # Read the rewards from the map file
     with open(args.map, "r") as f:
         lines = f.readlines()
-        num_rewards = lines[0]
-        num_rewards = int(num_rewards)
+        num_rewards = float(lines[0].split(sep=";")[1])
+        num_agents = int(lines[1].split(sep=";")[1])
+        budget = [float(lines[2].split(sep=";")[1])] * int(num_agents)
+        speeds = [1] * int(num_agents)
+
         rpositions = np.array(
-            [list(map(float, line.split()[:-1])) for line in lines[1:]]
+            [list(map(float, line.split(sep=";")[:-1])) for line in lines[3:]]
         )
-        rvalues = np.array([float(line.split()[2]) for line in lines[1:]])
+        rvalues = np.array([float(line.split(";")[2]) for line in lines[3:]])
+        rpositions = np.append(rpositions[1:], [rpositions[0]], axis=0)
+        rvalues = np.append(rvalues[1:], rvalues[0])
+    
+    if args.budget is not None:
+        budget = args.budget
+    if args.speeds is not None:
+        speeds = args.speeds
 
     paths = movns(
         rpositions,
         rvalues,
-        args.budget,
+        budget,
         seed=42,
-        num_agents=args.num_agents,
-        speeds=args.speeds,
+        num_agents=num_agents,
+        speeds=speeds,
         total_time=args.total_time,
+        max_it=args.num_iterations,
     )

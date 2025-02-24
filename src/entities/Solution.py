@@ -3,7 +3,7 @@ import numpy as np
 
 
 class Solution:
-    begin: int = -1
+    begin: int = 1
     end: int = -1
     num_agents: int = 1
     speeds: list[float] = [1]
@@ -21,7 +21,7 @@ class Solution:
         self.visited = False
 
         if paths is None:
-            self.paths = self.init_paths(len(rvalues) - 1)
+            self.paths = self.init_paths(len(rvalues) - 2)
             self.paths = self.bound_all_paths(self.paths, distmx, rvalues)
         else:
             self.paths = paths

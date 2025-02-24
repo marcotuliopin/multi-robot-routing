@@ -12,3 +12,5 @@
 \paper_example\*
 test.py
 calc_dist_opt.py
+\benchmarks
+\benchmarks\*

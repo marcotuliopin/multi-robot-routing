@@ -27,6 +27,6 @@ fi
 
 if [ ! -d "./imgs" ]; then
     echo "Creating ./imgs directory and subdirectories..."
-    mkdir -p ./imgs/movns/paths
-    mkdir -p ./imgs/movns/animations
+    mkdir -p ./imgs/paths
+    mkdir -p ./imgs/animations
 fi
