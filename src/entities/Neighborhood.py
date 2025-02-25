@@ -7,17 +7,20 @@ import numpy as np
 class Neighborhood:
     def __init__(self):
         self.perturbation_operators = [
-            # self.invert_points_all_agents,
             self.invert_points_all_agents_unique,
-            self.swap_subpaths_all_agents,
+            self.two_opt_all_paths,
             self.untangle_path,
+            # self.invert_points_all_agents,
+            # self.swap_subpaths_all_agents,
         ]
         self.local_search_operators = [
+            self.add_point,
             self.swap_points,
-            # self.invert_single_point,
             self.invert_single_point_unique,
-            self.swap_local_subpaths,
+            self.add_and_move,
             self.two_opt,
+            # self.invert_single_point,
+            # self.swap_local_subpaths,
             # self.path_relinking,
         ]
 
@@ -149,25 +152,7 @@ class Neighborhood:
             for j in range(i + 1, len(positive_indices)):
                 new_solution = solution.copy()
                 new_path = new_solution.paths[agent]
-
-                idx1 = positive_indices[i]
-                idx2 = positive_indices[j]
-
-                # If the new position is the last point.
-                if j == len(positive_indices) - 1:
-                    # The new position is the last point.
-                    new_path[idx1] = new_path[idx2]
-                    # The last point is the middle point between the two points.
-                    new_path[idx2] = (
-                        new_path[idx1]
-                        + (new_path[positive_indices[j - 1]] - new_path[idx1]) / 2
-                    )
-                else:
-                    # The new position is the middle point between the two points.
-                    new_path[idx1] = (
-                        new_path[idx2]
-                        + (new_path[positive_indices[j + 1]] - new_path[idx2]) / 2
-                    )
+                new_path[positive_indices[i]] = new_path[positive_indices[i]] + np.random.random() * self.epsilon
 
                 # SanityAssertions.assert_no_repeated_values(new_path)
 
@@ -350,11 +335,6 @@ class Neighborhood:
                 new_path = new_solution.paths[agent]
 
                 new_path[negative_indices[i]] = new_path[positive_indices[j]] + np.random.random() * self.epsilon
-
-                # if j == len(positive_indices) - 1:
-                #     new_path[idx1] = np.random.random() + new_path[idx2]
-                # else:
-                #     new_path[idx1] = (new_path[idx2] + new_path[idx2 + 1]) / 2 + np.random.random() * self.epsilon
 
                 neighbors.append(new_solution)
 

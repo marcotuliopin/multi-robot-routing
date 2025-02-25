@@ -14,6 +14,7 @@ archive_max_size = 60
 
 def save_stats(log, front):
     # log.append([max(s.score[0] for s in front), max(s.score[1] for s in front), min(-s.score[2] for s in front)])
+    print([int(max(s.score[0] for s in front)), int(max(s.score[1] for s in front))])
     log.append([max(s.score[0] for s in front), min(-s.score[1] for s in front)])
 
 

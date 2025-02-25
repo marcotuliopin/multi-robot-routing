@@ -17,11 +17,12 @@ def evaluate(
     interpolated_positions = interpolate_positions(paths, Solution.speeds, interesting_times, rpositions, distmx)
 
     max_distance = calculate_max_distance(interpolated_positions)
-    min_rssi = calculate_rssi(max_distance, noise=False)
+    max_rssi = calculate_rssi(max_distance, noise=False)
 
-    max_len = get_paths_max_length(paths, distmx)
+    min_len = get_paths_max_length(paths, distmx)
 
-    return max_reward, min_rssi, -max_len
+    # We are trying to maximize all these.
+    return max_reward, max_rssi, -min_len
 
 
 def get_paths_max_length(paths: list[np.ndarray], distmx: np.ndarray) -> float:
