@@ -7,21 +7,22 @@ import numpy as np
 class Neighborhood:
     def __init__(self):
         self.perturbation_operators = [
-            self.invert_points_all_agents_unique,
+            # self.invert_points_all_agents_unique,
+            self.invert_points_all_agents,
             self.two_opt_all_paths,
             self.untangle_path,
-            # self.invert_points_all_agents,
             # self.swap_subpaths_all_agents,
         ]
         self.local_search_operators = [
             self.add_point,
             self.swap_points,
-            self.invert_single_point_unique,
+            # self.invert_single_point_unique,
+            self.invert_single_point,
             self.add_and_move,
+            self.remove_point,
+            self.swap_local_subpaths,
             self.two_opt,
-            # self.invert_single_point,
-            # self.swap_local_subpaths,
-            # self.path_relinking,
+            self.path_relinking,
         ]
 
         self.num_neighborhoods = len(self.local_search_operators) * len(self.perturbation_operators)
@@ -323,8 +324,8 @@ class Neighborhood:
             new_solution = solution.copy()
             new_path = new_solution.paths[agent]
 
-            positive_idx = np.where(new_solution.paths[:, negative_indices[i]] > 0)[0]
-            new_solution.paths[positive_idx, negative_indices[i]] = -new_solution.paths[positive_idx, negative_indices[i]]
+            # positive_idx = np.where(new_solution.paths[:, negative_indices[i]] > 0)[0]
+            # new_solution.paths[positive_idx, negative_indices[i]] = -new_solution.paths[positive_idx, negative_indices[i]]
 
             new_path[negative_indices[i]] = -new_path[negative_indices[i]]
 
@@ -351,8 +352,8 @@ class Neighborhood:
             new_solution = solution.copy()
             new_path = new_solution.paths[agent]
 
-            positive_idx = np.where(new_solution.paths[:, negative_indices[i]] > 0)[0]
-            new_solution.paths[positive_idx, negative_indices[i]] = -new_solution.paths[positive_idx, negative_indices[i]]
+            # positive_idx = np.where(new_solution.paths[:, negative_indices[i]] > 0)[0]
+            # new_solution.paths[positive_idx, negative_indices[i]] = -new_solution.paths[positive_idx, negative_indices[i]]
 
             new_path[negative_indices[i]] = -new_path[negative_indices[i]]
 
