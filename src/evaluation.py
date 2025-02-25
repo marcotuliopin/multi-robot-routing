@@ -80,13 +80,10 @@ def calculate_max_distance(interpolated_positions: np.ndarray) -> float:
 
 def maximize_reward(paths: list[np.ndarray], rvalues: np.ndarray) -> float:
     all_elements = np.concatenate(paths)
-    unique_elements, counts = np.unique(all_elements, return_counts=True)
+    unique_elements = np.unique(all_elements)
     reward = 0
-    for element, count in zip(unique_elements, counts):
-        if count == 1:
-            reward += rvalues[element]
-        else:
-            reward += rvalues[element] / count
+    for element in unique_elements:
+        reward += rvalues[element]
     return reward
 
 

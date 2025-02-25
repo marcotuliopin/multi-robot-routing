@@ -6,9 +6,9 @@ import plot
 num_agents = 3
 speeds = [0.5, 0.5, 0.5]
 budget = [70.0]
-num = 385
+num = 471
 
-with open(f"out/front/{num_agents}_agents/{max(budget)}_bgt/1.0_spd/paths.pkl", "rb") as f:
+with open(f"data/combined_visit/paths.pkl", "rb") as f:
     for i in range(num):
         paths = pickle.load(f)
 print(paths)
@@ -16,7 +16,7 @@ print(paths)
 # with open("paper_example/combined_visit/paths.pkl", "rb") as f:
 #     paths = pickle.load(f)
 
-with open(f"out/front/{num_agents}_agents/{max(budget)}_bgt/1.0_spd/scores.pkl", "rb") as f:
+with open(f"data/combined_visit/scores.pkl", "rb") as f:
     for i in range(num):
         scores = pickle.load(f)
 
@@ -37,7 +37,7 @@ with open("maps/paper_example.txt", "r") as f:
         rpositions = np.append(rpositions[1:], [rpositions[0]], axis=0)
         rvalues = np.append(rvalues[1:], rvalues[0])
 
-directory = f"imgs/animations/{num_agents}_agents/{max(budget)}_bgt/"
+directory = f"imgs/animations/paper_example/"
 os.makedirs(directory, exist_ok=True)
 plot.plot_animated_paths(
     rpositions,

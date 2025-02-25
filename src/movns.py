@@ -10,10 +10,11 @@ from .evaluation import evaluate, update_archive
 from .operators import *
 from .entities import Solution, Neighborhood
 
-archive_max_size = 40
+archive_max_size = 60
 
 def save_stats(log, front):
-    log.append([max(s.score[0] for s in front), max(s.score[1] for s in front), min(-s.score[2] for s in front)])
+    # log.append([max(s.score[0] for s in front), max(s.score[1] for s in front), min(-s.score[2] for s in front)])
+    log.append([max(s.score[0] for s in front), min(-s.score[1] for s in front)])
 
 
 def select_solution(front, dominated):
@@ -143,7 +144,7 @@ def main(
     # plot.plot_pareto_front_evolution_3d(log, directory+f"/animations/{num_agents}_agents/{max(budget)}_bgt")
     # plot.plot_pareto_front_evolution_2d(log, directory+f"/animations/{num_agents}_agents/{max(budget)}_bgt")
 
-    # # Plot each path of the Pareto front.
+    # Plot each path of the Pareto front.
     print("Plotting Paths...")
     paths_dir = f"/paths/{num_agents}_agents/{max(budget)}_bgt/"
     for i, path in enumerate(paths):

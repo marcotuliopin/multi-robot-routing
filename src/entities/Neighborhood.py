@@ -7,14 +7,18 @@ import numpy as np
 class Neighborhood:
     def __init__(self):
         self.perturbation_operators = [
+            # self.invert_points_all_agents,
             self.invert_points_all_agents_unique,
             self.swap_subpaths_all_agents,
             self.untangle_path,
         ]
         self.local_search_operators = [
             self.swap_points,
+            # self.invert_single_point,
             self.invert_single_point_unique,
             self.swap_local_subpaths,
+            self.two_opt,
+            # self.path_relinking,
         ]
 
         self.num_neighborhoods = len(self.local_search_operators) * len(self.perturbation_operators)
@@ -72,7 +76,7 @@ class Neighborhood:
                     new_path_values = path[sorted_indices[i+1:j+1]][::-1]
                     path[sorted_indices[i+1:j+1]] = new_path_values
 
-        SanityAssertions.assert_one_agent_per_reward(new_paths)
+        # SanityAssertions.assert_one_agent_per_reward(new_paths)
         # for new_path in new_paths:
         #     SanityAssertions.assert_no_repeated_values(new_path)
                 
@@ -97,7 +101,7 @@ class Neighborhood:
                 new_path[positive_idxs[i : i + l]].copy(),
             )
         
-        SanityAssertions.assert_one_agent_per_reward(new_paths)
+        # SanityAssertions.assert_one_agent_per_reward(new_paths)
         # for new_path in new_paths:
         #     SanityAssertions.assert_no_repeated_values(new_path)
 
@@ -129,8 +133,7 @@ class Neighborhood:
                 new_positive_idx = np.random.randint(0, len(new_solution.paths))
                 new_solution.paths[new_positive_idx, col] = -new_solution.paths[new_positive_idx, col]
 
-        SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
-
+        # SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
         # for new_path in new_paths:
         #     SanityAssertions.assert_no_repeated_values(new_path)
 
@@ -187,7 +190,7 @@ class Neighborhood:
                 idx2 = positive_indices[j]
                 new_path[idx1], new_path[idx2] = new_path[idx2], new_path[idx1]
 
-                SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
+                # SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
                 # SanityAssertions.assert_no_repeated_values(new_path)
 
                 neighbors.append(new_solution)
@@ -197,15 +200,18 @@ class Neighborhood:
     def two_opt(self, solution: Solution, agent: int) -> list[Solution]:
         path = solution.paths[agent]
         neighbors = []
+        positive_indices = np.where(path > 0)[0]
 
-        for i in range(len(path) - 1):
-            for j in range(i + 1, len(path)):
+        for i in range(len(positive_indices) - 1):
+            for j in range(i + 1, len(positive_indices)):
                 new_solution = solution.copy()
                 new_path = new_solution.paths[agent]
-                new_path = np.concatenate(
-                    [new_path[:i], new_path[i : j + 1][::-1], new_path[j + 1 :]]
+
+                new_path[positive_indices[i : j + 1]] = (
+                    new_path[positive_indices[i: j + 1]][::-1]
                 )
 
+                # SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
                 # SanityAssertions.assert_no_repeated_values(new_path)
 
                 neighbors.append(new_solution)
@@ -256,7 +262,7 @@ class Neighborhood:
                     new_path[positive_idxs[i : i + l]].copy(),
                 )
 
-                SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
+                # SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
                 # SanityAssertions.assert_no_repeated_values(new_path)
 
                 neighbors.append(new_solution)

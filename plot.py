@@ -1,5 +1,6 @@
 import os
 from matplotlib import animation, pyplot as plt
+import matplotlib.gridspec as gridspec
 from utils import (
     calculate_rssi_history,
     interpolate_paths,
@@ -8,6 +9,7 @@ from utils import (
     calculate_rssi,
 )
 import numpy as np
+
 
 
 def plot_rewards(
@@ -22,13 +24,24 @@ def plot_rewards(
     reward_value (np.ndarray): The values of the rewards.
     not_plot (set): The set of rewards to not plot.
     """
-    rewards_to_plot = [i for i in range(len(reward_p)) if i not in not_plot]
+    rewards_1 = [i for i in range(len(reward_p)) if i not in not_plot]
     ax.scatter(
-        reward_p[rewards_to_plot, 0],
-        reward_p[rewards_to_plot, 1],
-        c="b",
-        s=20,
+        reward_p[rewards_1, 0],
+        reward_p[rewards_1, 1],
+        c="#e5b51e",
+        edgecolors="black",
+        s=100,
         label="Rewards",
+        marker="s",
+    )
+    rewards_2 = [i for i in range(len(reward_p)) if i in not_plot]
+    ax.scatter(
+        reward_p[rewards_2, 0],
+        reward_p[rewards_2, 1],
+        c="#58508d",
+        edgecolors="black",
+        s=120,
+        marker="o",
     )
     for i, (x, y) in enumerate(reward_p):
         if i in not_plot:
@@ -39,10 +52,8 @@ def plot_rewards(
             textcoords="offset points",
             xytext=(0, 10),
             ha="center",
+            fontsize=20,
         )
-
-    ax.set_xlabel("X Coordinates")
-    ax.set_ylabel("Y Coordinates")
 
 
 def plot_path(
@@ -70,21 +81,22 @@ def plot_path(
         if show_path:
             ax.plot([prev[0], curr[0]], [prev[1], curr[1]], linewidth=2, color=color)
 
-            dx, dy = curr[0] - prev[0], curr[1] - prev[1]
+        dx, dy = curr[0] - prev[0], curr[1] - prev[1]
 
-            if show_arrow:
-                ax.quiver(
-                    prev[0],
-                    prev[1],
-                    dx,
-                    dy,
-                    angles="xy",
-                    scale_units="xy",
-                    scale=1,
-                    color=color,
-                )
+        if show_arrow:
+            ax.quiver(
+                prev[0],
+                prev[1],
+                dx,
+                dy,
+                angles="xy",
+                scale_units="xy",
+                scale=1,
+                color=color,
+            )
 
         prev = curr
+    plot_max_distance(ax, [path])
 
 
 def get_path_length(path):
@@ -211,9 +223,8 @@ def plot_animated_paths(
     side_by_side (bool): Whether to display the plots side by side.
     """
     n_agents = len(paths)
-    colormap = plt.cm.get_cmap("tab10", n_agents)
-    colors = [colormap(i) for i in range(n_agents)]
-    background_color = "#ddd9dc"
+    colors = ["#003f5c", "#ff6361", "#ffa600"]
+    background_color = "#ffffff"
 
     # Interpolate the paths.
     step = 0.5
@@ -230,35 +241,41 @@ def plot_animated_paths(
     # Calculate the RSSI history.
     rssi_history = calculate_rssi_history(paths, speeds, rpositions, step=step)
 
+    x1_lim, y1_lim = max(rpositions[:, 0]) + 1, max(rpositions[:, 1]) + 1
+
     # Create the figure and axes.
-    if side_by_side:
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
-    else:
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 16))
+    fig = plt.figure(figsize=(15, 10))  # Define o tamanho da figura
+    gs = gridspec.GridSpec(3, 2, height_ratios=[2, 1, 1], width_ratios=[2, 1])  
+
+    ax1 = fig.add_subplot(gs[:2, :])
+    ax2 = fig.add_subplot(gs[2, :])
 
     fig.patch.set_facecolor(background_color)
     ax1.set_facecolor(background_color)
     ax2.set_facecolor(background_color)
-    plt.subplots_adjust(hspace=0.5 if not side_by_side else 0.3, wspace=0.3 if side_by_side else 0.5)
+    plt.subplots_adjust(hspace=0.4, wspace=0.4)
 
     # Plot rewards on the first axis
     plot_rewards(ax1, rpositions, rvalues)
     ax1.set_title(
-        "Paths - score: "
-        + str([int(score) for score in scores])
-        + f" - {collected_values[0]} collected"
+        "R: 19 | "
+        + f"MIN RSSI: {scores[1]: .2f} | "
+        + f"E: {scores[2]: .2f}"
+        , fontsize=30
     )
     ax1.grid(True)
-    ax1.axis("equal")
-    ax1.set_ylim(0, max(rpositions[:, 1]) + 5)
-    ax1.set_xlim(0, max(rpositions[:, 0]) + 5)
+    ax1.set_ylim(0, y1_lim)
+    ax1.set_xlim(0, x1_lim)
+    ax1.tick_params(axis="both", labelsize=20)
 
     # Plot RSSI history on the second axis
     ax2.plot(rssi_history)
-    ax2.set_title("RSSI History")
     ax2.grid(True)
     ax2.set_ylim(min(rssi_history) - 1, 0)
     ax2.set_xlim(0, len(rssi_history))
+    ax2.set_xlabel("Frame", fontsize=20)
+    ax2.set_ylabel("RSSI", fontsize=20)
+    ax2.tick_params(axis="both", labelsize=20)
 
     def update(i):
         """
@@ -278,31 +295,37 @@ def plot_animated_paths(
         # Clear the axes.
         ax1.clear()
         ax1.grid(True)
-        ax1.axis("equal")
-        ax1.set_ylim(0, max(rpositions[:, 1]) + 5)
-        ax1.set_xlim(0, max(rpositions[:, 0]) + 5)
-        ax1.legend()
+        ax1.set_ylim(0, y1_lim)
+        ax1.set_xlim(0, x1_lim)
+        ax1.tick_params(axis="both", labelsize=20)
 
         # Plot the rewards.
         plot_rewards(ax1, rpositions, rvalues, collected_rewards[idx])
         # Plot the paths of the agents.
         for k in range(n_agents):
-            plot_path(ax1, interpolation[k][i : i + 2], color=colors[k])
             plot_path(ax1, interpolation[k][: i + 1], color=colors[k], show_arrow=False)
+            plot_path(ax1, interpolation[k][i : i + 2], color=colors[k], show_arrow=True)
         ax1.set_title(
-            "Paths - score: "
-            + str([int(score) for score in scores])
-            + f" - {collected_values[idx]} collected"
+            "R: 19 | "
+            + f"MIN RSSI: {scores[1]: .2f} | "
+            + f"E: {scores[2]: .2f}"
+            , fontsize=30
         )
         # Plot the maximum distance between the paths.
         plot_max_distance(ax1, interpolation[:, :i + 1])
+        ax1.legend(fontsize=25)
 
         ax2.clear()
-        ax2.plot(rssi_history[: i + 1])
-        ax2.set_title("RSSI History")
+        ax2.plot(rssi_history[: i + 1], color="red", alpha=0.7, linewidth=3)
         ax2.grid(True)
         ax2.set_ylim(min(rssi_history) - 1, 0)
         ax2.set_xlim(0, len(rssi_history))
+        ax2.set_xlabel("Frame", fontsize=20)
+        ax2.set_ylabel("RSSI", fontsize=20)
+        ax2.tick_params(axis="both", labelsize=30)
+
+        if i % 10 == 0:
+            plt.savefig(f"{directory}/{fname}_frame_{i}.png")
 
     ani = animation.FuncAnimation(
         fig, update, frames=len(interpolation[0]), repeat=False
@@ -339,7 +362,7 @@ def plot_max_distance(ax, individual):
     # Plot the maximum distance between the paths.
     if point1 is not None and point2 is not None:
         ax.plot(
-            [point1[0], point2[0]], [point1[1], point2[1]], "r--", label="Max Distance"
+            [point1[0], point2[0]], [point1[1], point2[1]], "r--", label="Max Distance", linewidth=3
         )
         ax.scatter(point1[0], point1[1], c="r", marker="o")
         ax.scatter(point2[0], point2[1], c="r", marker="o")
