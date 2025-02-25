@@ -326,7 +326,68 @@ class Neighborhood:
             neighbors.append(new_solution)
         
         return neighbors
-            
+
+    def add_and_move(self, solution: Solution, agent: int) -> list[Solution]:
+        path = solution.paths[agent]
+        neighbors = []
+
+        negative_indices = np.where(path < 0)[0]
+        positive_indices = np.where(path > 0)[0]
+
+        for i in range(len(negative_indices)):
+            new_solution = solution.copy()
+            new_path = new_solution.paths[agent]
+
+            positive_idx = np.where(new_solution.paths[:, negative_indices[i]] > 0)[0]
+            new_solution.paths[positive_idx, negative_indices[i]] = -new_solution.paths[positive_idx, negative_indices[i]]
+
+            new_path[negative_indices[i]] = -new_path[negative_indices[i]]
+
+            neighbors.append(new_solution)
+
+            for j in range(len(positive_indices)):
+                new_solution = new_solution.copy()
+                new_path = new_solution.paths[agent]
+
+                new_path[negative_indices[i]] = new_path[positive_indices[j]] + np.random.random() * self.epsilon
+
+                # if j == len(positive_indices) - 1:
+                #     new_path[idx1] = np.random.random() + new_path[idx2]
+                # else:
+                #     new_path[idx1] = (new_path[idx2] + new_path[idx2 + 1]) / 2 + np.random.random() * self.epsilon
+
+                neighbors.append(new_solution)
+
+        return neighbors
+
+    def add_and_swap(self, solution: Solution, agent: int) -> list[Solution]:
+        path = solution.paths[agent]
+        neighbors = []
+
+        negative_indices = np.where(path < 0)[0]
+        positive_indices = np.where(path > 0)[0]
+
+        for i in range(len(negative_indices)):
+            new_solution = solution.copy()
+            new_path = new_solution.paths[agent]
+
+            positive_idx = np.where(new_solution.paths[:, negative_indices[i]] > 0)[0]
+            new_solution.paths[positive_idx, negative_indices[i]] = -new_solution.paths[positive_idx, negative_indices[i]]
+
+            new_path[negative_indices[i]] = -new_path[negative_indices[i]]
+
+            neighbors.append(new_solution)
+
+            for j in range(len(positive_indices)):
+                new_solution = new_solution.copy()
+                new_path = new_solution.paths[agent]
+
+                new_path[negative_indices[i]], new_path[positive_indices[j]] = new_path[positive_indices[j]], new_path[negative_indices[i]]
+
+                neighbors.append(new_solution)
+
+
+        return neighbors
     
     def remove_point(self, solution: Solution, agent: int) -> list[Solution]:
         path = solution.paths[agent]
