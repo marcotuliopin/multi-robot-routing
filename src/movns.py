@@ -10,25 +10,30 @@ from .evaluation import evaluate, update_archive
 from .operators import *
 from .entities import Solution, Neighborhood
 
-archive_max_size = 60
+archive_max_size = 200
 
 def save_stats(log, front):
-    # log.append([max(s.score[0] for s in front), max(s.score[1] for s in front), min(-s.score[2] for s in front)])
-    print([int(max(s.score[0] for s in front)), int(max(s.score[1] for s in front))])
-    log.append([max(s.score[0] for s in front), min(-s.score[1] for s in front)])
+    print(max(s.score[0] for s in front), max(s.score[1] for s in front))
+    log.append([max(s.score[0] for s in front), max(s.score[1] for s in front)])
 
 
-def select_solution(front, dominated):
+def select_solution(front, dominated, it):
     choosen_set = np.random.random()
-    if choosen_set < 0.8 or not dominated:
+    if choosen_set < 0.9 or not dominated:
         candidates = get_candidates(front)
     else:
         candidates = get_candidates(dominated)
 
-    solution = random.choice(candidates)
+    if it % 2 == 0: # Get the solution with the highest reward.
+        probabilities = np.array([s.score[0] for s in candidates])
+        probabilities = probabilities / np.sum(probabilities)
+    else: # Get the solution with the highest RSSI
+        probabilities = np.array([1 / s.score[1] for s in candidates])
+        probabilities = probabilities / np.sum(probabilities)
+    solution = np.random.choice(candidates, p=probabilities)
     solution.visited = True
 
-    return solution.copy()
+    return solution
 
 
 def get_candidates(solutions):
@@ -71,19 +76,16 @@ def movns(
 
     # Main loop.
     print("Running main loop...")
-    progress_bar_time = tqdm(total=total_time, desc="Progress", unit="sec", dynamic_ncols=True)
     init_time = time.perf_counter()
 
     progress_bar_it = tqdm(total=max_it, desc="Progress", unit="it", dynamic_ncols=True)
     it = 0
 
     while it < max_it and time.perf_counter() - init_time < total_time:
-        solution = select_solution(front, dominated)
+        solution = select_solution(front, dominated, it)
         
         for neighborhood_id in range(neighborhood.num_neighborhoods):
             elapsed_time = time.perf_counter() - init_time
-            progress_bar_time.n = int(elapsed_time)
-            progress_bar_time.refresh()
             if elapsed_time > total_time:
                 break
 
