@@ -13,7 +13,6 @@ from .entities import Solution, Neighborhood
 archive_max_size = 200
 
 def save_stats(log, front):
-    print(max(s.score[0] for s in front), max(s.score[1] for s in front))
     log.append([max(s.score[0] for s in front), max(s.score[1] for s in front)])
 
 
