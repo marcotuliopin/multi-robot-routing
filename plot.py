@@ -260,7 +260,6 @@ def plot_animated_paths(
     ax1.set_title(
         "R: 19 | "
         + f"MIN RSSI: {scores[1]: .2f} | "
-        + f"E: {scores[2]: .2f}"
         , fontsize=30
     )
     ax1.grid(True)
@@ -308,7 +307,6 @@ def plot_animated_paths(
         ax1.set_title(
             "R: 19 | "
             + f"MIN RSSI: {scores[1]: .2f} | "
-            + f"E: {scores[2]: .2f}"
             , fontsize=30
         )
         # Plot the maximum distance between the paths.

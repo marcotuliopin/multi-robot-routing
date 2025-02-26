@@ -19,10 +19,8 @@ def evaluate(
     max_distance = calculate_max_distance(interpolated_positions)
     max_rssi = calculate_rssi(max_distance, noise=False)
 
-    min_len = get_paths_max_length(paths, distmx)
-
-    # We are trying to maximize all these.
-    return max_reward, max_rssi, -min_len
+    # We are trying to maximize all these. Since rssi is a negative measure, maximizing it means enhancing connectivity.
+    return max_reward, max_rssi,
 
 
 def get_paths_max_length(paths: list[np.ndarray], distmx: np.ndarray) -> float:

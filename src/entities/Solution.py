@@ -16,11 +16,12 @@ class Solution:
         distmx: np.ndarray = None,
         rvalues: np.ndarray = None,
         paths: np.ndarray = None,
-        score: tuple = (-1, -1, -1),
+        score: tuple = (-1, -1),
     ) -> None:
         self.score = score
         self.crowding_distance = -1
         self.visited = False
+        self.dominated = True
 
         if paths is None:
             self.paths = self.init_paths_unique(len(rvalues) - 2)
@@ -65,6 +66,9 @@ class Solution:
         return paths
 
     def dominates(self, other: "Solution") -> bool:
+        if all([s == o for s, o in zip(self.score, other.score)]):
+            return True
+
         is_better = False
         for i in range(len(self.score)):
             if self.score[i] > other.score[i]:
