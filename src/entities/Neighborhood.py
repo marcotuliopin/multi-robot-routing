@@ -7,22 +7,22 @@ import numpy as np
 class Neighborhood:
     def __init__(self):
         self.perturbation_operators = [
-            # self.invert_points_all_agents_unique,
-            self.invert_points_all_agents,
+            self.invert_points_all_agents_unique,
+            # self.invert_points_all_agents,
             self.two_opt_all_paths,
-            self.untangle_path,
-            # self.swap_subpaths_all_agents,
+            # self.untangle_path,
+            self.swap_subpaths_all_agents,
         ]
         self.local_search_operators = [
-            self.add_point,
+            self.move_point,
             self.swap_points,
-            # self.invert_single_point_unique,
-            self.invert_single_point,
+            self.invert_single_point_unique,
+            # self.invert_single_point,
             self.add_and_move,
-            self.remove_point,
             self.swap_local_subpaths,
+            self.remove_point,
             self.two_opt,
-            self.path_relinking,
+            # self.path_relinking,
         ]
 
         self.num_neighborhoods = len(self.local_search_operators) * len(self.perturbation_operators)
@@ -44,11 +44,10 @@ class Neighborhood:
         new_solution = solution.copy()
         new_paths = new_solution.paths
 
-        i, j = np.random.choice(len(new_paths[0]) - 1, 2, replace=False)
-        if i > j:
-            i, j = j, i
-
         for new_path in new_paths:
+            i, j = np.random.choice(len(new_paths[0]) - 1, 2, replace=False)
+            if i > j:
+                i, j = j, i
             new_path = np.concatenate(
                 [new_path[:i], new_path[i : j + 1][::-1], new_path[j + 1 :]]
             )
@@ -117,7 +116,7 @@ class Neighborhood:
 
         for i in range(len(new_paths)):
             for j in range(len(new_paths[i])):
-                if np.random.rand() < 0.5:
+                if np.random.rand() < 0.75:
                     new_paths[i][j] = -new_paths[i][j]
 
         # for new_path in new_paths:
@@ -130,7 +129,7 @@ class Neighborhood:
         path_length = len(new_solution.paths[0])
 
         for col in range(path_length):
-            if np.random.random() < 0.5:
+            if np.random.random() < 0.75:
                 positive_idx = np.where(new_solution.paths[:, col] > 0)[0]
                 new_solution.paths[positive_idx, col] = -new_solution.paths[positive_idx, col]
 
@@ -324,8 +323,8 @@ class Neighborhood:
             new_solution = solution.copy()
             new_path = new_solution.paths[agent]
 
-            # positive_idx = np.where(new_solution.paths[:, negative_indices[i]] > 0)[0]
-            # new_solution.paths[positive_idx, negative_indices[i]] = -new_solution.paths[positive_idx, negative_indices[i]]
+            positive_idx = np.where(new_solution.paths[:, negative_indices[i]] > 0)[0]
+            new_solution.paths[positive_idx, negative_indices[i]] = -new_solution.paths[positive_idx, negative_indices[i]]
 
             new_path[negative_indices[i]] = -new_path[negative_indices[i]]
 
@@ -352,8 +351,8 @@ class Neighborhood:
             new_solution = solution.copy()
             new_path = new_solution.paths[agent]
 
-            # positive_idx = np.where(new_solution.paths[:, negative_indices[i]] > 0)[0]
-            # new_solution.paths[positive_idx, negative_indices[i]] = -new_solution.paths[positive_idx, negative_indices[i]]
+            positive_idx = np.where(new_solution.paths[:, negative_indices[i]] > 0)[0]
+            new_solution.paths[positive_idx, negative_indices[i]] = -new_solution.paths[positive_idx, negative_indices[i]]
 
             new_path[negative_indices[i]] = -new_path[negative_indices[i]]
 
