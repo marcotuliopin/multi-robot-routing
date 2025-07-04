@@ -9,7 +9,8 @@ def interpolate_paths_with_speeds(paths, speeds, rpositions, step):
         distances = np.cumsum(np.linalg.norm(np.diff(rpositions[path], axis=0), axis=1))
         distances = np.insert(distances, 0, 0)
         total_distance = distances[-1]
-        num_steps = int(total_distance / (speed * step))
+        num_steps = int(total_distance * step / speed)
+        print(num_steps)
         new_distances = np.linspace(0, total_distance, num_steps)
         new_path = np.zeros((num_steps, 2))
         new_path[:, 0] = np.interp(new_distances, distances, rpositions[path, 0])
@@ -101,7 +102,7 @@ def calculate_rssi_history(
     rpositions: np.ndarray,
     tx_power: float = -30,
     path_loss_exponent: float = 2.0,
-    noise_std: float = 1.0,
+    noise_std: float = 0.0,
     step: float = 1.0,
 ) -> np.ndarray:
     interpolated_points = interpolate_paths_with_speeds(paths, speeds, rpositions, step)
@@ -119,6 +120,6 @@ def calculate_rssi_history(
             distance = 0.1
 
         rssi = tx_power - 10 * path_loss_exponent * np.log10(distance)
-        rssi += np.random.normal(0, noise_std)
+        # rssi += np.random.normal(0, noise_std)
         rssi_history.append(rssi)
     return rssi_history

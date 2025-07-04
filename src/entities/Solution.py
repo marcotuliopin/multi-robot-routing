@@ -5,8 +5,8 @@ from .SanityAssertions import SanityAssertions
 
 
 class Solution:
-    begin: int = 1
-    end: int = -1
+    begin: int = -1
+    end: int = -2
     num_agents: int = 1
     speeds: list[float] = [1]
     budget: list[int] = [150]
@@ -16,7 +16,7 @@ class Solution:
         distmx: np.ndarray = None,
         rvalues: np.ndarray = None,
         paths: np.ndarray = None,
-        score: tuple = (-1, -1),
+        score: tuple = (-1, -1, -1),
     ) -> None:
         self.score = score
         self.crowding_distance = -1
@@ -141,21 +141,28 @@ class Solution:
             if i == 0:
                 # If the path has only one node, the impact is zeroing the length.
                 if len(trajectory) == 1:
-                    impacts[i] = distmx[Solution.begin, index]
+                    original_length = distmx[Solution.begin, index] + distmx[index, Solution.end]
+                    new_length = distmx[Solution.begin, Solution.end]
+                    impacts[i] = original_length - new_length
                 # If the path has more than one node, the impact is the difference between the length of the path and the length of the path without the first node.
                 elif len(trajectory) > 1:
                     original_length = distmx[Solution.begin, index] + distmx[index, trajectory[1]]
-                    impacts[i] = original_length - distmx[Solution.begin, trajectory[1]]
+                    new_length = distmx[Solution.begin, trajectory[1]]
+                    impacts[i] = original_length - new_length
             # If the node is the last node and at the same time not the first, this means the path is of at least two nodes.
             elif i == len(trajectory) - 1:
                 # The impact is the difference between the length of the path and the length of the path without the last node.
                 original_length = distmx[trajectory[i - 1], index] + distmx[index, Solution.end]
-                impacts[i] = original_length - distmx[trajectory[i - 1], Solution.end]
+                new_length = distmx[trajectory[i - 1], Solution.end]
+                impacts[i] = original_length - new_length
             # If the node is in the middle of the path and is neither the first nor the last node, then the path is of at least three nodes.
             else:
                 # The impact is the difference between the length of the path and the length of the path without the node.
                 original_length = distmx[trajectory[i - 1], index] + distmx[index, trajectory[i + 1]]
-                impacts[i] = original_length - distmx[trajectory[i - 1], trajectory[i + 1]]
+                new_length = distmx[trajectory[i - 1], trajectory[i + 1]]
+                impacts[i] = original_length - new_length + 1e-6
+            if impacts[i] < 0:
+                raise ValueError("Impacts must be greater than or equal to zero.")
 
         return impacts
 

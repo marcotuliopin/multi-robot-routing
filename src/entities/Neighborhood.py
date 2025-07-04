@@ -5,25 +5,33 @@ import numpy as np
 
 
 class Neighborhood:
-    def __init__(self):
+    def __init__(self, algorithm: int = 0):
         self.perturbation_operators = [
             self.invert_points_all_agents_unique,
-            # self.invert_points_all_agents,
             self.two_opt_all_paths,
-            # self.untangle_path,
-            self.swap_subpaths_all_agents,
+            # self.swap_subpaths_all_agents,
         ]
-        self.local_search_operators = [
-            self.move_point,
-            self.swap_points,
-            self.invert_single_point_unique,
-            # self.invert_single_point,
-            self.add_and_move,
-            self.swap_local_subpaths,
-            self.remove_point,
-            self.two_opt,
-            # self.path_relinking,
-        ]
+        if algorithm == 0:
+            self.local_search_operators = [
+                self.move_point,
+                self.swap_points,
+                self.invert_single_point_unique,
+                self.add_and_move,
+                # self.swap_local_subpaths,
+                # self.remove_point,
+                self.two_opt,
+            ]
+        else:
+            self.local_search_operators = [
+                self.move_point,
+                self.swap_points,
+                self.invert_single_point,
+                self.add_and_move,
+                # self.swap_local_subpaths,
+                # self.remove_point,
+                self.two_opt,
+                self.path_relinking,
+            ]
 
         self.num_neighborhoods = len(self.local_search_operators) * len(self.perturbation_operators)
         self.epsilon = 1e-4

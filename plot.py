@@ -11,7 +11,6 @@ from utils import (
 import numpy as np
 
 
-
 def plot_rewards(
     ax, reward_p: np.ndarray, reward_value: np.ndarray, not_plot: set = set()
 ):
@@ -24,15 +23,36 @@ def plot_rewards(
     reward_value (np.ndarray): The values of the rewards.
     not_plot (set): The set of rewards to not plot.
     """
-    rewards_1 = [i for i in range(len(reward_p)) if i not in not_plot]
-    ax.scatter(
+    rewards_1 = [i for i in range(len(reward_p) - 2) if i not in not_plot]
+    scatter = ax.scatter(
         reward_p[rewards_1, 0],
         reward_p[rewards_1, 1],
-        c="#e5b51e",
+        c=reward_value[rewards_1],
+        cmap='viridis',
         edgecolors="black",
-        s=100,
-        label="Rewards",
+        s=700,
+        label="PoI",
+        marker="D",
+        vmin=1,
+        vmax=10
+    )
+    ax.scatter(
+        reward_p[-1, 0],
+        reward_p[-1, 1],
+        c="#ff6361",
+        edgecolors="black",
+        s=800,
+        label="Start",
         marker="s",
+    )
+    ax.scatter(
+        reward_p[-2, 0],
+        reward_p[-2, 1],
+        c="#58508d",
+        edgecolors="black",
+        s=800,
+        label="Goal",
+        marker="X",
     )
     rewards_2 = [i for i in range(len(reward_p)) if i in not_plot]
     ax.scatter(
@@ -40,20 +60,12 @@ def plot_rewards(
         reward_p[rewards_2, 1],
         c="#58508d",
         edgecolors="black",
-        s=120,
+        label="Visited PoI",
+        s=700,
         marker="o",
     )
-    for i, (x, y) in enumerate(reward_p):
-        if i in not_plot:
-            continue
-        ax.annotate(
-            reward_value[i],
-            (x, y),
-            textcoords="offset points",
-            xytext=(0, 10),
-            ha="center",
-            fontsize=20,
-        )
+    return scatter
+    # Adicionar a colorbar
 
 
 def plot_path(
@@ -79,22 +91,38 @@ def plot_path(
 
     for curr in path[1:]:
         if show_path:
-            ax.plot([prev[0], curr[0]], [prev[1], curr[1]], linewidth=2, color=color)
+            ax.plot([prev[0], curr[0]], [prev[1], curr[1]], linewidth=5, color=color)
 
         dx, dy = curr[0] - prev[0], curr[1] - prev[1]
 
-        if show_arrow:
-            ax.quiver(
-                prev[0],
-                prev[1],
-                dx,
-                dy,
-                angles="xy",
-                scale_units="xy",
-                scale=1,
-                color=color,
-            )
+        norm = np.sqrt(dx**2 + dy**2)
+        dx_fixed = (dx / norm) * .5
+        dy_fixed = (dy / norm) * .5
 
+        if show_arrow:
+            # ax.quiver(
+            #     prev[0],
+            #     prev[1],
+            #     dx_fixed,
+            #     dy_fixed,
+            #     angles="xy",
+            #     scale_units="xy",
+            #     scale=1,  # Keep scale=1 for direct control
+            #     color=color,
+            #     width=0.01,  # Increase arrow thickness
+            #     headlength=20,  # Bigger arrowhead
+            #     headwidth=20,
+            #     headaxislength=19,
+            # )
+            ax.scatter(
+                prev[0] + dx_fixed,
+                prev[1] + dy_fixed,
+                color="red",
+                s=1500,  # Tamanho do marcador
+                marker="X",  # Tipo do marcador
+                edgecolors="black",  # Cor da borda do marcador
+                linewidths=1.5  # Largura da borda do marcador
+            )
         prev = curr
     plot_max_distance(ax, [path])
 
@@ -131,7 +159,7 @@ def plot_paths_with_rewards(
     colormap = plt.cm.get_cmap("tab10", n_agents)
     colors = [colormap(i) for i in range(n_agents)]
 
-    fig, ax = plt.subplots(figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(20, 20))
     fig.patch.set_facecolor("grey")
     ax.set_facecolor("grey")
     plot_rewards(ax, rpositions, rvalues)
@@ -145,9 +173,9 @@ def plot_paths_with_rewards(
 
     ax.set_title(
         "Individual Paths - score: "
-        + str([int(score) for score in scores])
+        + str([float(score) for score in scores])
         + "- length: "
-        + str([int(l) for l in length])
+        + str([float(l) for l in length])
     )
     plt.grid(True)
     plt.axis("equal")
@@ -183,7 +211,7 @@ def get_collection_history(interpolation, individual, coordinates, rvalues):
             if idx >= len(individual[j]):
                 continue
             if all(
-                abs(coordinates[j][idx][z] - interpolation[j][i][z]) < 1
+                abs(coordinates[j][idx][z] - interpolation[j][i][z]) < 0.1
                 for z in range(2)
             ):
                 collected_rewards.append(
@@ -207,6 +235,7 @@ def plot_animated_paths(
     directory=None,
     fname=None,
     side_by_side=False,
+    update_rewards=False,
 ):
     """
     Plots the animated paths.
@@ -227,10 +256,9 @@ def plot_animated_paths(
     background_color = "#ffffff"
 
     # Interpolate the paths.
-    step = 0.5
+    step = 20
     n_agents = len(paths)
     interpolation = interpolate_paths_with_speeds(paths, speeds, rpositions, step)
-    interpolation = np.hstack((interpolation, np.zeros((len(interpolation), 1, 2))))
 
     # Translate the paths to coordinates.
     coordinates = translate_path_to_coordinates(paths, rpositions)
@@ -238,28 +266,34 @@ def plot_animated_paths(
         interpolation, paths, coordinates, rvalues
     )
 
+    if not update_rewards:
+        collected_rewards = []
+
     # Calculate the RSSI history.
     rssi_history = calculate_rssi_history(paths, speeds, rpositions, step=step)
 
     x1_lim, y1_lim = max(rpositions[:, 0]) + 1, max(rpositions[:, 1]) + 1
 
     # Create the figure and axes.
-    fig = plt.figure(figsize=(15, 10))  # Define o tamanho da figura
-    gs = gridspec.GridSpec(3, 2, height_ratios=[2, 1, 1], width_ratios=[2, 1])  
+    fig = plt.figure(figsize=(24, 11))  # Define o tamanho da figura
+    gs = gridspec.GridSpec(2, 2, height_ratios=[1, 1], width_ratios=[1.5, 1])  
 
-    ax1 = fig.add_subplot(gs[:2, :])
-    ax2 = fig.add_subplot(gs[2, :])
+    ax1 = fig.add_subplot(gs[:, 0])
+    ax2 = fig.add_subplot(gs[1, 1])
+    ax_legend = fig.add_subplot(gs[0, 1])
 
     fig.patch.set_facecolor(background_color)
-    ax1.set_facecolor(background_color)
+    ax1.set_facecolor("#ffcccc")
     ax2.set_facecolor(background_color)
-    plt.subplots_adjust(hspace=0.4, wspace=0.4)
+    ax_legend.set_facecolor(background_color)
+    plt.subplots_adjust(hspace=0.6, wspace=0.6)
 
     # Plot rewards on the first axis
-    plot_rewards(ax1, rpositions, rvalues)
+    scatter = plot_rewards(ax1, rpositions, rvalues)
     ax1.set_title(
-        "R: 19 | "
-        + f"MIN RSSI: {scores[1]: .2f} | "
+        f"R: {(int(scores[0]))} | "
+        + f"MIN RSSI: {int(scores[1])} | "
+        + f"E: {int(scores[2])} "
         , fontsize=30
     )
     ax1.grid(True)
@@ -267,14 +301,22 @@ def plot_animated_paths(
     ax1.set_xlim(0, x1_lim)
     ax1.tick_params(axis="both", labelsize=20)
 
+    cbar = plt.colorbar(scatter, ax=ax1)
+    cbar.set_label('Reward Value', fontsize=40)
+    cbar.ax.tick_params(labelsize=40)
+
     # Plot RSSI history on the second axis
     ax2.plot(rssi_history)
-    ax2.grid(True)
+    # ax2.grid(True)
     ax2.set_ylim(min(rssi_history) - 1, 0)
     ax2.set_xlim(0, len(rssi_history))
-    ax2.set_xlabel("Frame", fontsize=20)
-    ax2.set_ylabel("RSSI", fontsize=20)
-    ax2.tick_params(axis="both", labelsize=20)
+    # ax2.set_xlabel("Frame", fontsize=20)
+    ax2.tick_params(axis="y", labelsize=20)
+    plt.tight_layout()
+
+    ax_legend.axis("off")
+    handles, labels = ax1.get_legend_handles_labels()
+    ax_legend.legend(handles, labels, loc="center", fontsize=50)
 
     def update(i):
         """
@@ -283,7 +325,6 @@ def plot_animated_paths(
         Parameters:
         i (int): The current frame index.
         """
-        print(i)
         # Find the index of the collection.
         idx = len(collection_idx) - 1
         for j in range(len(collection_idx)):
@@ -299,28 +340,31 @@ def plot_animated_paths(
         ax1.tick_params(axis="both", labelsize=20)
 
         # Plot the rewards.
-        plot_rewards(ax1, rpositions, rvalues, collected_rewards[idx])
+        _ = plot_rewards(ax1, rpositions, rvalues, collected_rewards[idx])
         # Plot the paths of the agents.
         for k in range(n_agents):
             plot_path(ax1, interpolation[k][: i + 1], color=colors[k], show_arrow=False)
             plot_path(ax1, interpolation[k][i : i + 2], color=colors[k], show_arrow=True)
         ax1.set_title(
-            "R: 19 | "
-            + f"MIN RSSI: {scores[1]: .2f} | "
-            , fontsize=30
+            f"R: {(int(scores[0]))} | "
+            + f"MIN RSSI: {int(scores[1])} | "
+            + f"E: {int(scores[2])} "
+            , fontsize=50
         )
         # Plot the maximum distance between the paths.
         plot_max_distance(ax1, interpolation[:, :i + 1])
-        ax1.legend(fontsize=25)
+        # ax1.legend(loc='lower right', fontsize=15)
 
         ax2.clear()
-        ax2.plot(rssi_history[: i + 1], color="red", alpha=0.7, linewidth=3)
-        ax2.grid(True)
+        ax2.plot(rssi_history[: i + 1], color="red", alpha=0.7, linewidth=5)
+        # ax2.grid(True)
         ax2.set_ylim(min(rssi_history) - 1, 0)
         ax2.set_xlim(0, len(rssi_history))
-        ax2.set_xlabel("Frame", fontsize=20)
-        ax2.set_ylabel("RSSI", fontsize=20)
-        ax2.tick_params(axis="both", labelsize=30)
+        # ax2.set_xlabel("Frame", fontsize=20)
+        ax2.set_title(f"RSSI: {rssi_history[i]: .2f}", fontsize=50)
+        ax2.tick_params(axis="y", labelsize=40)
+        plt.tight_layout()
+        ax_legend.legend(handles, labels, loc="center", fontsize=50)
 
         if i % 10 == 0:
             plt.savefig(f"{directory}/{fname}_frame_{i}.png")
@@ -329,7 +373,7 @@ def plot_animated_paths(
         fig, update, frames=len(interpolation[0]), repeat=False
     )
     # plt.show()
-    ani.save(f"{directory}/{fname}.mp4", writer="ffmpeg", fps=22)
+    ani.save(f"{directory}/{fname}.mp4", writer="ffmpeg", fps=20)
 
     # Save the last frame as a static image
     update(len(interpolation[0]) - 1)

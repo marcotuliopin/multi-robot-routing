@@ -1,5 +1,4 @@
 import os
-import random
 import time
 import plot
 import numpy as np
@@ -10,9 +9,10 @@ from .evaluation import evaluate, update_archive
 from .operators import *
 from .entities import Solution, Neighborhood
 
-archive_max_size = 200
+archive_max_size = 40
 
 def save_stats(log, front):
+    # print(int(max(s.score[0] for s in front)), int(max(s.score[1] for s in front)))
     log.append([max(s.score[0] for s in front), max(s.score[1] for s in front)])
 
 
@@ -22,14 +22,14 @@ def select_solution(front, dominated, it):
         candidates = get_candidates(front)
     else:
         candidates = get_candidates(dominated)
-
     if it % 2 == 0: # Get the solution with the highest reward.
         probabilities = np.array([s.score[0] for s in candidates])
         probabilities = probabilities / np.sum(probabilities)
+        solution = np.random.choice(candidates, p=probabilities)
     else: # Get the solution with the highest RSSI
         probabilities = np.array([1 / s.score[1] for s in candidates])
         probabilities = probabilities / np.sum(probabilities)
-    solution = np.random.choice(candidates, p=probabilities)
+        solution = np.random.choice(candidates)
     solution.visited = True
 
     return solution
@@ -51,10 +51,11 @@ def movns(
     total_time: int,
     seed: int,
     max_it: int = 100,
+    algorithm: bool = 0,
 ):
     np.random.seed(seed)
 
-    neighborhood = Neighborhood()
+    neighborhood = Neighborhood(algorithm)
 
     solution = Solution(distmx=distmx, rvalues=rvalues)
     solution.score = evaluate(solution, rvalues, rpositions, distmx)
@@ -104,6 +105,8 @@ def main(
     rpositions: np.ndarray, # Rewards coordinates
     rvalues: np.ndarray, # Rewards values
     budget: list[int],
+    map: str,
+    out: str,
     begin: int = -1,
     end: int = -2,
     total_time: int = 600,
@@ -111,15 +114,15 @@ def main(
     speeds: list = [1],
     seed: int = 42,
     max_it: int = 100,
+    algorithm: bool = 0,
 ):
-    print(speeds)
     Solution.set_parameters(begin, end, num_agents, budget, speeds)
 
     # Matrix of distances between rewards
     distmx = cdist(rpositions, rpositions, metric="euclidean")
 
     # Run the algorithm
-    archive, front, log = movns(rvalues, rpositions, distmx, total_time, seed, max_it)
+    archive, front, log = movns(rvalues, rpositions, distmx, total_time, seed, max_it, algorithm)
     archive.sort(key=lambda solution: solution.score[0])
 
     paths = [s.get_solution_paths() for s in front]
@@ -128,7 +131,7 @@ def main(
 
     # Store the results of the front for further analysis.
     for i, path in enumerate(paths):
-        out_dir = f"out/front/{num_agents}_agents/{max(budget)}_bgt/{max(speeds)}_spd"
+        out_dir = f"{out}/{map}/{max(speeds)}"
         os.makedirs(out_dir, exist_ok=True)
         with open(f"{out_dir}/scores.pkl", "ab") as f:
             pickle.dump(scores[i], f)
@@ -148,7 +151,7 @@ def main(
 
     # Plot each path of the Pareto front.
     print("Plotting Paths...")
-    paths_dir = f"/paths/{num_agents}_agents/{max(budget)}_bgt/"
+    paths_dir = f"paths/{map}/"
     for i, path in enumerate(paths):
         path_dir = directory + paths_dir
         os.makedirs(path_dir, exist_ok=True)
