@@ -11,7 +11,7 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 - **T**: Maximum execution time
 - **I**: Maximum iterations
 - **A**: Archive size (default: 40)
-- **N**: Number of neighborhood operators
+- **N**: Number of neighborhood operators (fixed value)
 
 ## Time Complexity Analysis
 
@@ -22,11 +22,12 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 - Path bounding for all agents: O(k × n²) due to distance calculations
 - Evaluation: O(n² + kn) for reward calculation and RSSI computation
 
-**Archive Initialization**: O(N × k × n³)
-- For each neighborhood operator: O(n²) neighbors generated per agent
-- Total neighbors per iteration: O(k × n²)
-- Evaluation of all neighbors: O(k × n² × n²) = O(k × n⁴)
-- Archive update: O(A² × 3) for dominance checking
+**Archive Initialization**: O(k × n⁴)
+- For each neighborhood operator, generates O(n²) neighbors per agent: O(k × n²) total neighbors
+- Each neighbor evaluation: O(n² + k²n) 
+- Total evaluation cost: O(k × n² × (n² + k²n)) = O(k × n⁴ + k³ × n²)
+- Archive update: O(A²) for dominance checking
+- Since N is constant: **Dominant term is O(k × n⁴)**
 
 ### 2. Main Loop Components
 
@@ -87,7 +88,7 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 
 ### 2. Archive and Populations
 - Archive: O(A × kn)
-- Neighbors per iteration: O(N × k × n² × kn) = O(N × k² × n³)
+- Neighbors per iteration: O(N x k × n² × kn) = O(k² × n³) (since N is constant)
 - Working memory for operators: O(kn)
 
 ### 3. Problem Data
@@ -95,12 +96,12 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 - Reward positions: O(n)
 - Reward values: O(n)
 
-**Total Space Complexity**: O(N × k² × n³ + n²)
+**Total Space Complexity**: O(k² × n³ + n²)
 
 ## Complexity Bottlenecks
 
 ### 1. Critical Operations
-1. **Neighbor Generation**: O(N × k × n²) per iteration
+1. **Neighbor Generation**: O(k × n²) per iteration (since N is constant)
 2. **Solution Evaluation**: O(k²n) for RSSI calculation  
 3. **Archive Management**: O(A²) for dominance checking
 4. **Path Bounding**: O(n²) per path modification
@@ -109,7 +110,6 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 - **Number of Rewards (n)**: Quartic growth in worst case
 - **Number of Agents (k)**: Cubic growth when k ≈ n
 - **Archive Size (A)**: Quadratic impact on dominance checking
-- **Neighborhoods (N)**: Linear impact on iteration time
 
 ## Conclusion
 
