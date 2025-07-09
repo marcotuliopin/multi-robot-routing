@@ -117,10 +117,6 @@ def update_archive(
 def get_non_dominated_solutions(
     solutions: list[Solution],
 ) -> tuple[list[Solution], list[Solution]]:
-    """
-    Optimized non-dominated sorting using fast dominance checking.
-    Reduced from O(N²) to O(N log N) average case using divide-and-conquer.
-    """
     if len(solutions) <= 1:
         return solutions, []
     
@@ -129,10 +125,6 @@ def get_non_dominated_solutions(
 
 
 def fast_non_dominated_sort(solutions: list[Solution]) -> tuple[list[Solution], list[Solution]]:
-    """
-    Fast non-dominated sorting algorithm with O(MN²) complexity
-    where M is number of objectives (3 in our case).
-    """
     n = len(solutions)
     if n <= 1:
         return solutions, []
