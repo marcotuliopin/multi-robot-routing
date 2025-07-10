@@ -98,6 +98,8 @@ def movns(
         it += 1
         progress_bar_it.update(1)
 
+    print(f"Finished running in {time.perf_counter() - init_time:.2f} seconds.")
+
     return archive, front, log
 
 
