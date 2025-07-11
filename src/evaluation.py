@@ -67,16 +67,22 @@ def get_time_to_rewards(
 
 
 def calculate_max_distance(interpolated_positions: np.ndarray) -> float:
-    max_distance = 0.0
-    num_paths = len(interpolated_positions)
-
-    for i in range(num_paths):
-        for j in range(i + 1, num_paths):
-            distances = np.linalg.norm(
-                interpolated_positions[i] - interpolated_positions[j], axis=1
-            )
-            max_distance = max(max_distance, np.max(distances))
-
+    if len(interpolated_positions) <= 1:
+        return 0.0
+    
+    all_positions = np.stack(interpolated_positions)
+    k, _, _ = all_positions.shape
+    
+    pos_expanded_i = all_positions[:, np.newaxis, :, :]  # (k, 1, n, 2)
+    pos_expanded_j = all_positions[np.newaxis, :, :, :]  # (1, k, n, 2)
+    
+    diff = pos_expanded_i - pos_expanded_j  # (k, k, n, 2)
+    distances = np.linalg.norm(diff, axis=-1)  # (k, k, n)
+    
+    upper_triangle_mask = np.triu(np.ones((k, k)), k=1).astype(bool)
+    
+    max_distance = np.max(distances[upper_triangle_mask])
+    
     return max_distance
 
 
