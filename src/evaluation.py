@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.spatial.distance import cdist
+from numba import njit
+
 from utils import calculate_rssi
 from .entities import Solution
 
@@ -11,11 +12,15 @@ def evaluate(
     distmx: np.ndarray,
 ) -> tuple[float, float]:
     paths = solution.get_solution_paths()
+    
+    # Convert to formats compatible with Numba functions
+    speeds = np.array(Solution.speeds)
+    paths_flat = np.concatenate(paths)
 
-    max_reward = maximize_reward(paths, rvalues)
+    max_reward = maximize_reward(paths_flat, rvalues)
 
-    interesting_times = get_time_to_rewards(paths, Solution.speeds, distmx)
-    interpolated_positions = interpolate_positions(paths, Solution.speeds, interesting_times, rpositions, distmx)
+    interesting_times = get_time_to_rewards(paths, speeds, distmx)
+    interpolated_positions = interpolate_positions(paths, speeds, interesting_times, rpositions, distmx)
 
     max_distance = calculate_max_distance(interpolated_positions)
     max_rssi = calculate_rssi(max_distance, noise=False)
@@ -26,70 +31,116 @@ def evaluate(
     return max_reward, max_rssi, -min_len
 
 
+@njit(cache=True, fastmath=True)
+def get_paths_max_length(paths_array: np.ndarray, distmx: np.ndarray) -> float:
+    max_distance = 0.0
+    
+    for i in range(len(paths_array)):
+        path = paths_array[i]
+        distances = 0.0
+        for j in range(len(path) - 1):
+            distances += distmx[path[j], path[j + 1]]
+        if distances > max_distance:
+            max_distance = distances
+            
+    return max_distance
+
+
 def get_paths_max_length(paths: list[np.ndarray], distmx: np.ndarray) -> float:
-    mean_distance = []
+    max_distance = 0.0
+    
     for path in paths:
-        distances = np.sum(distmx[path[:-1], path[1:]])
-        mean_distance.append(distances)
-    return np.max(mean_distance)
+        distances = 0.0
+        for j in range(len(path) - 1):
+            distances += distmx[path[j], path[j + 1]]
+        max_distance = max(max_distance, distances)
+            
+    return max_distance
 
 
 def interpolate_positions(
     paths: list[np.ndarray],
-    speeds: list[float],
+    speeds: np.ndarray,
     interesting_times: np.ndarray,
     rpositions: np.ndarray,
     distmx: np.ndarray,
 ) -> np.ndarray:
-    interpolated_positions = []
+    num_paths = len(paths)
+    num_times = len(interesting_times)
+    interpolated_positions = np.zeros((num_paths, num_times, 2))
+    
+    for i in range(num_paths):
+        path = paths[i]
+        speed = speeds[i]
 
-    for path, speed in zip(paths, speeds):
-        time_to_rewards = np.cumsum(distmx[path[:-1], path[1:]]) / speed
-        x_positions = rpositions[path[1:], 0]
-        y_positions = rpositions[path[1:], 1]
-        interpolated_x = np.interp(interesting_times, time_to_rewards, x_positions)
-        interpolated_y = np.interp(interesting_times, time_to_rewards, y_positions)
-        interpolated_positions.append(np.vstack((interpolated_x, interpolated_y)).T)
+        if len(path) <= 1:
+            continue
+            
+        time_to_rewards = np.zeros(len(path) - 1)
+        cumulative_dist = 0.0
+        for j in range(len(path) - 1):
+            cumulative_dist += distmx[path[j], path[j + 1]]
+            time_to_rewards[j] = cumulative_dist / speed
+        
+        x_positions = np.zeros(len(path) - 1)
+        y_positions = np.zeros(len(path) - 1)
+        for j in range(len(path) - 1):
+            x_positions[j] = rpositions[path[j + 1], 0]
+            y_positions[j] = rpositions[path[j + 1], 1]
+        
+        # Interpolate for each interesting time
+        for t in range(num_times):
+            if len(time_to_rewards) > 0:
+                interpolated_positions[i, t, 0] = np.interp(interesting_times[t], time_to_rewards, x_positions)
+                interpolated_positions[i, t, 1] = np.interp(interesting_times[t], time_to_rewards, y_positions)
+    
+    return interpolated_positions
 
-    return np.array(interpolated_positions)
 
-
+@njit(cache=True, fastmath=True)
 def get_time_to_rewards(
-    paths: list[np.ndarray], speeds: list[float], distmx: np.ndarray
+    paths: list[np.ndarray], speeds: np.ndarray, distmx: np.ndarray
 ) -> np.ndarray:
-    def calculate_times(path, speed):
-        return np.cumsum(distmx[path[:-1], path[1:]]) / speed
+    all_times = []
+    
+    for path, speed in zip(paths, speeds):
+        cumulative_dist = 0.0
+        for j in range(len(path) - 1):
+            cumulative_dist += distmx[path[j], path[j + 1]]
+            all_times.append(cumulative_dist / speed)
+    
+    if len(all_times) == 0:
+        return np.array([0.0])
+    
+    times_array = np.array(all_times)
+    return np.unique(times_array)
 
-    times_to_rewards = [calculate_times(path, speed) for path, speed in zip(paths, speeds)]
-    times_to_rewards = np.concatenate(times_to_rewards)
 
-    return np.unique(times_to_rewards)
-
-
+@njit(cache=True, fastmath=True)
 def calculate_max_distance(interpolated_positions: np.ndarray) -> float:
     if len(interpolated_positions) <= 1:
         return 0.0
     
-    all_positions = np.stack(interpolated_positions)
-    k, _, _ = all_positions.shape
+    k, n, _ = interpolated_positions.shape
+    max_distance = 0.0
     
-    pos_expanded_i = all_positions[:, np.newaxis, :, :]  # (k, 1, n, 2)
-    pos_expanded_j = all_positions[np.newaxis, :, :, :]  # (1, k, n, 2)
-    
-    diff = pos_expanded_i - pos_expanded_j  # (k, k, n, 2)
-    distances = np.linalg.norm(diff, axis=-1)  # (k, k, n)
-    
-    upper_triangle_mask = np.triu(np.ones((k, k)), k=1).astype(bool)
-    
-    max_distance = np.max(distances[upper_triangle_mask])
+    for i in range(k):
+        for j in range(i + 1, k):
+            for t in range(n):
+                pos_i = interpolated_positions[i, t, :]
+                pos_j = interpolated_positions[j, t, :]
+                
+                distance = np.sqrt((pos_i[0] - pos_j[0])**2 + (pos_i[1] - pos_j[1])**2)
+
+                max_distance = max(max_distance, distance) 
     
     return max_distance
 
 
-def maximize_reward(paths: list[np.ndarray], rvalues: np.ndarray) -> float:
-    all_elements = np.concatenate(paths)
-    unique_elements = np.unique(all_elements)
-    reward = 0
+@njit(cache=True, fastmath=True)
+def maximize_reward(paths_flat: np.ndarray, rvalues: np.ndarray) -> float:
+    unique_elements = np.unique(paths_flat)
+    reward = 0.0
     for element in unique_elements:
         reward += rvalues[element]
     return reward
