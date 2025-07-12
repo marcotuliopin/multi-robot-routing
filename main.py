@@ -10,7 +10,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_iterations", type=int, default=100, help="Number of iterations.")
     parser.add_argument("--speeds", type=float, nargs="+", help="Speed of the agents.")
     parser.add_argument("--budget", type=float, nargs="+", help="Budget of the agents.")
-    parser.add_argument("--algorithm", type=int, default=0, help="Indicates which algorithm to use. 0 or 1.")
+    parser.add_argument("--algorithm", type=str, default="unique_vis", choices=["unique_vis", "multi_vis"], help="Indicates which algorithm to use.")
     parser.add_argument("--out", type=str, default="out/")
     args = parser.parse_args()
     

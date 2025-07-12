@@ -1,41 +1,8 @@
 #!/bin/bash
 
-N=$1
-MAP="benchmarks/chao/p1.2.r.txt"
-TOTAL_TIME=600
-ITERATIONS=100
-SPEEDS="2 1 1"
-ALGORITHM="0"
-OUT="out/"
-BUDGET="70.1 70.1 70.1"
-
-while getopts "n:m:a:t:s:b:i:o:" opt; do
-  case $opt in
-    n) N=$OPTARG ;;
-    m) MAP=$OPTARG ;;
-    t) TOTAL_TIME=$OPTARG ;;
-    s) SPEEDS=$OPTARG ;;
-    a) ALGORITHM=$OPTARG ;;
-    b) BUDGET=$OPTARG ;;
-    o) OUT=$OPTARG ;;
-    i) ITERATIONS=$OPTARG ;;
-    \?) echo "Uso: $0 [-n runs] [-m map] [-a agents] [-t time_limit] [-s speeds] [-b budgets] [-i iterations]" 
-        exit 1 ;;
-  esac
-done
-
-if [[ -z "$N" || ! "$N" =~ ^[0-9]+$ ]]; then
-    echo "Usage: $0 <number_of_times>"
-    exit 1
-fi
-
-for ((i=1; i<=$N; i++)); do
-    echo "Running iteration $i on map $MAP..."
-    python3 main.py \
-        --map "$MAP" \
-        --total_time "$TOTAL_TIME" \
-        --num_iterations "$ITERATIONS" \
-        --algorithm $ALGORITHM \
-        --out $OUT \
-        # --budget $BUDGET
-done
+python3 main.py \
+    --map  maps/intro.txt \
+    --total_time 600 \
+    --num_iterations 300 \
+    --algorithm unique_vis \
+    --out out/ \

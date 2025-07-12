@@ -1,11 +1,12 @@
 from itertools import combinations
-from . import Solution
 import numpy as np
+
+from . import Solution
 
 
 class Neighborhood:
-    def __init__(self, algorithm: int = 0):
-        if algorithm == 0:
+    def __init__(self, algorithm: str = "unique_vis"):
+        if algorithm == "unique_vis":
             self.perturbation_operators = [
                 self.invert_points_all_agents_unique,
                 self.two_opt_all_paths,
@@ -46,7 +47,7 @@ class Neighborhood:
     def get_local_search_operator(self, neighborhood: int):
         return self.local_search_operators[neighborhood % len(self.local_search_operators)]
 
-    def two_opt_all_paths(self, solution: Solution) -> list:
+    def two_opt_all_paths(self, solution: Solution) -> Solution:
         new_solution = solution.copy()
         new_paths = new_solution.paths
 

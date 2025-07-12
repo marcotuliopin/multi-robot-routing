@@ -51,7 +51,7 @@ def movns(
     total_time: int,
     seed: int,
     max_it: int = 100,
-    algorithm: bool = 0,
+    algorithm: str = "unique_vis",
 ):
     np.random.seed(seed)
 
@@ -116,7 +116,7 @@ def main(
     speeds: list = [1],
     seed: int = 42,
     max_it: int = 100,
-    algorithm: bool = 0,
+    algorithm: str = "unique_vis",
 ):
     Solution.set_parameters(begin, end, num_agents, budget, speeds)
 
