@@ -1,4 +1,4 @@
-from itertools import combinations
+from numba import njit
 import numpy as np
 
 from . import Solution
@@ -36,80 +36,25 @@ class Neighborhood:
         self.epsilon = 1e-4
     
     def get_perturbation_operator(self):
-        def wrapper(solution: Solution, rpositions: np.ndarray) -> Solution:
-            operator = np.random.randint(0, len(self.perturbation_operators))
-            if operator == len(self.perturbation_operators) - 1:
-                return self.untangle_path(solution, rpositions)
-            return self.perturbation_operators[operator](solution)
-            
-        return wrapper
+        operator = np.random.randint(0, len(self.perturbation_operators))
+        return self.perturbation_operators[operator]
 
     def get_local_search_operator(self, neighborhood: int):
         return self.local_search_operators[neighborhood % len(self.local_search_operators)]
 
     def two_opt_all_paths(self, solution: Solution) -> Solution:
         new_solution = solution.copy()
-        new_paths = new_solution.paths
-
-        for new_path in new_paths:
-            i, j = np.random.choice(len(new_paths[0]) - 1, 2, replace=False)
-            if i > j:
-                i, j = j, i
-            new_path[i:j + 1] = new_path[i:j + 1][::-1]
-
-        return new_solution
-    
-    def untangle_path(self, solution: Solution, rpositions: np.ndarray) -> Solution:
-        def intersect(a, b, c, d):
-            def ccw(p1, p2, p3):
-                return (p3[1] - p1[1]) * (p2[0] - p1[0]) > (p2[1] - p1[1]) * (p3[0] - p1[0])
-            return ccw(a, c, d) != ccw(b, c, d) and ccw(a, b, c) != ccw(a, b, d)
-
-        new_solution = solution.copy()
-        new_paths = new_solution.paths
-        
-        for path in new_paths:
-            positive_indices = np.where(path > 0)[0]
-            if len(positive_indices) < 2:
-                continue
-
-            sorted_indices = positive_indices[np.argsort(path[positive_indices])]
-            positions = rpositions[sorted_indices]
-
-            for i, j in combinations(range(len(sorted_indices) - 1), 2):
-                a, b = positions[i], positions[i + 1]
-                c, d = positions[j], positions[j + 1]
-                
-                if intersect(a, b, c, d):
-                    indices_to_reverse = sorted_indices[i+1:j+1]
-                    path[indices_to_reverse] = path[indices_to_reverse][::-1].copy()
-                
+        new_solution.paths = two_opt_all_paths_core(solution.paths)
         return new_solution
 
     def invert_points_all_agents(self, solution: Solution) -> Solution:
         new_solution = solution.copy()
-        new_paths = new_solution.paths
-        path_length = len(new_paths[0])
-
-        for i in range(len(new_paths)):
-            cols_to_invert = np.random.random(path_length) < 0.75
-            new_paths[i][cols_to_invert] *= -1
-
+        new_solution.paths = invert_points_all_agents_core(solution.paths)
         return new_solution
     
     def invert_points_all_agents_unique(self, solution: Solution) -> Solution:
         new_solution = solution.copy()
-        path_length = len(new_solution.paths[0])
-
-        cols_to_invert = np.random.random(path_length) < 0.75
-
-        for col in np.where(cols_to_invert)[0]:
-            positive_idx = np.where(new_solution.paths[:, col] > 0)[0]
-            new_solution.paths[positive_idx, col] *= -1
-
-            new_positive_idx = np.random.randint(0, len(new_solution.paths))
-            new_solution.paths[new_positive_idx, col] *= -1
-
+        new_solution.paths = invert_points_all_agents_unique_core(solution.paths)
         return new_solution
 
     def move_point(self, solution: Solution, agent: int) -> list[Solution]:
@@ -339,3 +284,67 @@ class Neighborhood:
                 neighbors.append(new_solution.copy())
 
         return neighbors
+
+
+@njit
+def copy_paths(paths):
+    return paths.copy()
+
+
+@njit
+def get_positive_indices(path):
+    return np.where(path > 0)[0]
+
+
+@njit
+def get_negative_indices(path):
+    return np.where(path < 0)[0]
+
+
+@njit
+def two_opt_all_paths_core(paths):
+    new_paths = copy_paths(paths)
+    
+    for i in range(len(new_paths)):
+        path_len = len(new_paths[i])
+        if path_len <= 1:
+            continue
+            
+        idx1 = np.random.randint(0, path_len - 1)
+        idx2 = np.random.randint(0, path_len - 1)
+        if idx1 > idx2:
+            idx1, idx2 = idx2, idx1
+        
+        new_paths[i][idx1:idx2 + 1] = new_paths[i][idx1:idx2 + 1][::-1]
+    
+    return new_paths
+
+
+@njit
+def invert_points_all_agents_core(paths):
+    new_paths = copy_paths(paths)
+    path_length = new_paths.shape[1]
+    
+    for i in range(len(new_paths)):
+        cols_to_invert = np.random.random(path_length) < 0.75
+        new_paths[i][cols_to_invert] *= -1
+    
+    return new_paths
+
+
+@njit
+def invert_points_all_agents_unique_core(paths):
+    new_paths = copy_paths(paths)
+    path_length = new_paths.shape[1]
+    
+    cols_to_invert = np.random.random(path_length) < 0.75
+    
+    for col in np.where(cols_to_invert)[0]:
+        positive_agents = np.where(new_paths[:, col] > 0)[0]
+        if len(positive_agents) > 0:
+            new_paths[positive_agents, col] *= -1
+        
+        new_positive_agent = np.random.randint(0, len(new_paths))
+        new_paths[new_positive_agent, col] = -new_paths[new_positive_agent, col]
+    
+    return new_paths
