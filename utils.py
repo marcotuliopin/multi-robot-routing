@@ -1,4 +1,5 @@
 import numpy as np
+from numba import njit
 
 
 def interpolate_paths_with_speeds(paths, speeds, rpositions, step):
@@ -86,14 +87,19 @@ def calculate_rssi(
     noise: bool = True,
     noise_std: float = 1.0,
 ) -> float:
-    if distance < 0.1:
-        distance = 0.1
-
-    rssi = tx_power - 10 * path_loss_exponent * np.log10(distance)
+    rssi = _calculate_rssi(distance, tx_power, path_loss_exponent)
+    
     if noise:
         rssi += np.random.normal(0, noise_std)
-
+    
     return rssi
+
+
+@njit(cache=True, fastmath=True)
+def _calculate_rssi(distance, tx_power, path_loss_exponent):
+    if distance < 0.1:
+        distance = 0.1
+    return tx_power - 10 * path_loss_exponent * np.log10(distance)
 
 
 def calculate_rssi_history(
@@ -102,7 +108,6 @@ def calculate_rssi_history(
     rpositions: np.ndarray,
     tx_power: float = -30,
     path_loss_exponent: float = 2.0,
-    noise_std: float = 0.0,
     step: float = 1.0,
 ) -> np.ndarray:
     interpolated_points = interpolate_paths_with_speeds(paths, speeds, rpositions, step)

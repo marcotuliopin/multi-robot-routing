@@ -1,3 +1,4 @@
+import random
 import time
 import numpy as np
 import pickle
@@ -119,6 +120,7 @@ def run_movns(
         Tuple of (archive, front, log)
     """
     np.random.seed(seed)
+    random.seed(seed)
 
     neighborhood = Neighborhood(algorithm)
     
