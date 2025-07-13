@@ -83,6 +83,90 @@ class Neighborhood:
         new_solution = solution.copy()
         new_solution.paths = invert_points_all_agents_unique_core(solution.paths)
         return new_solution
+    
+    def untangle_path(self, solution: Solution, rpositions: np.ndarray) -> Solution:
+        """
+        Untangle intersecting path segments by reversing crossing segments.
+        
+        Args:
+            solution: Current solution
+            rpositions: Array of node positions for intersection detection
+            
+        Returns:
+            Solution with untangled paths
+        """
+        new_solution = solution.copy()
+        
+        for path in enumerate(new_solution.paths):
+            self._untangle_single_agent_path(path, rpositions)
+            
+        return new_solution
+    
+    def _untangle_single_agent_path(self, path: np.ndarray, rpositions: np.ndarray) -> None:
+        """
+        Untangle intersections in a single agent's path.
+        
+        Args:
+            path: Agent's path array (modified in-place)
+            rpositions: Array of node positions
+        """
+        positive_indices = self._get_positive_indices(path)
+        if len(positive_indices) < 4:  # Need at least 4 points to have intersections
+            return
+            
+        sorted_indices = positive_indices[np.argsort(path[positive_indices])]
+        positions = rpositions[sorted_indices]
+        
+        # Check all pairs of consecutive segments for intersections
+        for i in range(len(sorted_indices) - 1):
+            for j in range(i + 2, len(sorted_indices) - 1):  # Skip adjacent segments
+                segment1_start = positions[i]
+                segment1_end = positions[i + 1]
+                segment2_start = positions[j]
+                segment2_end = positions[j + 1]
+                
+                if self._segments_intersect(segment1_start, segment1_end, segment2_start, segment2_end):
+                    self._reverse_path_segment(path, sorted_indices, i + 1, j)
+    
+    def _segments_intersect(self, a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarray) -> bool:
+        """
+        Check if two line segments intersect using the CCW algorithm.
+        
+        Args:
+            a, b: Endpoints of first segment
+            c, d: Endpoints of second segment
+            
+        Returns:
+            True if segments intersect, False otherwise
+        """
+        return (self._ccw(a, c, d) != self._ccw(b, c, d) and 
+                self._ccw(a, b, c) != self._ccw(a, b, d))
+    
+    def _ccw(self, p1: np.ndarray, p2: np.ndarray, p3: np.ndarray) -> bool:
+        """
+        Check if three points are in counter-clockwise order.
+        
+        Args:
+            p1, p2, p3: Points to check
+            
+        Returns:
+            True if points are in counter-clockwise order
+        """
+        return (p3[1] - p1[1]) * (p2[0] - p1[0]) > (p2[1] - p1[1]) * (p3[0] - p1[0])
+    
+    def _reverse_path_segment(self, path: np.ndarray, sorted_indices: np.ndarray, 
+                            start_idx: int, end_idx: int) -> None:
+        """
+        Reverse a segment of the path to untangle intersections.
+        
+        Args:
+            path: Agent's path array (modified in-place)
+            sorted_indices: Sorted indices of visited nodes
+            start_idx: Start index of segment to reverse
+            end_idx: End index of segment to reverse
+        """
+        segment_indices = sorted_indices[start_idx:end_idx + 1]
+        path[segment_indices] = path[segment_indices][::-1]
 
     # ==================== LOCAL SEARCH OPERATORS ====================
 
