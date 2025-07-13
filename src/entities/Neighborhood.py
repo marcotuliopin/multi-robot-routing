@@ -561,25 +561,25 @@ class Neighborhood:
         return np.where(path < 0)[0]
 
 
-@njit
+@njit(cache=True)
 def copy_paths(paths):
     """Create a copy of the paths array."""
     return paths.copy()
 
 
-@njit
+@njit(cache=True)
 def get_positive_indices(path):
     """Get indices where path values are positive."""
     return np.where(path > 0)[0]
 
 
-@njit
+@njit(cache=True)
 def get_negative_indices(path):
     """Get indices where path values are negative."""
     return np.where(path < 0)[0]
 
 
-@njit
+@njit(cache=True, fastmath=True)
 def two_opt_all_paths_core(paths):
     """
     Apply 2-opt operation to all agent paths simultaneously.
@@ -621,7 +621,7 @@ def two_opt_all_paths_core(paths):
     return new_paths
 
 
-@njit
+@njit(cache=True, fastmath=True)
 def invert_points_all_agents_core(paths):
     """
     Invert points across all agents independently.
@@ -642,7 +642,7 @@ def invert_points_all_agents_core(paths):
     return new_paths
 
 
-@njit
+@njit(cache=True, fastmath=True)
 def invert_points_all_agents_unique_core(paths):
     """
     Invert points across all agents while maintaining uniqueness constraint.
