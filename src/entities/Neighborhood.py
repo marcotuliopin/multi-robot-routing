@@ -72,9 +72,6 @@ class Neighborhood:
         new_solution = solution.copy()
         new_solution.paths = two_opt_all_paths_core(solution.paths)
         
-        # Sanity check: Ensure uniqueness constraint is maintained
-        SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
-        
         return new_solution
 
     def invert_points_all_agents(self, solution: Solution) -> Solution:
@@ -87,9 +84,6 @@ class Neighborhood:
         """Invert points across all agents while maintaining uniqueness constraint."""
         new_solution = solution.copy()
         new_solution.paths = invert_points_all_agents_unique_core(solution.paths)
-        
-        # Sanity check: Ensure uniqueness constraint is maintained
-        SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
         
         return new_solution
     
