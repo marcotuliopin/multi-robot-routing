@@ -1,7 +1,71 @@
 
-# **IC-Robotics**
+# **Team Orienteering Problem With Communication Constraints**
 
-This project addresses the **Team Orienteering Problem (TOP)** with the added complexity of maintaining a distance constraint between two agents. A **multi-objective Genetic Algorithm (GA)** is used to optimize both the rewards collected by the agents and the total distance traveled. The approach incorporates clustering, path initialization, and advanced visualization tools.
+- **Multi-objective optimization** with Pareto front evolution tracking
+- **Wireless connectivity modeling** with realistic RSSI calculations
+- **Flexible agent configuration** supporting variable numbers of agents
+- **Comprehensive visualization tools**:
+  - 3D Pareto front plotting and animation
+  - Agent path visualization with reward collection
+  - Real-time connectivity monitoring
+  - Solution convergence analysis
+- **Benchmarking support** with performance comparison tools
+- **Reproducible experiments** with configurable random seedsraints**
+
+This project addresses the **Team Orienteering Problem (TOP)** with wireless connectivity constraints between agents. A **Multi-Objective Variable Neighborhood Search (MOVNS)** algorithm is used to simultaneously optimize three objectives: reward collection, wireless signal strength (RSSI), and path efficiency.
+
+## **Problem Description**
+
+The Multi-Agent Team Orienteering Problem with Connectivity Constraints involves:
+
+- **Multiple autonomous agents** navigating in a 2D environment
+- **Reward points** distributed across the environment that agents must collect
+- **Wireless connectivity constraints** requiring agents to maintain communication quality (RSSI) above a threshold
+- **Budget constraints** limiting the total travel distance for each agent
+- **Multi-objective optimization** balancing reward collection, connectivity, and travel efficiency
+
+This problem is particularly relevant for:
+- Search and rescue operations requiring coordinated team communication
+- Environmental monitoring with distributed sensor networks
+- Exploration missions where agents must maintain contact with base stations
+- Any scenario where autonomous agents must work collaboratively while maintaining reliable communication
+
+## **Motivation**
+
+Traditional path planning approaches often optimize single objectives and fail to account for real-world communication constraints. In many robotic applications, maintaining wireless connectivity between agents is crucial for:
+
+1. **Coordination**: Agents need to share information and coordinate actions
+2. **Safety**: Communication enables emergency response and fault detection
+3. **Efficiency**: Shared knowledge improves overall mission performance
+4. **Reliability**: Redundant communication paths increase system robustness
+
+This project addresses the gap by providing a multi-objective optimization framework that explicitly considers wireless signal strength alongside traditional objectives like reward collection and path length.
+
+## **Solution Approach**
+
+### **Multi-Objective Variable Neighborhood Search (MOVNS)**
+
+The solution implements a sophisticated metaheuristic algorithm with the following components:
+
+1. **Three-Objective Optimization**:
+   - **Reward Maximization**: Total value collected from visited points
+   - **RSSI Maximization**: Wireless signal strength between agent pairs
+   - **Path Length Minimization**: Total travel distance (energy efficiency)
+
+2. **Variable Neighborhood Search**:
+   - Multiple neighborhood operators for solution exploration
+   - Local search procedures for solution improvement
+   - Perturbation mechanisms to escape local optima
+
+3. **Pareto Front Management**:
+   - Non-dominated solution archive with crowding distance selection
+   - Dynamic archive size management (default: 40 solutions)
+   - Probabilistic selection from Pareto front vs dominated solutions
+
+4. **Advanced Evaluation**:
+   - RSSI calculation based on distance
+   - Connectivity constraint enforcement
+   - Budget constraint validation
 
 ## **Features**
 
@@ -19,72 +83,85 @@ This project addresses the **Team Orienteering Problem (TOP)** with the added co
 ## **Setup**
 
 ### **Requirements**
-To run the project, ensure the following Python packages are installed:
-- `numpy`
-- `matplotlib`
-- `matplotlib.animation`
-- `deap`
-- `sklearn.neighbors`
-- `scipy.spatial`
+Install the following Python packages:
+
+```bash
+# Create conda environment
+conda create -n topcc python=3.12
+conda activate topcc
+
+# Install required packages
+conda install numpy matplotlib scipy scikit-learn tqdm numba
+```
+
+Or use the provided environment file:
+```bash
+conda env create -f environment.yml
+conda activate topcc
+```
+
+---
 
 ## **Usage**
 
-Run the script from the command line with the desired options:
+### **Basic Execution**
 
+Run the optimization with default settings:
 ```bash
-python main.py [OPTIONS]
+python main.py
 ```
 
-### **Arguments**
+### **Command Line Arguments**
 
-| Argument             | Description                                                                                     | Default          |
-|----------------------|-------------------------------------------------------------------------------------------------|------------------|
-| `--seed <value>`     | Sets the random seed for reproducibility.                                                       | `42`             |
-| `--plot-path`        | Plots the best paths found by the GA for both agents.                                           | Disabled         |
-| `--plot-distances`   | Plots the distance between the two agents over the entire path.                                 | Disabled         |
-| `--save-plot <file>` | Saves the plotted paths or distance plots to the specified file.                                | Disabled         |
-| `--run-animation`    | Runs an animation showing the agents moving along their respective paths in real time.          | Disabled         |
+| Argument | Description | Default |
+|----------|-------------|---------|
+| `--map <file>` | Problem instance map file | Required |
+| `--seed <value>` | Random seed for reproducibility | `42` |
+| `--total-time <seconds>` | Maximum execution time | `60` |
+| `--algorithm <name>` | Algorithm variant (e.g., "unique_vis") | `"unique_vis"` |
+| `--out <directory>` | Output directory for results | `"out/"` |
+| `--budget <values>` | Agent budget constraints | From map file |
+| `--speeds <values>` | Agent speed parameters | From map file |
 
 ### **Examples**
 
-- **Run with default settings**:
-  ```bash
-  python main.py
-  ```
+**Run with specific map and time limit:**
+```bash
+python main.py --map maps/1.txt --total-time 120
+```
 
-- **Run with a specific seed and save the path plot**:
-  ```bash
-  python main.py --seed 123 --plot-path --save-plot path_plot.png
-  ```
-
-- **Run with animation enabled**:
-  ```bash
-  python main.py --run-animation
-  ```
+**Extended optimization run:**
+```bash
+python main.py --map maps/1.txt --total-time 300 --algorithm unique_vis
+```
 
 ---
 
-## **Algorithm Overview**
+## **Project Structure**
 
-1. **Input**: A set of rewards distributed over a 2D grid and constraints for agent collaboration.
-3. **Genetic Algorithm**:
-   - **Representation**: Each individual represents two paths, one for each agent.
-   - **Fitness Function**:
-     - Maximizes the rewards collected by both agents.
-     - Minimizes the total distance traveled by the agents.
-     - Penalizes solutions where agents exceed the maximum distance constraint.
-   - **Operators**: Includes PMX crossover and mutation designed for permutation problems.
-4. **Output**: The best paths for both agents and their corresponding performance metrics.
+```
+├── main.py                 # Main execution script
+├── src/                    # Core algorithm implementation
+│   ├── movns.py           # MOVNS algorithm
+│   ├── evaluation.py      # Multi-objective evaluation functions
+│   ├── operators.py       # Neighborhood operators and local search
+│   └── entities.py        # Data structures (Solution, Neighborhood)
+├── plot.py                # Visualization utilities
+├── utils.py               # Helper functions
+├── experiments/           # Experimental analysis notebooks
+├── benchmarks/            # Standard benchmark instances
+├── data/                  # Problem instance data
+└── docs/                  # Algorithm documentation
+```
 
 ---
 
-## **Visualization**
+## **Algorithm Performance**
 
-### **1. Path Plotting**
-Visualizes the paths for both agents, the rewards collected, and the clusters. Use the `--plot-path` argument to enable.
+See `docs/complexity_analysis.md` for detailed complexity analysis.
 
-### **2. Distance Monitoring**
-Plots the distance between the two agents during the execution of their paths. Use the `--plot-distances` argument to enable.
+---
 
-### **3. Animation**
-Simulates the movement of both agents in real time. Requires CoppeliaSim to be running with the appropriate scene. Use the `--run-animation` argument to enable.
+## **Contributing**
+
+This project is part of ongoing research in multi-agent systems and wireless robotics. For questions or contributions, please refer to the experimental notebooks in `experiments/` for detailed analysis examples.
