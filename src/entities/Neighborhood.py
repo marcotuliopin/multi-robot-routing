@@ -2,6 +2,7 @@ from numba import njit
 import numpy as np
 
 from . import Solution
+from .SanityAssertions import SanityAssertions
 
 INVERSION_PROBABILITY = 0.75
 EPSILON = 1e-4
@@ -70,6 +71,10 @@ class Neighborhood:
         """Apply 2-opt operation to all agent paths simultaneously."""
         new_solution = solution.copy()
         new_solution.paths = two_opt_all_paths_core(solution.paths)
+        
+        # Sanity check: Ensure uniqueness constraint is maintained
+        SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
+        
         return new_solution
 
     def invert_points_all_agents(self, solution: Solution) -> Solution:
@@ -82,6 +87,10 @@ class Neighborhood:
         """Invert points across all agents while maintaining uniqueness constraint."""
         new_solution = solution.copy()
         new_solution.paths = invert_points_all_agents_unique_core(solution.paths)
+        
+        # Sanity check: Ensure uniqueness constraint is maintained
+        SanityAssertions.assert_one_agent_per_reward(new_solution.paths)
+        
         return new_solution
     
     def untangle_path(self, solution: Solution, rpositions: np.ndarray) -> Solution:
@@ -97,7 +106,7 @@ class Neighborhood:
         """
         new_solution = solution.copy()
         
-        for path in enumerate(new_solution.paths):
+        for path in new_solution.paths:
             self._untangle_single_agent_path(path, rpositions)
             
         return new_solution
@@ -424,7 +433,7 @@ class Neighborhood:
                 continue
                 
             neighbor = self._create_move_after_add_neighbor(
-                solution, agent, new_positive_indices, add_point_idx, target_idx, source_value
+                temp_solution, agent, new_positive_indices, add_point_idx, target_idx, source_value
             )
             neighbors.append(neighbor)
         
@@ -490,7 +499,7 @@ class Neighborhood:
                 continue
                 
             neighbor = self._create_move_after_add_neighbor(
-                solution, agent, new_positive_indices, add_point_idx, target_idx, source_value
+                temp_solution, agent, new_positive_indices, add_point_idx, target_idx, source_value
             )
             neighbors.append(neighbor)
         
@@ -554,26 +563,26 @@ class Neighborhood:
 
 @njit
 def copy_paths(paths):
-    """Create a copy of the paths array (numba-optimized)."""
+    """Create a copy of the paths array."""
     return paths.copy()
 
 
 @njit
 def get_positive_indices(path):
-    """Get indices where path values are positive (numba-optimized)."""
+    """Get indices where path values are positive."""
     return np.where(path > 0)[0]
 
 
 @njit
 def get_negative_indices(path):
-    """Get indices where path values are negative (numba-optimized)."""
+    """Get indices where path values are negative."""
     return np.where(path < 0)[0]
 
 
 @njit
 def two_opt_all_paths_core(paths):
     """
-    Apply 2-opt operation to all agent paths simultaneously (numba-optimized).
+    Apply 2-opt operation to all agent paths simultaneously.
     
     Args:
         paths: Array of agent paths
@@ -584,18 +593,30 @@ def two_opt_all_paths_core(paths):
     new_paths = copy_paths(paths)
     
     for agent_idx in range(len(new_paths)):
-        path_length = len(new_paths[agent_idx])
-        if path_length <= 1:
-            continue
-            
-        # Select two random indices for reversal
-        idx1 = np.random.randint(0, path_length - 1)
-        idx2 = np.random.randint(0, path_length - 1)
-        if idx1 > idx2:
-            idx1, idx2 = idx2, idx1
+        path = new_paths[agent_idx]
         
-        # Reverse the segment between indices
-        new_paths[agent_idx][idx1:idx2 + 1] = new_paths[agent_idx][idx1:idx2 + 1][::-1]
+        # Get indices where values are positive (visited nodes)
+        positive_indices = get_positive_indices(path)
+        
+        if len(positive_indices) < 2:
+            continue  # Need at least 2 positive values for 2-opt
+            
+        # Select two random positions within the positive indices
+        pos1 = np.random.randint(0, len(positive_indices))
+        pos2 = np.random.randint(0, len(positive_indices))
+        if pos1 > pos2:
+            pos1, pos2 = pos2, pos1
+        if pos1 == pos2:
+            continue  # No reversal needed if same position
+        
+        # Extract the positive values in their current order
+        positive_values = path[positive_indices].copy()
+        
+        # Reverse the segment between pos1 and pos2 (inclusive)
+        positive_values[pos1:pos2 + 1] = positive_values[pos1:pos2 + 1][::-1]
+        
+        # Put the reordered positive values back in their positions
+        path[positive_indices] = positive_values
     
     return new_paths
 
@@ -603,7 +624,7 @@ def two_opt_all_paths_core(paths):
 @njit
 def invert_points_all_agents_core(paths):
     """
-    Invert points across all agents independently (numba-optimized).
+    Invert points across all agents independently.
     
     Args:
         paths: Array of agent paths
@@ -624,7 +645,7 @@ def invert_points_all_agents_core(paths):
 @njit
 def invert_points_all_agents_unique_core(paths):
     """
-    Invert points across all agents while maintaining uniqueness constraint (numba-optimized).
+    Invert points across all agents while maintaining uniqueness constraint.
     
     Args:
         paths: Array of agent paths
