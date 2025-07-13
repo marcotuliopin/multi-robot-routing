@@ -100,28 +100,19 @@ def plot_path(
         dy_fixed = (dy / norm) * .5
 
         if show_arrow:
-            # ax.quiver(
-            #     prev[0],
-            #     prev[1],
-            #     dx_fixed,
-            #     dy_fixed,
-            #     angles="xy",
-            #     scale_units="xy",
-            #     scale=1,  # Keep scale=1 for direct control
-            #     color=color,
-            #     width=0.01,  # Increase arrow thickness
-            #     headlength=20,  # Bigger arrowhead
-            #     headwidth=20,
-            #     headaxislength=19,
-            # )
-            ax.scatter(
-                prev[0] + dx_fixed,
-                prev[1] + dy_fixed,
-                color="red",
-                s=1500,  # Tamanho do marcador
-                marker="X",  # Tipo do marcador
-                edgecolors="black",  # Cor da borda do marcador
-                linewidths=1.5  # Largura da borda do marcador
+            ax.quiver(
+                prev[0],
+                prev[1],
+                dx_fixed,
+                dy_fixed,
+                angles="xy",
+                scale_units="xy",
+                scale=1,  # Keep scale=1 for direct control
+                color=color,
+                width=0.01,  # Increase arrow thickness
+                headlength=20,  # Bigger arrowhead
+                headwidth=20,
+                headaxislength=19,
             )
         prev = curr
     plot_max_distance(ax, [path])
