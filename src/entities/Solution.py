@@ -356,8 +356,6 @@ class Solution:
             A new Solution instance with copied data
         """
         return Solution(
-            distmx=None,
-            rvalues=None,
             paths=np.copy(self.paths),
             score=copy.deepcopy(self.score),
         )
