@@ -25,9 +25,9 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 **Archive Initialization**: O(k × n⁴)
 - For each neighborhood operator, generates O(n²) neighbors per agent: O(k × n²) total neighbors
 - Each neighbor evaluation: O(k³ x n) 
-- Total evaluation cost: O(k × n² × (k³n)) = O(k⁴ × n²)
+- Total evaluation cost: O(k × n² × (k³n)) = O(k⁴ × n³)
 - Archive update: O(A²) for dominance checking
-- Since N is constant: **Dominant term is O(k⁴ × n²)**
+- Since N is constant: **Dominant term is O(k⁴ × n³)**
 
 ### 2. Main Loop Components
 
@@ -79,7 +79,7 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 **Since N is constant**: O(k⁴ × n³ + A²)
 
 **Total Algorithm**: O(I × (k⁴ × n³ + A²))
-**Dominant Term**: O(I × k⁴ × n³)
+**Dominant Term**: O(I × k⁴n³)
 
 ## Space Complexity Analysis
 
@@ -105,14 +105,12 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 ### 1. Critical Operations
 1. **Neighbor Generation**: O(k × n²) per iteration (since N is constant)
 2. **Solution Evaluation**: O(k³n) for RSSI calculation  
-3. **Archive Management**: O(A²) for dominance checking
-4. **Path Bounding**: O(n²) per path modification
 
 ### 2. Scalability Limits
-- **Number of Rewards (n)**: Quadratic growth in worst case
-- **Number of Agents (k)**: Cubic growth when k ≈ n
+- **Number of Rewards (n)**: Cubic growth in worst case
+- **Number of Agents (k)**: Quartic growth when k ≈ n
 - **Archive Size (A)**: Quadratic impact on dominance checking
 
 ## Conclusion
 
-The MOVNS algorithm exhibits polynomial complexity in most practical scenarios, with quadratic dependence on the number of rewards being the primary scalability concern. The multi-objective nature and constraint handling add significant computational overhead but provide valuable solution diversity. For large-scale problems (n > 100, k > 10), algorithmic and implementation optimizations become critical for practical application.
+The MOVNS algorithm exhibits polynomial complexity in most practical scenarios, with cubic dependence on the number of rewards being the primary scalability concern. The multi-objective nature and constraint handling add significant computational overhead but provide valuable solution diversity. For large-scale problems (n > 100, k > 10), algorithmic and implementation optimizations become critical for practical application.
