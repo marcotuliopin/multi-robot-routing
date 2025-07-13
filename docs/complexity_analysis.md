@@ -20,14 +20,14 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 **Single Solution Creation**: O(n²)
 - Path matrix initialization: O(kn)
 - Path bounding for all agents: O(k × n²) due to distance calculations
-- Evaluation: O(n² + kn) for reward calculation and RSSI computation
+- Evaluation: O(k³n) for reward calculation and RSSI computation
 
 **Archive Initialization**: O(k × n⁴)
 - For each neighborhood operator, generates O(n²) neighbors per agent: O(k × n²) total neighbors
-- Each neighbor evaluation: O(n² + k²n) 
-- Total evaluation cost: O(k × n² × (n² + k²n)) = O(k × n⁴ + k³ × n²)
+- Each neighbor evaluation: O(k³ x n) 
+- Total evaluation cost: O(k × n² × (k³n)) = O(k⁴ × n²)
 - Archive update: O(A²) for dominance checking
-- Since N is constant: **Dominant term is O(k × n⁴)**
+- Since N is constant: **Dominant term is O(k⁴ × n²)**
 
 ### 2. Main Loop Components
 
@@ -47,10 +47,12 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 - `invert_single_point_unique`: O(n) - generates O(n) neighbors
 - `add_and_move`: O(n²) - generates O(n²) neighbors
 
-#### Evaluation Function: O(n² + k²n)
-- Reward calculation: O(n) - sum rewards from visited points
-- RSSI calculation: O(k²n) - connectivity measure between all agent pairs over time
-- Path length calculation: O(kn) - total distance for each agent path
+#### Evaluation Function: O(k³n)
+- Reward calculation: O(n)
+- Time calculation: O(kn) 
+- Position interpolation: O(k²n log n)
+- RSSI calculation: O(k³n) - **dominant term**
+- Path length: O(kn)
 
 **Three Objectives Being Optimized:**
 1. **Reward Maximization**: Total reward collected from visited points
@@ -68,16 +70,16 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 - Solution selection: O(A)
 - For each neighborhood (N iterations, where N is constant):
   - Perturbation: O(kn)
-  - Neighbor generation: O(k × n²) per neighborhood
-  - Neighbor evaluation: O(k × n² × (n² + k²n)) per neighborhood
+  - Neighbor generation: O(kn²) per neighborhood
+  - Neighbor evaluation: O(kn² × (k³n)) per neighborhood
   - Archive update: O(A²)
 
-**Total per iteration**: O(A + N × (kn + k × n² + k × n² × (n² + k²n)) + A²)
-**Simplified**: O(N × k × n⁴ + N × k³ × n² + A²)
-**Since N is constant**: O(k × n⁴ + k³ × n² + A²)
+**Total per iteration**: O(A + N × (kn + kn² + kn² × (k³n)) + A²)
+**Simplified**: O(A + N × k⁴ × n³ + A²)
+**Since N is constant**: O(k⁴ × n³ + A²)
 
-**Total Algorithm**: O(I × (k × n⁴ + k³ × n² + A²))
-**Dominant Term**: O(I × k × n⁴)
+**Total Algorithm**: O(I × (k⁴ × n³ + A²))
+**Dominant Term**: O(I × k⁴ × n³)
 
 ## Space Complexity Analysis
 
@@ -102,12 +104,12 @@ This document provides a thorough complexity analysis of the Multi-Objective Var
 
 ### 1. Critical Operations
 1. **Neighbor Generation**: O(k × n²) per iteration (since N is constant)
-2. **Solution Evaluation**: O(k²n) for RSSI calculation  
+2. **Solution Evaluation**: O(k³n) for RSSI calculation  
 3. **Archive Management**: O(A²) for dominance checking
 4. **Path Bounding**: O(n²) per path modification
 
 ### 2. Scalability Limits
-- **Number of Rewards (n)**: Quartic growth in worst case
+- **Number of Rewards (n)**: Quadratic growth in worst case
 - **Number of Agents (k)**: Cubic growth when k ≈ n
 - **Archive Size (A)**: Quadratic impact on dominance checking
 
